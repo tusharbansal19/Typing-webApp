@@ -2,7 +2,7 @@
 class FakeRedis {
   constructor() {
     this.store = new Map(); // key => { value, expiresAt (optional) }
-    setInterval(() => this.cleanupExpiredKeys(), 1000);
+    setInterval(() => this.cleanupExpiredKeys(), 60*1000);
   }
 
   set(key, value) {

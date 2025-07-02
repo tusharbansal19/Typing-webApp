@@ -63,9 +63,9 @@ function App() {
             } />
           <Route path="/host" element={
             <ComppProtect>
-              <SocketProvider>
+              {/* <SocketProvider> */}
                 <HostPage darkMode={darkMode} setDarkMode={setDarkMode} />
-              </SocketProvider>
+              {/* </SocketProvider> */}
             </ComppProtect>
           } />
           <Route path='/dashboard' element={<ComppProtect>

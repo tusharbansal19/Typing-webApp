@@ -19,6 +19,7 @@ router.post('/create', auth, async (req, res) => {
     });
     const roomId = matchDoc._id.toString();
     // Save match state in Redis using the same ObjectId
+    console.log("Match created....", req.user.id, req.user.name, req.user.email);
     await redis.hmset(`match:${roomId}`, {
       started: false,
       participants: JSON.stringify([{ id: req.user.id, name: req.user.name, email: req.user.email }]),
@@ -32,11 +33,12 @@ router.post('/create', auth, async (req, res) => {
 // Join a match
 router.post('/join', auth, async (req, res) => {
   const { roomId } = req.body;
+  console.log("Joining match....", req.user.id, req.user.name, req.user.email, roomId);
   if (!roomId) return res.status(400).json({ message: 'Room ID required' });
 
   // Check if match exists in Redis
   const matchState = await redis.hgetall(`match:${roomId}`);
-  if (!matchState || Object.keys(matchState).length === 0) {
+  if (!matchState ) {
     return res.status(404).json({ message: 'Match does not exist' });
   }
   if (matchState.started === 'true') {
