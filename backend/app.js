@@ -3,6 +3,7 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { connect } = require('./connect');
 const userRoutes = require('./routes/user');
+const matchRoutes = require('./routes/match');
 // Add other route imports as needed
 
 const app = express();
@@ -21,6 +22,7 @@ app.use(cookieParser());
 
 // Routes
 app.use('/user', userRoutes);
+app.use('/api/match', matchRoutes);
 // Add other routes here
 
 // Health check

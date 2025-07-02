@@ -194,14 +194,7 @@ const Home = ({ darkMode, setDarkMode }) => {
 
       {/* Dark/Light Mode Toggle - Assuming it's elsewhere or added here */}
       {/* Example: */}
-      <button
-        onClick={() => setDarkMode(!darkMode)}
-        className={`fixed top-4 right-4 p-3 rounded-full shadow-lg z-50 transition-colors duration-300
-          ${darkMode ? 'bg-gray-800 text-yellow-300 hover:bg-gray-700' : 'bg-white text-blue-600 hover:bg-gray-100'}`}
-        aria-label="Toggle dark mode"
-      >
-        {darkMode ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
-      </button>
+   
 
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 px-4">

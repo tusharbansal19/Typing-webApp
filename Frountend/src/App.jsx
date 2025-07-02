@@ -19,7 +19,7 @@ import { SocketProvider } from './Context/Socket';
 import HostPage from './components/Hostpage';
 import GroupComponent from './components/GameComponent';
 import PageLoader from './components/PageLoader';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { checkAuth } from './features/user/userSlice';
 
 function App() {
@@ -27,6 +27,7 @@ function App() {
   const dispatch = useDispatch();
   const isAuthLoading = useSelector((state) => state.user.isAuthLoading);
 
+  // Persist login on reload
   useEffect(() => {
     dispatch(checkAuth());
   }, [dispatch]);
@@ -60,10 +61,13 @@ function App() {
             <TypingPage darkMode={darkMode} setDarkMode={setDarkMode} />
           </ComppProtect>
             } />
-          <Route path="/host" element={<ComppProtect>
-            <HostPage darkMode={darkMode} setDarkMode={setDarkMode} />
-          </ComppProtect>
-            } />
+          <Route path="/host" element={
+            <ComppProtect>
+              <SocketProvider>
+                <HostPage darkMode={darkMode} setDarkMode={setDarkMode} />
+              </SocketProvider>
+            </ComppProtect>
+          } />
           <Route path='/dashboard' element={<ComppProtect>
             <UserDashboard darkMode={darkMode} />
           </ComppProtect>
