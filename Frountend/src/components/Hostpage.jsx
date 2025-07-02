@@ -1,66 +1,70 @@
-import React, { useState, useContext, useEffect } from 'react';
-import io from 'socket.io-client';
+import React, { useState } from 'react';
 import { FaGithub, FaTwitter, FaInstagram, FaYoutube, FaDiscord } from "react-icons/fa";
 import "../App.css"
-import { useSocket } from '../Context/Socket';
+import axios from '../api/axiosInstance';
+import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-// Replace with your server URL or use environment variable
-
 
 const Hostpage = ({ darkMode }) => {
- let navigator =useNavigate();
-  let { socket, typingUsers }=useSocket();
-  const [groupName, setGroupName] = useState('');
-  const [joinName, setJoinName]=useState('');
+  const { user } = useSelector((state) => state.user);
+  const [roomCode, setRoomCode] = useState('');
+  const [createdRoom, setCreatedRoom] = useState(null);
+  const [hostName, setHostName] = useState('');
+  const [hostEmail, setHostEmail] = useState('');
+  const [joinCode, setJoinCode] = useState('');
+  const [joinError, setJoinError] = useState('');
+  const [createError, setCreateError] = useState('');
+  const [joinSuccess, setJoinSuccess] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [isJoining, setIsJoining] = useState(false);
-useEffect(() =>{
-
-console.log('Connecting to'+typingUsers)
-
-
-},[])
-useEffect(() => {
-  if(socket){
-
-    // Listen for any responses from the server if needed
-    socket.on('createGroupToJoin', (response) => {
-      console.log('Group created:', response);
-    });
-    
-    
-    return () => {
-      socket.off('groupCreated'); // Cleanup the listener
-    };
-  }
-}, [socket]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   // Handle group creation
-  
+  const handleCreateGroup = async () => {
+    setCreateError('');
+    setLoading(true);
+    try {
+      const response = await axios.post('/match/create', {
+        name: user?.name,
+        email: user?.email,
+      });
+      setCreatedRoom(response.data.roomId);
+      setHostName(response.data.hostName || user?.name || 'You');
+      setHostEmail(response.data.hostEmail || user?.email || '');
+      setIsCreating(false);
+    } catch (err) {
+      setCreateError(err.response?.data?.message || 'Failed to create room');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handle group joining
-  const handleJoinGroup = () => {
-    let x="";
-    if(!groupName)
-      x=joinName
-    else{
-      x=groupName
+  const handleJoinGroup = async () => {
+    setJoinError('');
+    setJoinSuccess(false);
+    setLoading(true);
+    try {
+      const response = await axios.post('/match/join', {
+        roomId: joinCode,
+        name: user?.name,
+        email: user?.email,
+      });
+      setHostName(response.data.hostName || 'Host');
+      setHostEmail(response.data.hostEmail || '');
+      setJoinSuccess(true);
+      setIsJoining(false);
+    } catch (err) {
+      setJoinError(err.response?.data?.message || 'Failed to join room');
+    } finally {
+      setLoading(false);
     }
-    console.log("group created :"+x)
-
-     // Emit 'joinGroup' event
-     console.log(`Creating group: ${x}`);
-     socket.emit('createGroup',{roomName:x})
-     
-     setIsJoining(false);
-     navigator("/hostgame", {state:{roomName:x}})
-    
   };
 
   return (
     <div className={`${darkMode ? 'bg-gradient-to-br from-black via-blue-900 to-gray-900' : 'bg-gradient-to-br from-blue-300 to-white'} min-h-screen p-6 md:p-10 flex items-center justify-center`}>
       <div className="max-w-7xl w-full grid md:grid-cols-2 gap-10 items-start text-white">
-        
         {/* Header Section */}
         <div className="text-center space-y-4 md:space-y-6 md:col-span-2">
           <h1 className={`${darkMode ? 'text-blue-400' : 'text-blue-700'} text-4xl md:text-5xl font-bold`}>Group Typing Contest</h1>
@@ -89,27 +93,36 @@ useEffect(() => {
         {/* Group Creation Section */}
         <div className="glass-effect2 p-6 rounded-lg shadow-lg flex flex-col items-center space-y-4 md:space-y-6">
           <h2 className={`${darkMode ? 'text-blue-400' : 'text-blue-700'} text-3xl font-semibold`}>Start a New Group</h2>
-          <input
-            type="text"
-            placeholder="Enter group name"
-            value={groupName}
-            onChange={(e) => setGroupName(e.target.value)}
-            className="w-full p-3 rounded-md text-black"
-          />
           <button
             onClick={() => setIsCreating(!isCreating)}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors"
+            disabled={loading}
           >
             {isCreating ? 'Cancel' : 'Create Group'}
           </button>
           {isCreating && (
             <button
-              onClick={handleJoinGroup}
+              onClick={handleCreateGroup}
               className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md transition-colors"
+              disabled={loading}
             >
-              Confirm Creation
+              {loading ? 'Creating...' : 'Confirm Creation'}
             </button>
           )}
+          {createdRoom && (
+            <div className="mt-4 text-center">
+              <div className="text-lg font-bold">Room Code: <span className="text-blue-300">{createdRoom}</span></div>
+              <div className="text-md">Host: <span className="text-green-300">{hostName}</span></div>
+              <div className="text-md">Host Email: <span className="text-green-200">{hostEmail}</span></div>
+              <button
+                className="mt-4 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md transition-colors"
+                onClick={() => navigate('/match')}
+              >
+                Go to Match
+              </button>
+            </div>
+          )}
+          {createError && <div className="text-red-400 mt-2">{createError}</div>}
         </div>
 
         {/* Group Joining Section */}
@@ -117,14 +130,16 @@ useEffect(() => {
           <h2 className={`${darkMode ? 'text-blue-400' : 'text-blue-700'} text-3xl font-semibold`}>Join an Existing Group</h2>
           <input
             type="text"
-            placeholder="Enter group name to join"
-            value={joinName}
-            onChange={(e) => setJoinName(e.target.value)}
+            placeholder="Enter room code to join"
+            value={joinCode}
+            onChange={(e) => setJoinCode(e.target.value)}
             className="w-full p-3 rounded-md text-black"
+            disabled={loading}
           />
           <button
             onClick={() => setIsJoining(!isJoining)}
             className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-md transition-colors"
+            disabled={loading}
           >
             {isJoining ? 'Cancel' : 'Join Group'}
           </button>
@@ -132,10 +147,25 @@ useEffect(() => {
             <button
               onClick={handleJoinGroup}
               className="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-md transition-colors"
+              disabled={loading || !joinCode}
             >
-              Confirm Join
+              {loading ? 'Joining...' : 'Confirm Join'}
             </button>
           )}
+          {joinSuccess && (
+            <div className="mt-4 text-center">
+              <div className="text-lg font-bold">Joined Room: <span className="text-blue-300">{joinCode}</span></div>
+              <div className="text-md">Host: <span className="text-green-300">{hostName}</span></div>
+              <div className="text-md">Host Email: <span className="text-green-200">{hostEmail}</span></div>
+              <button
+                className="mt-4 bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-md transition-colors"
+                onClick={() => navigate('/match')}
+              >
+                Go to Match
+              </button>
+            </div>
+          )}
+          {joinError && <div className="text-red-400 mt-2">{joinError}</div>}
         </div>
       </div>
     </div>

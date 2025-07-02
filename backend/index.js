@@ -6,7 +6,7 @@ const http = require("http");
 const socketIo = require("socket.io");
 const { connect } = require("./connect");
 const router = require("./routes/user"); // Main router file
-
+const matchRouter = require("./routes/match");
 const app = require('./app');
 const initSocket = require('./socket');
 
@@ -39,6 +39,7 @@ app.get("/", (req, res) => {
 
 // User routes
 app.use("/user", router);
+app.use("/match", matchRouter);
 
 
 initSocket(server);

@@ -72,7 +72,7 @@ function App() {
             <UserDashboard darkMode={darkMode} />
           </ComppProtect>
             } />
-          <Route path='/hostgame' element={<ComppProtect>
+          <Route path='/match' element={<ComppProtect>
             <SocketProvider>
               <GroupComponent darkMode={darkMode} />
             </SocketProvider>
