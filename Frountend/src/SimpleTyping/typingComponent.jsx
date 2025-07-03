@@ -506,7 +506,7 @@ const TypingInterface = ({darkMode}) => {
 
         {/* Virtual keyboard or Chart */}
         <div className="mb-8">
-          {isFinished ? (
+          {isFinished ? (<>
             <div className="glass-card rounded-xl p-6 shadow-lg">
               <h3 className="text-xl font-bold mb-4 text-center bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
                 Progress Chart (WPM every 5 seconds)
@@ -570,7 +570,7 @@ const TypingInterface = ({darkMode}) => {
                 );
               })()}
             </div>
-          ) : (
+          </>) : (
             <VirtualKeyboard
               pressedKey={pressedKey}
               isCorrect={isCorrectKey}
