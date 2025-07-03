@@ -423,7 +423,11 @@ const TypingInterface = () => {
         <div className="mb-8">
           <div
             ref={textRef}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg max-h-64 overflow-y-auto"
+            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg max-h-64"
+            style={{
+              overflow: 'hidden',
+              pointerEvents: 'none',
+            }}
           >
             <div className="text-xl md:text-2xl leading-relaxed font-mono">
               {currentText.split('').map((char, index) => (
