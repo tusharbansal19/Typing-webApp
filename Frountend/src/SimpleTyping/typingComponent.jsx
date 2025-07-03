@@ -2,12 +2,8 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { RotateCcw, Play, Pause, Trophy, Target, Clock, AlertCircle, Keyboard } from 'lucide-react';
 
 // Text samples for typing test
-const TEXT_SAMPLES = [
-  "The quick brown fox jumps over the lazy dog. This pangram contains every letter of the alphabet at least once. It's commonly used for testing typefaces and keyboards.",
-  "Technology has revolutionized the way we communicate, work, and live. From smartphones to artificial intelligence, innovation continues to shape our future.",
-  "Learning to type efficiently is a valuable skill in today's digital world. Practice makes perfect, and consistency is key to improving your typing speed.",
-  "The art of programming requires logical thinking, problem-solving skills, and attention to detail. Each line of code is a step toward creating something meaningful.",
-  "Nature provides endless inspiration with its beautiful landscapes, diverse wildlife, and changing seasons. Every moment outdoors offers something new to discover."
+const TEXT_SAMPLES = [  
+"this is a very extensive string composed of random words and phrases designed to meet your specific length requirement it continues to grow with various vocabulary choices ensuring it surpasses the five hundred character mark without using any punctuation whatsoever only lowercase letters and spaces are present throughout its entirety providing a continuous flow of text for your needs we are carefully adding more words to increase its overall length making sure it remains well above your requested minimum this paragraph demonstrates a large block of text suitable for many applications where a long character sequence without special symbols is desired it keeps going and going with more random words and less meaning sometimes just for the sake of length and character count validation we hope this extended passage serves its purpose effectively this is a very extensive string composed of random words and phrases designed to meet your specific length requirement it continues to grow with various vocabulary choices ensuring it surpasses the five hundred character mark without using any punctuation whatsoever only lowercase letters and spaces are present throughout its entirety providing a continuous flow of text for your needs we are carefully adding more words to increase its overall length making sure it remains well above your requested minimum this paragraph demonstrates a large block of text suitable for many applications where a long character sequence without special symbols is desired it keeps going and going with more random words and less meaning sometimes just for the sake of length and character count validation we hope this extended passage serves its purpose effectively",
 ];
 
 // Virtual keyboard layout
@@ -221,10 +217,9 @@ const TypingInterface = () => {
       // Handle special keys
       if (key === 'Backspace') {
         event.preventDefault();
-        if (currentIndex > 0) {
+        if (currentIndex > 0 && currentText[currentIndex - 1] !== ' ') {
           setCurrentIndex(prev => prev - 1);
           setInputText(prev => prev.slice(0, -1));
-          
           // Adjust counters for backspace
           if (inputText[currentIndex - 1] === currentText[currentIndex - 1]) {
             correctCharsRef.current = Math.max(0, correctCharsRef.current - 1);
@@ -232,6 +227,46 @@ const TypingInterface = () => {
             mistakesRef.current = Math.max(0, mistakesRef.current - 1);
           }
         }
+        return;
+      }
+      
+      // Handle spacebar for skipping words
+      if (key === ' ' && currentIndex < currentText.length) {
+        event.preventDefault();
+        // Find the end of the current word
+        let wordEnd = currentIndex;
+        while (wordEnd < currentText.length && currentText[wordEnd] !== ' ') {
+          wordEnd++;
+        }
+        // If already at a space, just move to next char
+        if (currentText[currentIndex] === ' ') {
+          setInputText(prev => prev + ' ');
+          setCurrentIndex(prev => prev + 1);
+        } else {
+          // Skipped chars in the word
+          const skippedCount = wordEnd - currentIndex;
+          setInputText(prev => prev + '$'.repeat(skippedCount));
+          let nextIndex = wordEnd;
+          // Move past any spaces to the next word's first character
+          while (nextIndex < currentText.length && currentText[nextIndex] === ' ') {
+            setInputText(prev => prev + ' ');
+            nextIndex++;
+          }
+          setCurrentIndex(nextIndex);
+          mistakesRef.current += skippedCount;
+          // Check if test is complete
+          if (nextIndex >= currentText.length) {
+            setIsActive(false);
+            setIsFinished(true);
+          }
+        }
+        setIsCorrectKey(false);
+        setIsIncorrectKey(true);
+        setTimeout(() => {
+          setPressedKey('');
+          setIsCorrectKey(false);
+          setIsIncorrectKey(false);
+        }, 150);
         return;
       }
       
@@ -305,6 +340,9 @@ const TypingInterface = () => {
   // Get character style
   const getCharStyle = (index) => {
     if (index < inputText.length) {
+      if (inputText[index] === '$') {
+        return 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200';
+      }
       return inputText[index] === currentText[index] 
         ? 'bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200' 
         : 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200';
