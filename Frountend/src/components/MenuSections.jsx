@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MdOutlineRestartAlt } from "react-icons/md";
-// import ResultsPage from '../MatchComponents/ResultPage';
-import ResultsDisplay from '../MatchComponents/ResultsDisplay'; 
+import ResultsPage from '../MatchComponents/ResultPage';
 import { Typewriter } from 'react-simple-typewriter';
 import "../App.css"
 const TypingPage = ({ darkMode }) => {

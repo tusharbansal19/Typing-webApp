@@ -13,7 +13,6 @@ import ComppProtect from './components/ProtectedRoute';
 import ProtectLogin from './components/Protectroutes';
 import Navbar from './components/navbar';
 // import TypingPage from './MatchComponents/MenuSections';
-import TypingPage from './components/MenuSections';
 import ContestSection from './components/Contest';
 import LearnPage from './components/Learn';
 import { SocketProvider } from './Context/Socket';
@@ -22,6 +21,7 @@ import GroupComponent from './MatchComponents/GameComponent';
 import PageLoader from './components/PageLoader';
 import { useSelector, useDispatch } from 'react-redux';
 import { checkAuth } from './features/user/userSlice';
+import TypingInterface from './SimpleTyping/typingComponent';
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -59,7 +59,7 @@ function App() {
           </ComppProtect>
             } />
           <Route path="/typing" element={<ComppProtect>
-            <TypingPage darkMode={darkMode} setDarkMode={setDarkMode} />
+            <TypingInterface darkMode={darkMode} setDarkMode={setDarkMode} />
           </ComppProtect>
             } />
           <Route path="/host" element={
