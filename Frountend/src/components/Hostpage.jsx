@@ -98,11 +98,9 @@ const Hostpage = ({ darkMode }) => {
   // Add participant to match if not host, then navigate
   const handleEnterBattle = async () => {
     const isHost = user?.email;
-    // Always use the most recent roomId
     const roomId = createdRoom || joinedRoom;
     if (!roomId) return;
     if (isHost) {
-      console.log("roomId of handleEnterBattle", roomId, "isHost", isHost);
       try {
         setLoading(true);
         await axios.post('/match/add-participant', {
@@ -110,15 +108,15 @@ const Hostpage = ({ darkMode }) => {
           name: user?.name,
           email: user?.email,
         });
-        // Emit joinRoom after add-participant
-        console.log("socket of handleEnterBattle", roomId);
+        // Only emit if socket is ready
         if (socket && roomId) {
-          console.log('Emitting joinRoom with roomId (add-participant):', roomId);
           socket.emit('joinRoom', {
             roomName: roomId,
             socketId: socket.id,
             email: user?.email,
           });
+        } else {
+          console.warn('Socket not ready, cannot join room yet.');
         }
       } catch (err) {
         console.log("err of handleEnterBattle", err);
@@ -308,6 +306,7 @@ const Hostpage = ({ darkMode }) => {
 
                     <button
                       onClick={handleEnterBattle}
+                      disabled={!socket || loading}
                       className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl ${
                         darkMode
                           ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'

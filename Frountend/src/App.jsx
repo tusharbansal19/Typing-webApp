@@ -41,6 +41,7 @@ function App() {
 
   return (
     <AuthProvider>
+       <SocketProvider>
       <Router>
         <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
         <Routes>
@@ -66,9 +67,9 @@ function App() {
             } />
           <Route path="/host" element={
             <ComppProtect>
-              <SocketProvider>
+              {/* <SocketProvider> */}
                 <HostPage darkMode={darkMode} setDarkMode={setDarkMode} />
-              </SocketProvider>
+              {/* </SocketProvider> */}
             </ComppProtect>
           } />
           <Route path='/dashboard' element={<ComppProtect>
@@ -77,11 +78,11 @@ function App() {
             } />
             
           <Route path='/match/:roomName' element={<ComppProtect>
+           
             <MatchProvider>
-            <SocketProvider>
               <MatchInterface darkMode={darkMode} setDarkMode={setDarkMode} />
-            </SocketProvider>
             </MatchProvider>
+            
           </ComppProtect>
             } />
           <Route path='/contact' element={<ComppProtect>
@@ -105,7 +106,9 @@ function App() {
           } />
         </Routes>
       </Router>
+      </SocketProvider>
     </AuthProvider>
+    
   );
 }
 

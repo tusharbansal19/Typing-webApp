@@ -17,6 +17,9 @@ import TextDisplay from './TextDisplay.jsx';
 import Results from './Results.jsx';
 import TypingChartOrKeyboard from './TypingChartOrKeyboard.jsx';
 import ShowMember from './ShowMember.jsx';
+import { useSocket } from '../Context/Socket';
+import { useSelector, useDispatch } from 'react-redux';
+import { setRoomName, setParticipants } from '../features/matchRealtimeSlice';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Text samples for typing test
@@ -28,11 +31,7 @@ const TEXT_SAMPLES = [
 "a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed",];
 
 // Virtual keyboard layout
-const KEYBOARD_LAYOUT = [
-  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
-  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
-  ['z', 'x', 'c', 'v', 'b', 'n', 'm']
-];
+
 
 // Stats card component
 const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
@@ -59,6 +58,7 @@ const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
 
 // Main typing interface component
 const MatchInterface = ({darkMode}) => {
+  // simple typing test................................................................................
   // Core state
   const [currentText, setCurrentText] = useState('');
   const [inputText, setInputText] = useState('');
@@ -92,6 +92,23 @@ const MatchInterface = ({darkMode}) => {
   const startTimeRef = useRef(null);
   const [progressData, setProgressData] = useState([]); // Array of {time, wpm}
   const [intervalStep, setIntervalStep] = useState(0); // Track elapsed time in 5s steps
+  const { socket } = useSocket();
+  const dispatch = useDispatch();
+  const roomName = useSelector(state => state.matchRealtime.roomName);
+  const participants = useSelector(state => state.matchRealtime.participants);
+
+  // Listen for 'all participants' event and update Redux
+  React.useEffect(() => {
+    if (!socket) return;
+    const handleAllParticipants = ({ roomName, participants }) => {
+      dispatch(setRoomName(roomName));
+      dispatch(setParticipants(participants));
+    };
+    socket.on('all participants', handleAllParticipants);
+    return () => {
+      socket.off('all participants', handleAllParticipants);
+    };
+  }, [socket, dispatch]);
 
   // Initialize text
   useEffect(() => {
@@ -353,6 +370,8 @@ const MatchInterface = ({darkMode}) => {
     }
     return 'text-gray-700 dark:text-gray-300';
   };
+
+ 
 
   return (
     <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}>

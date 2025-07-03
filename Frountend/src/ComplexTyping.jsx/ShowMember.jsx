@@ -10,10 +10,11 @@ const ShowMember = ({ darkMode }) => {
 
     const { socket } = useSocket();
 const navigator=useNavigate();
+const roomName = useSelector(state => state.matchRealtime.roomName);
     const [groupMembers, setGroupMembers] = useState([]);
     const [readyCount, setReadyCount] = useState(0);
     const [readyPlayers, setReadyPlayers] = useState([]);
-    const roomName = useSelector((state) => state.match.roomName);
+ 
     const [joinMessage, setJoinMessage] = useState("");
     const [restartButton, setrestartButton] = useState(false);
     const {userEmail} = useAuth();
@@ -26,7 +27,11 @@ console.log("userEmail",userEmail);
       if (!socket) return;
       // Listen for all participants event
       const handleAllParticipants = ({ participants, roomName: eventRoomName }) => {
-        if (eventRoomName === roomName) setGroupMembers(participants);
+        console.log("participants",participants);
+        if (eventRoomName === roomName){
+          console.log("participants",participants);
+          setGroupMembers(participants);
+        } 
       };
       socket.on('all participants', handleAllParticipants);
 

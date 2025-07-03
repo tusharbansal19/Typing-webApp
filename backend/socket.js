@@ -28,6 +28,7 @@ function initSocket(server) {
 
       console.log(`[SOCKET] joinRoom for roomName: ${roomName}`);
       socket.join(roomName);
+      console.log("socket.id :: ",socket.id,"roomName :: ",roomName);
       // Fetch or create match state from Redis
       let roomState = await redis.hgetall(`match:${roomName}`);
       console.log("roomState :: ",roomName,"room is :: ", roomState);

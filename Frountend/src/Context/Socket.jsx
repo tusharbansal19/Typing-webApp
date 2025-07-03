@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
 // Create the context
@@ -6,26 +6,24 @@ const SocketContext = createContext();
 
 // Socket provider component
 export const SocketProvider = ({ children }) => {
+  const [socket, setSocket] = useState(null);
   const [roomName, setRoomName] = useState("");
-  const socketRef = useRef(null);
 
   useEffect(() => {
-    if (!socketRef.current) {
-      socketRef.current = io("http://localhost:3000", {
-        transports: ['websocket'],
-        reconnection: true,
-      });
-    }
+    const newSocket = io("http://localhost:3000", {
+      transports: ['websocket'],
+      reconnection: true,
+    });
+    setSocket(newSocket);
+
     return () => {
-      if (socketRef.current) {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
+      newSocket.disconnect();
+      setSocket(null);
     };
   }, []);
 
   return (
-    <SocketContext.Provider value={{ socket: socketRef.current, roomName, setRoomName }}>
+    <SocketContext.Provider value={{ socket, roomName, setRoomName }}>
       {children}
     </SocketContext.Provider>
   );

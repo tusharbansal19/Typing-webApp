@@ -3,6 +3,7 @@ import userReducer from '../features/user/userSlice';
 import contestReducer from '../features/contest/contestSlice';
 import themeReducer from '../features/theme/themeSlice';
 import matchReducer from '../features/matchSlice';
+import matchRealtimeReducer from '../features/matchRealtimeSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,5 +11,6 @@ export const store = configureStore({
     contest: contestReducer,
     theme: themeReducer,
     match: matchReducer,
+    matchRealtime: matchRealtimeReducer,
   },
 }); 
