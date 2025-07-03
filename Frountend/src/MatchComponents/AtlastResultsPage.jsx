@@ -14,6 +14,7 @@ import {
     Legend,
   } from 'chart.js';
 import { useSocket } from '../Context/Socket';
+import { useSelector } from 'react-redux';
   
   // Register necessary components
   ChartJS.register(
@@ -30,10 +31,11 @@ import { useSocket } from '../Context/Socket';
   
 
   
-  const AtlastResultsPage = ({roomName ,darkMode, inputText,currentText}) => {
+  const AtlastResultsPage = ({ darkMode }) => {
     const { socket } = useSocket();
     const [resultData, setResults]=useState();
     const [isShowing,setIsShowing] = useState(false);
+    const { roomName, inputText, currentText } = useSelector((state) => state.match);
 
     useEffect(()=>{
 

@@ -11,40 +11,46 @@ function initSocket(server) {
   });
 
   io.on('connection', (socket) => {
+
+
     console.log('New socket connection:', socket.id);
 
-    // JOIN ROOM
+
     socket.on('joinRoom', async ({ roomName, socketId, email }) => {
+
+
       if (!roomName) {
         console.log('[SOCKET] joinRoom called with undefined roomName, ignoring.');
         return;
       }
+
+
+
       console.log(`[SOCKET] joinRoom for roomName: ${roomName}`);
       socket.join(roomName);
       // Fetch or create match state from Redis
       let roomState = await redis.hgetall(`match:${roomName}`);
-      console.log("roomState", roomState);
+      console.log("roomState :: ",roomName,"room is :: ", roomState);
       let participants = [];
       try { participants = JSON.parse(roomState.participants); } catch { participants = []; }
+      // Ensure each participant has _id, email, username
+      participants = participants.map(p => ({
+        _id: p._id ,
+        email: p.email,
+        username: p.username ,
+      }));
       io.to(roomName).emit('all participants', { participants , roomName});
-     
-      // io.to(roomName).emit('all participants', { participants });
-      // if (!roomState.members) roomState.members = JSON.stringify([]);
-      // if (!roomState.emails) roomState.emails = JSON.stringify([]);
-      // if (!roomState.readyPlayers) roomState.readyPlayers = JSON.stringify([]);
-      // if (!roomState.submissions) roomState.submissions = JSON.stringify([]);
-      // let members = [];
-      // let emails = [];
-      // let readyPlayers = [];
-      // try { members = JSON.parse(roomState.members); } catch { members = []; }
-      // try { emails = JSON.parse(roomState.emails); } catch { emails = []; }
-      // try { readyPlayers = JSON.parse(roomState.readyPlayers); } catch { readyPlayers = []; }
-      // if (!members.includes(socketId)) members.push(socketId);
-      // if (!emails.includes(email)) emails.push(email);
-      // await redis.hset(`room:${roomName}`, 'members', JSON.stringify(members));
-      // await redis.hset(`room:${roomName}`, 'emails', JSON.stringify(emails));
-      // await redis.hset(`room:${roomName}`, 'readyPlayers', JSON.stringify(readyPlayers));
-      // io.to(roomName).emit('all participants', { participants  });
+      // Emit userJoined event for new user
+      const newUser = participants.find(p => p.email === email);
+      if (newUser) {
+        io.to(roomName).emit('userJoined', { user: newUser, participants, roomName });
+      }
+      if (newUser) {
+        io.to(socket.id).emit('meJoined', { user: newUser, participants, roomName });
+      }
+      
+
+
     });
 
     // SUBMIT RESULT
@@ -93,29 +99,17 @@ function initSocket(server) {
 
     // DISCONNECT
     socket.on('disconnect', async () => {
-      // Iterate all rooms in Redis and remove this socket.id
       for (let [key, entry] of redis.store.entries()) {
         if (key.startsWith('match:')) {
           let roomState = entry.value;
-          let members = [];
-          let readyPlayers = [];
-          let emails = [];
-          try { members = JSON.parse(roomState.members || '[]'); } catch { members = []; }
-          try { readyPlayers = JSON.parse(roomState.readyPlayers || '[]'); } catch { readyPlayers = []; }
-          try { emails = JSON.parse(roomState.emails || '[]'); } catch { emails = []; }
-          const origMembersLen = members.length;
-          members = members.filter(id => id !== socket.id);
-          readyPlayers = readyPlayers.filter(id => id !== socket.id);
-          // Optionally, remove email if you track which socket.id belongs to which email
-          if (members.length !== origMembersLen) {
-            await redis.hset(key, 'members', JSON.stringify(members));
-            await redis.hset(key, 'readyPlayers', JSON.stringify(readyPlayers));
-            await redis.hset(key, 'emails', JSON.stringify(emails));
-            io.to(key.replace('match:', '')).emit('showReadyPlayers', readyPlayers);
-            if (members.length === 0) {
-              redis.store.delete(key);
-            }
-          }
+          let participants = [];
+          try { participants = JSON.parse(roomState.participants || '[]'); } catch { participants = []; }
+          // Find participant by socket id (if stored)
+          // If you store socket id in participant, remove by id, else skip
+          // For now, skip if not tracked
+          // Optionally, you could track socket id in participant for more robust removal
+          // For now, just emit all participants with roomName
+          io.to(key.replace('match:', '')).emit('all participants', { participants, roomName: key.replace('match:', '') });
         }
       }
       console.log('User disconnected:', socket.id);
@@ -153,9 +147,13 @@ function initSocket(server) {
       let participants = [];
       try { participants = JSON.parse(roomState.participants || '[]'); } catch { participants = []; }
       // Remove the participant with the given email
+      const removedUser = participants.find(p => p.email === email);
       const newParticipants = participants.filter(p => p.email !== email);
       await redis.hset(`match:${roomName}`, 'participants', JSON.stringify(newParticipants));
-      io.to(roomName).emit('all participants', { participants: newParticipants });
+      io.to(roomName).emit('all participants', { participants: newParticipants, roomName });
+      if (removedUser) {
+        io.to(roomName).emit('userLeft', { user: removedUser, participants: newParticipants, roomName });
+      }
     });
   });
 }

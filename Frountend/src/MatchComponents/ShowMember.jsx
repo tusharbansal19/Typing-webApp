@@ -3,8 +3,9 @@ import { MdOutlineRestartAlt } from "react-icons/md";
 
 import { useSocket } from '../Context/Socket';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
-const ShowMember = ({ darkMode, roomName }) => {
+const ShowMember = ({ darkMode }) => {
 
     const { socket } = useSocket();
 const navigator=useNavigate();
@@ -12,32 +13,55 @@ const navigator=useNavigate();
     const [readyCount, setReadyCount] = useState(0);
     const [readyPlayers, setReadyPlayers] = useState([]);
     const [isReady, setIsReady] = useState(false);
-    const [emails, setEmails]=useState([]);
+    const roomName = useSelector((state) => state.match.roomName);
+    const [joinMessage, setJoinMessage] = useState("");
+    const [restartButton, setrestartButton] = useState(false);
+
     useEffect(() => {
       if (!socket) return;
-      console.log(localStorage.getItem('email'));
-      let email = localStorage.getItem('email') 
-    //   socket.emit('joinRoom', { roomName, socketId:socket.id,email,
-    //    });
-      socket.on('addNewMember', ({members,emails, readyPlayersList}) => {
+      // Listen for all participants event
+      const handleAllParticipants = ({ participants, roomName: eventRoomName }) => {
+        if (eventRoomName === roomName) setGroupMembers(participants);
+      };
+      socket.on('all participants', handleAllParticipants);
+
+
+      // Listen for userJoined event
+      const handleUserJoined = ({ user, participants, roomName: eventRoomName }) => {
+          if (eventRoomName === roomName) {
+              setJoinMessage(`${user.username || user.email} joined!`);
+              setGroupMembers(participants);
+              setTimeout(() => setJoinMessage(""), 3000);
+            }
+        };
+        socket.on('userJoined', handleUserJoined);
+        socket.on("meJoined",handleUserJoined)
+      // Listen for userLeft event
+      const handleUserLeft = ({ user, participants, roomName: eventRoomName }) => {
+        if (eventRoomName === roomName) {
+          setJoinMessage(`${user.username || user.email} left!`);
+          setGroupMembers(participants);
+          setTimeout(() => setJoinMessage(""), 3000);
+        }
+      };
+      socket.on('userLeft', handleUserLeft);
+      // Other events
+      socket.on('addNewMember', ({ members, readyPlayersList }) => {
         setGroupMembers(members);
-        setEmails(emails);
-        console.log('emails',emails, readyPlayers);
-
         setReadyPlayers(readyPlayersList);
-
       });
-      socket.on('showRanks',(rankplayer)=>{
-        setrestartButton("restart")
-        console.log("kqwdnwadcwaocnj")
-        socket.emit('playerReady', { roomName, isReady:false });
+      socket.on('showRanks', (rankplayer) => {
+        setrestartButton("restart");
+        socket.emit('playerReady', { roomName, isReady: false });
         setIsReady(false);
-      }) 
-      socket.on('showReadyPlayers', (readyPlayersList) => {
-          setReadyPlayers(readyPlayersList);
       });
-  
+      socket.on('showReadyPlayers', (readyPlayersList) => {
+        setReadyPlayers(readyPlayersList);
+      });
       return () => {
+        socket.off('all participants', handleAllParticipants);
+        socket.off('userJoined', handleUserJoined);
+        socket.off('userLeft', handleUserLeft);
         socket.off('addNewMember');
         socket.off('showReadyPlayers');
       };
@@ -47,7 +71,6 @@ const navigator=useNavigate();
         socket.emit('playerReady', { roomName, isReady:!isReady });
         setIsReady(!isReady);
     }, [socket, roomName, isReady]);
-  const [restartButton, setrestartButton] = useState(false)
  
     useEffect(() => {
         if (socket) {
@@ -81,6 +104,10 @@ const navigator=useNavigate();
         <div className={`w-full lg:w-1/4  lg:mt-0 lg:ml-6 p-6 mt-12 rounded-lg shadow-lg ${darkMode ? 'bg-gradient-to-br text-white from-black to-blue-900' : 'bg-gradient-to-br from-blue-200 to-white'}`}>
         <h2 className="text-xl font-semibold mt-12 mb-4"> Room name : {roomName}</h2>
         
+        {joinMessage && (
+          <div className="mb-4 p-2 bg-green-200 text-green-800 rounded text-center animate-pulse">{joinMessage}</div>
+        )}
+        
         <p className="text-lg mb-6">Total Players: {groupMembers.length}</p>
         <p className="text-lg mb-6">Ready Players: {readyCount}</p>
        {
@@ -94,10 +121,11 @@ const navigator=useNavigate();
         }
         {groupMembers.length > 0 ? (
             <ul className="space-y-3 pt-4">
-            {groupMembers.map((member, index) => (
-                <li key={member || index} className={`p-3 bg-gray-700 rounded-lg shadow-md ${readyPlayers.includes(member)? ' text-green-500 ': 'text-red-600'}`}>
-                        <span className="font-medium">{ `User ${index + 1}`}</span>
-                        <p className="text-sm text-gray-400">ID: {emails[index]}</p>
+            {groupMembers.map((member) => (
+                <li key={member._id || member.email} className={`p-3 bg-gray-700 rounded-lg shadow-md`}>
+                        <span className="font-medium">{member.username || member.email}</span>
+                        <p className="text-sm text-gray-400">Email: {member.email}</p>
+                        <p className="text-xs text-gray-400">ID: {member._id}</p>
                     </li>
                 ))}
             </ul>

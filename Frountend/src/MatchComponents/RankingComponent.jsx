@@ -1,6 +1,9 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 
-const Rankings = ({ rankings, darkMode }) => {
+const Rankings = ({ darkMode }) => {
+  const rankings = useSelector((state) => state.match.rankings);
+
   return (
     <div
       className={`w-full max-w-2xl mx-auto p-6 mt-8 rounded-lg shadow-lg ${darkMode ? 'bg-gradient-to-br from-gray-800 to-black text-white' : 'bg-white text-gray-900'}`}
