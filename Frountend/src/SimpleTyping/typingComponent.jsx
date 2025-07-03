@@ -17,11 +17,11 @@ const KEYBOARD_LAYOUT = [
 const KeyboardKey = ({ keyChar, isPressed, isCorrect, isIncorrect }) => {
   const getKeyStyle = () => {
     if (isPressed) {
-      if (isCorrect) return 'bg-green-500 text-white transform scale-95';
-      if (isIncorrect) return 'bg-red-500 text-white transform scale-95';
-      return 'bg-yellow-500 text-black transform scale-95';
+      if (isCorrect) return 'bg-green-500/90 text-white shadow-[0_0_12px_4px_rgba(34,197,94,0.3)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)] transform scale-95';
+      if (isIncorrect) return 'bg-red-500/90 text-white shadow-[0_0_12px_4px_rgba(239,68,68,0.3)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)] transform scale-95';
+      return 'bg-yellow-400/90 text-black shadow-[0_0_12px_4px_rgba(253,224,71,0.3)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)] transform scale-95';
     }
-    return 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600';
+    return 'bg-white/90 dark:bg-gray-700/60 hover:bg-white/100 dark:hover:bg-gray-600/80 backdrop-blur-md border border-white/50 dark:border-gray-500/30';
   };
 
   return (
@@ -40,14 +40,13 @@ const KeyboardKey = ({ keyChar, isPressed, isCorrect, isIncorrect }) => {
 // Virtual keyboard component
 const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect }) => {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+    <div className="glass-card rounded-xl p-6 shadow-lg mb-8">
       <div className="flex items-center justify-center mb-4">
-        <Keyboard className="w-6 h-6 mr-2 text-gray-600 dark:text-gray-300" />
-        <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+        <Keyboard className="w-6 h-6 mr-2 text-blue-600 dark:text-blue-200 drop-shadow-lg" />
+        <h3 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-500 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
           Virtual Keyboard
         </h3>
       </div>
-      
       <div className="flex flex-col items-center space-y-2">
         {KEYBOARD_LAYOUT.map((row, rowIndex) => (
           <div key={rowIndex} className="flex justify-center">
@@ -71,11 +70,11 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect }) => {
               transition-all duration-150 ease-in-out
               ${pressedKey === ' ' 
                 ? isCorrect 
-                  ? 'bg-green-500 text-white transform scale-95'
+                  ? 'bg-green-400/80 text-white shadow-[0_0_8px_2px_rgba(34,197,94,0.7)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)]'
                   : isIncorrect 
-                    ? 'bg-red-500 text-white transform scale-95'
-                    : 'bg-yellow-500 text-black transform scale-95'
-                : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'
+                    ? 'bg-red-400/80 text-white shadow-[0_0_8px_2px_rgba(239,68,68,0.7)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)]'
+                    : 'bg-yellow-300/80 text-black shadow-[0_0_8px_2px_rgba(253,224,71,0.7)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)]'
+                : 'bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 backdrop-blur-md border border-white/30 dark:border-gray-500/30'
               }
             `}
           >
@@ -90,21 +89,21 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect }) => {
 // Stats card component
 const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
   const colorClasses = {
-    blue: "text-blue-500 bg-blue-50 dark:bg-blue-900/20",
-    green: "text-green-500 bg-green-50 dark:bg-green-900/20",
-    red: "text-red-500 bg-red-50 dark:bg-red-900/20",
-    yellow: "text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20",
-    purple: "text-purple-500 bg-purple-50 dark:bg-purple-900/20"
+    blue: "text-blue-800 bg-blue-200/90 dark:bg-blue-900/40",
+    green: "text-green-800 bg-green-200/90 dark:bg-green-900/40",
+    red: "text-red-800 bg-red-200/90 dark:bg-red-900/40",
+    yellow: "text-yellow-800 bg-yellow-200/90 dark:bg-yellow-900/40",
+    purple: "text-purple-800 bg-purple-200/90 dark:bg-purple-900/40"
   };
 
   return (
-    <div className={`p-4 rounded-xl ${colorClasses[color]} transition-all duration-300 hover:scale-105`}>
+    <div className={`glass-card p-4 rounded-xl ${colorClasses[color]} transition-all duration-300 hover:scale-105`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{label}</p>
-          <p className="text-2xl font-bold text-gray-800 dark:text-gray-100">{value}</p>
+          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 drop-shadow-md">{label}</p>
+          <p className="text-2xl font-extrabold text-gray-900 dark:text-white drop-shadow-md">{value}</p>
         </div>
-        <Icon className={`w-8 h-8 ${colorClasses[color].split(' ')[0]}`} />
+        <Icon className={`w-8 h-8 ${colorClasses[color].split(' ')[0]} drop-shadow-md`} />
       </div>
     </div>
   );
@@ -354,14 +353,14 @@ const TypingInterface = () => {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gray-900' : 'bg-gradient-to-br from-blue-50 to-indigo-100'}`}>
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-white to-indigo-200'}`}>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-blue-800 via-purple-700 to-indigo-900 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">
             Typing Speed Test
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
+          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100 drop-shadow-md">
             Test your typing speed and accuracy
           </p>
         </div>
@@ -423,7 +422,7 @@ const TypingInterface = () => {
         <div className="mb-8">
           <div
             ref={textRef}
-            className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg max-h-64"
+            className="glass-card rounded-xl p-6 shadow-lg max-h-64"
             style={{
               overflow: 'hidden',
               pointerEvents: 'none',
@@ -454,26 +453,26 @@ const TypingInterface = () => {
 
         {/* Results */}
         {isFinished && (
-          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
-            <h2 className="text-2xl font-bold text-center mb-6 text-gray-800 dark:text-gray-200">
+          <div className="glass-card rounded-xl p-6 shadow-lg">
+            <h2 className="text-2xl font-extrabold text-center mb-6 bg-gradient-to-r from-green-500 to-blue-500 dark:from-green-200 dark:to-blue-300 bg-clip-text text-transparent drop-shadow-lg">
               Test Complete! 🎉
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-3xl font-bold text-green-600">{wpm}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">WPM</div>
+                <div className="text-3xl font-extrabold text-green-600 dark:text-green-200 drop-shadow-lg">{wpm}</div>
+                <div className="text-sm text-gray-700 dark:text-gray-100">WPM</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-blue-600">{accuracy}%</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Accuracy</div>
+                <div className="text-3xl font-extrabold text-blue-600 dark:text-blue-200 drop-shadow-lg">{accuracy}%</div>
+                <div className="text-sm text-gray-700 dark:text-gray-100">Accuracy</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-purple-600">{correctChars}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Correct</div>
+                <div className="text-3xl font-extrabold text-purple-600 dark:text-purple-200 drop-shadow-lg">{correctChars}</div>
+                <div className="text-sm text-gray-700 dark:text-gray-100">Correct</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-bold text-red-600">{mistakes}</div>
-                <div className="text-sm text-gray-600 dark:text-gray-400">Mistakes</div>
+                <div className="text-3xl font-extrabold text-red-600 dark:text-red-200 drop-shadow-lg">{mistakes}</div>
+                <div className="text-sm text-gray-700 dark:text-gray-100">Mistakes</div>
               </div>
             </div>
           </div>
@@ -484,3 +483,18 @@ const TypingInterface = () => {
 };
 
 export default TypingInterface;
+
+<style jsx global>{`
+  .glass-card {
+    background: rgba(245,245,255,0.85);
+    box-shadow: 0 8px 32px 0 rgba(31,38,135,0.10);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 16px;
+    border: 1px solid rgba(180,180,220,0.18);
+  }
+  .dark .glass-card {
+    background: rgba(30,41,59,0.45);
+    border: 1px solid rgba(255,255,255,0.10);
+  }
+`}</style>
