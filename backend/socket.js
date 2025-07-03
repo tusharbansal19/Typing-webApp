@@ -76,26 +76,7 @@ function initSocket(server) {
     });
 
     // PLAYER READY
-    socket.on('playerReady', async ({ roomName, isReady }) => {
-      console.log(`[SOCKET] playerReady for roomName: ${roomName}`);
-      if (!roomName) return;
-      let roomState = await redis.hgetall(`match:${roomName}`);
-      if (!roomState.members) return;
-      let members = [];
-      let readyPlayers = [];
-      try { members = JSON.parse(roomState.members); } catch { members = []; }
-      try { readyPlayers = JSON.parse(roomState.readyPlayers); } catch { readyPlayers = []; }
-      if (isReady) {
-        if (!readyPlayers.includes(socket.id)) readyPlayers.push(socket.id);
-      } else {
-        readyPlayers = readyPlayers.filter(id => id !== socket.id);
-      }
-      await redis.hset(`match:${roomName}`, 'readyPlayers', JSON.stringify(readyPlayers));
-      io.to(roomName).emit('showReadyPlayers', readyPlayers);
-      if (readyPlayers.length === members.length) {
-        io.to(roomName).emit('startMatch');
-      }
-    });
+ 
 
     // DISCONNECT
     socket.on('disconnect', async () => {

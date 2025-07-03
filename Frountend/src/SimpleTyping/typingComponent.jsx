@@ -133,7 +133,7 @@ const TypingInterface = ({darkMode}) => {
   const [isActive, setIsActive] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
-  const [ setDarkMode] = useState(false);
+
   
   // Timer state
   const [timeLeft, setTimeLeft] = useState(60);

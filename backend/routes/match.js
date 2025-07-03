@@ -24,6 +24,7 @@ router.post('/create', auth, async (req, res) => {
       email: req.user.email,
       wpm: 0,
       accuracy: 0,
+      status: 'notStarted',
       errors: 0,
       totalTyped: 0,
     };
@@ -32,6 +33,7 @@ router.post('/create', auth, async (req, res) => {
       mode: 'multiplayer',
       timeLimit: 60,
       wordList: [],
+      
       startedAt: null,
       endedAt: null,
       winnerId: null,
