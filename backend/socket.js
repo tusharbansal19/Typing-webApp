@@ -13,25 +13,25 @@ function initSocket(server) {
   io.on('connection', (socket) => {
 
 
-    console.log('New socket connection:', socket.id);
+    //console.log('New socket connection:', socket.id);
 
 
     socket.on('joinRoom', async ({ roomName, socketId, email }) => {
 
 
       if (!roomName) {
-        console.log('[SOCKET] joinRoom called with undefined roomName, ignoring.');
+        //console.log('[SOCKET] joinRoom called with undefined roomName, ignoring.');
         return;
       }
 
 
 
-      console.log(`[SOCKET] joinRoom for roomName: ${roomName}`);
+      //console.log(`[SOCKET] joinRoom for roomName: ${roomName}`);
       socket.join(roomName);
-      console.log("socket.id :: ",socket.id,"roomName :: ",roomName);
+      //console.log("socket.id :: ",socket.id,"roomName :: ",roomName);
       // Fetch or create match state from Redis
       let roomState = await redis.hgetall(`match:${roomName}`);
-      console.log("roomState :: ",roomName,"room is :: ", roomState);
+      //console.log("roomState :: ",roomName,"room is :: ", roomState);
       let participants = [];
       try { participants = JSON.parse(roomState.participants); } catch { participants = []; }
       // Ensure each participant has _id, email, username
@@ -56,7 +56,7 @@ function initSocket(server) {
 
     // SUBMIT RESULT
     socket.on('submitResult', async ({ roomName, speed, accuracy, email }) => {
-      console.log(`[SOCKET] submitResult for roomName: ${roomName}`);
+      //console.log(`[SOCKET] submitResult for roomName: ${roomName}`);
       if (!roomName) return;
       let roomState = await redis.hgetall(`match:${roomName}`);
       if (!roomState.members) return;
@@ -94,12 +94,12 @@ function initSocket(server) {
           io.to(key.replace('match:', '')).emit('all participants', { participants, roomName: key.replace('match:', '') });
         }
       }
-      console.log('User disconnected:', socket.id);
+      //console.log('User disconnected:', socket.id);
     });
 
     // CREATE GROUP TO JOIN (legacy, for completeness)
     socket.on('createGroupToJoin', async ({ roomName, userName }) => {
-      console.log(`[SOCKET] createGroupToJoin for roomName: ${roomName}`);
+      //console.log(`[SOCKET] createGroupToJoin for roomName: ${roomName}`);
       if (!roomName) return;
       let roomState = await redis.hgetall(`match:${roomName}`);
       if (!roomState.groupMembers) roomState.groupMembers = JSON.stringify([]);
@@ -112,13 +112,13 @@ function initSocket(server) {
 
     // START GAME
     socket.on('startGame', async (roomName) => {
-      console.log(`[SOCKET] startGame for roomName: ${roomName}`);
+      //console.log(`[SOCKET] startGame for roomName: ${roomName}`);
       io.in(roomName).emit('gameStarted', { message: 'The game has started!' });
     });
 
     // GAME OVER
     socket.on('gameOver', async (roomName) => {
-      console.log(`[SOCKET] gameOver for roomName: ${roomName}`);
+      //console.log(`[SOCKET] gameOver for roomName: ${roomName}`);
       io.in(roomName).emit('gameOver', { message: 'Game Over!' });
     });
 
@@ -150,6 +150,26 @@ function initSocket(server) {
       );
       await redis.hset(`match:${roomName}`, 'participants', JSON.stringify(participants));
       io.to(roomName).emit('statusUpdated', { participants, roomName });
+
+      // Check if all participants are ready
+      //console.log("RoomState :: ",roomState);
+      const allReady = participants.length > 0 && participants.every(p => p.ready);
+      if (allReady) {
+        // Update isStarted and emit matchStart with full info
+        const mode = roomState.mode || 'multiplayer';
+        const timeLimit = roomState.timeLimit ? Number(roomState.timeLimit) : 60;
+        //console.log("roomState.wordList :: ",roomState.wordList);
+        const wordList = roomState.wordList;
+        await redis.hset(`match:${roomName}`, 'isStarted', true);
+        io.to(roomName).emit('matchStart', {
+          roomName,
+          participants,
+          mode,
+          timeLimit,
+          wordList,
+          isStarted: true,
+        });
+      }
     });
   });
 }

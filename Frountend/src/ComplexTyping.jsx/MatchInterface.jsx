@@ -19,7 +19,7 @@ import TypingChartOrKeyboard from './TypingChartOrKeyboard.jsx';
 import ShowMember from './ShowMember.jsx';
 import { useSocket } from '../Context/Socket';
 import { useSelector, useDispatch } from 'react-redux';
-import { setRoomName, setParticipants } from '../features/matchRealtimeSlice';
+import { setRoomName, setParticipants, setMode, setTimeLimit, setWordList, setStarted } from '../features/matchRealtimeSlice';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Text samples for typing test
@@ -60,6 +60,7 @@ const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
 const MatchInterface = ({darkMode}) => {
   // simple typing test................................................................................
   // Core state
+
   const [currentText, setCurrentText] = useState('');
   const [inputText, setInputText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -96,6 +97,9 @@ const MatchInterface = ({darkMode}) => {
   const dispatch = useDispatch();
   const roomName = useSelector(state => state.matchRealtime.roomName);
   const participants = useSelector(state => state.matchRealtime.participants);
+  const [isTypingActive, setIsTypingActive] = useState(false);
+  const [cooldown, setCooldown] = useState(false);
+  const [cooldownValue, setCooldownValue] = useState(3);
 
   // Listen for 'all participants' event and update Redux
   React.useEffect(() => {
@@ -107,6 +111,60 @@ const MatchInterface = ({darkMode}) => {
     socket.on('all participants', handleAllParticipants);
     return () => {
       socket.off('all participants', handleAllParticipants);
+    };
+  }, [socket, dispatch]);
+
+  // Listen for 'matchStart' event and update Redux
+  React.useEffect(() => {
+    if (!socket) return;
+    const handleMatchStart = ({ roomName, participants, mode, timeLimit, wordList, isStarted = true }) => {
+      console.log('DEBUG setRoomName:', setRoomName);
+      console.log('DEBUG setParticipants:', setParticipants);
+      console.log('DEBUG setMode:', setMode);
+      console.log('DEBUG setTimeLimit:', setTimeLimit);
+      console.log('DEBUG setWordList:', setWordList);
+      console.log('DEBUG setIsStarted:', setIsStarted);
+      console.log('setRoomName(roomName):', setRoomName(roomName));
+      console.log('setParticipants(participants):', setParticipants(participants));
+      console.log('setMode(mode):', setMode(mode));
+      console.log('setTimeLimit(timeLimit):', setTimeLimit(timeLimit));
+      console.log('setWordList(wordList):', setWordList(wordList));
+      console.log('setStarted(isStarted):', setStarted(isStarted));
+      dispatch(setMode(mode));
+      dispatch(setTimeLimit(timeLimit));
+      dispatch(setWordList(wordList));
+      dispatch(setStarted(true));
+      setCooldown(true);
+      setIsTypingActive(false);
+      setCooldownValue(3);
+      setCurrentText(wordList);
+      mistakesRef.current = 0;
+      correctCharsRef.current = 0;
+      startTimeRef.current = null;
+      setPressedKey('');
+      setIsCorrectKey(false);
+      setIsIncorrectKey(false);
+      let countdown = 3;
+      setCooldownValue(countdown);
+      const interval = setInterval(() => {
+        countdown--;
+        setCooldownValue(countdown);
+        if (countdown <= 0) {
+          clearInterval(interval);
+          setCooldown(false);
+          setIsTypingActive(true);
+          setTimeLeft(timeLimit || 60);
+          setIsActive(true); // Start timer immediately after cooldown
+          setInputText('');
+          setCurrentIndex(0);
+          setIsStarted(true);
+          setIsFinished(false);
+        }
+      }, 1000);
+    };
+    socket.on('matchStart', handleMatchStart);
+    return () => {
+      socket.off('matchStart', handleMatchStart);
     };
   }, [socket, dispatch]);
 
@@ -380,68 +438,81 @@ const MatchInterface = ({darkMode}) => {
         <div className="flex flex-col lg:flex-row lg:items-start w-full">
           {/* Main content */}
           <div className="flex-1 w-full lg:w-3/4 lg:ml-6">
-            {/* Header */}
-            <Header />
-
-            {/* Controls */}
-            <Controls
-              testDuration={testDuration}
-              setTestDuration={setTestDuration}
-              setTimeLeft={setTimeLeft}
-              isActive={isActive}
-              resetTest={resetTest}
-            />
-
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
-              <StatsCard icon={Target} label="WPM" value={wpm} color="green" />
-              <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
-              <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
-            </div>
-
-            {/* Start prompt */}
-            {!isStarted && (
-              <div className="text-center mb-8">
-                <p className="text-2xl text-gray-600 dark:text-gray-300 animate-pulse">
-                  Press any key to start typing...
-                </p>
+            {cooldown || !isTypingActive ? (
+              <div className="flex flex-col items-center justify-center min-h-[300px] relative">
+                <h2 className="text-3xl font-bold text-center mt-12">Get Ready...</h2>
+                {cooldown && (
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                    <span className="text-7xl font-extrabold text-yellow-400 drop-shadow-lg animate-pulse">{cooldownValue > 0 ? cooldownValue : ''}</span>
+                  </div>
+                )}
+                <div className="block lg:hidden mt-4">
+                  <ShowMember darkMode={darkMode} />
+                </div>
               </div>
+            ) : (
+              <>
+                {/* Header */}
+                <Header />
+
+                {/* Controls */}
+                <Controls
+                  testDuration={testDuration}
+                  setTestDuration={setTestDuration}
+                  setTimeLeft={setTimeLeft}
+                  isActive={isActive}
+                  resetTest={resetTest}
+                />
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                  <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
+                  <StatsCard icon={Target} label="WPM" value={wpm} color="green" />
+                  <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
+                  <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
+                </div>
+
+                {/* Start prompt */}
+                {!isStarted && (
+                  <div className="text-center mb-8">
+                    <p className="text-2xl text-gray-600 dark:text-gray-300 animate-pulse">
+                      Press any key to start typing...
+                    </p>
+                  </div>
+                )}
+
+                {/* Text display */}
+                <TextDisplay
+                  currentText={currentText}
+                  inputText={inputText}
+                  currentIndex={currentIndex}
+                  textRef={textRef}
+                  activeCharRef={activeCharRef}
+                  getCharStyle={getCharStyle}
+                />
+
+                {/* ShowMember below text area on mobile */}
+
+                {/* Virtual keyboard or Chart */}
+                <TypingChartOrKeyboard
+                  isFinished={isFinished}
+                  testDuration={testDuration}
+                  progressData={progressData}
+                  pressedKey={pressedKey}
+                  isCorrectKey={isCorrectKey}
+                  isIncorrectKey={isIncorrectKey}
+                />
+
+                {/* Results */}
+                <Results
+                  isFinished={isFinished}
+                  wpm={wpm}
+                  accuracy={accuracy}
+                  correctChars={correctChars}
+                  mistakes={mistakes}
+                />
+              </>
             )}
-
-            {/* Text display */}
-            <TextDisplay
-              currentText={currentText}
-              inputText={inputText}
-              currentIndex={currentIndex}
-              textRef={textRef}
-              activeCharRef={activeCharRef}
-              getCharStyle={getCharStyle}
-            />
-
-            {/* ShowMember below text area on mobile */}
-            <div className="block lg:hidden mt-4">
-              <ShowMember darkMode={darkMode} />
-            </div>
-
-            {/* Virtual keyboard or Chart */}
-            <TypingChartOrKeyboard
-              isFinished={isFinished}
-              testDuration={testDuration}
-              progressData={progressData}
-              pressedKey={pressedKey}
-              isCorrectKey={isCorrectKey}
-              isIncorrectKey={isIncorrectKey}
-            />
-
-            {/* Results */}
-            <Results
-              isFinished={isFinished}
-              wpm={wpm}
-              accuracy={accuracy}
-              correctChars={correctChars}
-              mistakes={mistakes}
-            />
           </div>
           {/* Sidebar on large screens */}
           <div className="hidden lg:block lg:w-1/4 lg:ml-6">

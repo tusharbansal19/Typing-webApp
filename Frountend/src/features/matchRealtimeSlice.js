@@ -37,7 +37,7 @@ const matchRealtimeSlice = createSlice({
     setEndedAt(state, action) {
       state.endedAt = action.payload;
     },
-    setIsStarted(state, action) {
+    setStarted(state, action) {
       state.isStarted = action.payload;
     },
     setWinnerId(state, action) {
@@ -57,7 +57,7 @@ export const {
   setWordList,
   setStartedAt,
   setEndedAt,
-  setIsStarted,
+  setStarted,
   setWinnerId,
   resetMatchRealtime,
 } = matchRealtimeSlice.actions;

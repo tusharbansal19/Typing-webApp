@@ -2,7 +2,6 @@ import { configureStore } from '@reduxjs/toolkit';
 import userReducer from '../features/user/userSlice';
 import contestReducer from '../features/contest/contestSlice';
 import themeReducer from '../features/theme/themeSlice';
-import matchReducer from '../features/matchSlice';
 import matchRealtimeReducer from '../features/matchRealtimeSlice';
 
 export const store = configureStore({
@@ -10,7 +9,6 @@ export const store = configureStore({
     user: userReducer,
     contest: contestReducer,
     theme: themeReducer,
-    match: matchReducer,
     matchRealtime: matchRealtimeReducer,
   },
 }); 

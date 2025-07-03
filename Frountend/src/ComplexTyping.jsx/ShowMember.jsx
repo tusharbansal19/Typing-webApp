@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MdOutlineRestartAlt } from "react-icons/md";
 
 import { useSocket } from '../Context/Socket';
@@ -11,27 +11,23 @@ const ShowMember = ({ darkMode }) => {
     const { socket } = useSocket();
 const navigator=useNavigate();
 const roomName = useSelector(state => state.matchRealtime.roomName);
-    const [groupMembers, setGroupMembers] = useState([]);
-    const [readyCount, setReadyCount] = useState(0);
+const participants = useSelector(state => state.matchRealtime.participants);
     const [readyPlayers, setReadyPlayers] = useState([]);
  
     const [joinMessage, setJoinMessage] = useState("");
     const [restartButton, setrestartButton] = useState(false);
     const {userEmail} = useAuth();
+    
 console.log("userEmail",userEmail);
     // Find the current user in the group
-    const me = groupMembers.find(m => m.email === userEmail);
+    const me = participants.find(m => m.email === userEmail);
     const isReady = !!(me && me.ready);
 
     useEffect(() => {
       if (!socket) return;
       // Listen for all participants event
       const handleAllParticipants = ({ participants, roomName: eventRoomName }) => {
-        console.log("participants",participants);
-        if (eventRoomName === roomName){
-          console.log("participants",participants);
-          setGroupMembers(participants);
-        } 
+        // Redux will update participants, so no need to set local state
       };
       socket.on('all participants', handleAllParticipants);
 
@@ -40,7 +36,6 @@ console.log("userEmail",userEmail);
       const handleUserJoined = ({ user, participants, roomName: eventRoomName }) => {
           if (eventRoomName === roomName) {
               setJoinMessage(`${user.username || user.email} joined!`);
-              setGroupMembers(participants);
               setTimeout(() => setJoinMessage(""), 3000);
             }
         };
@@ -50,14 +45,12 @@ console.log("userEmail",userEmail);
       const handleUserLeft = ({ user, participants, roomName: eventRoomName }) => {
         if (eventRoomName === roomName) {
           setJoinMessage(`${user.username || user.email} left!`);
-          setGroupMembers(participants);
           setTimeout(() => setJoinMessage(""), 3000);
         }
       };
       socket.on('userLeft', handleUserLeft);
       // Other events
       socket.on('addNewMember', ({ members, readyPlayersList }) => {
-        setGroupMembers(members);
         setReadyPlayers(readyPlayersList);
       });
       socket.on('showRanks', (rankplayer) => {
@@ -77,19 +70,15 @@ console.log("userEmail",userEmail);
     }, [socket, roomName]);
   
     const iReady = useCallback(() => {
-      console.log("userEmail",userEmail);
       if (!userEmail) return;
-      console.log("iReady");
-        console.log("userEmail",userEmail, "roomName", roomName);
-        socket.emit('changeStatus', { roomName, email: userEmail });
+      socket.emit('changeStatus', { roomName, email: userEmail });
     }, [socket, roomName, userEmail]);
  
     useEffect(() => {
         if (!socket) return;
         // Listen for statusUpdated event
         const handleStatusUpdated = ({ participants, roomName: eventRoomName }) => {
-          console.log("participants",participants);
-            if (eventRoomName === roomName) setGroupMembers(participants);
+          // Redux will update participants, so no need to set local state
         };
         socket.on('statusUpdated', handleStatusUpdated);
         return () => {
@@ -105,8 +94,7 @@ console.log("userEmail",userEmail);
           <div className="mb-4 p-2 bg-green-200 text-green-800 rounded text-center animate-pulse">{joinMessage}</div>
         )}
         
-        <p className="text-lg mb-6">Total Players: {groupMembers.length}</p>
-        <p className="text-lg mb-6">Ready Players: {readyCount}</p>
+        <p className="text-lg mb-6">Total Players: {participants.length}</p>
        {
         restartButton ==='restart'? <button onClick={()=>navigator("/host")} className="bg-blue-500 text-white py-2 px-4 rounded shadow hover:bg-blue-700">Restart Game</button> 
         :
@@ -114,17 +102,21 @@ console.log("userEmail",userEmail);
             {isReady ? 'Not Ready' : 'Ready'}
         </button>
         }
-        {groupMembers.length > 0 ? (
+        {participants.length > 0 ? (
             <ul className="space-y-3 pt-4">
-            {groupMembers.map((member) => (
-                <li key={member._id || member.email} className={`p-3 bg-gray-700 rounded-lg shadow-md`}>
+            {participants.map((member) => (
+                <li key={member._id || member.email} className={`p-3 bg-gray-700 rounded-lg shadow-md flex items-center justify-between`}>
+                    <div>
                         <span className={`font-medium ${member.ready ? 'text-green-400' : 'text-red-400'}`}>{member.username || member.email}</span>
                         <p className={`text-sm ${member.ready ? 'text-green-300' : 'text-red-300'}`}>Email: {member.email}</p>
                         <p className="text-xs text-gray-400">ID: {member._id}</p>
-                    </li>
-                ))}
+                    </div>
+                    <span className={`ml-2 px-3 py-1 rounded-full text-sm font-bold ${member.ready ? 'bg-green-500 text-white' : 'bg-red-500 text-white'} transition-colors duration-300`}>
+                        {member.ready ? 'Ready' : 'Not Ready'}
+                    </span>
+                </li>
+            ))}
             </ul>
-
         ) : (
             <p className="text-gray-400">No players in the room yet.</p>
         )}
