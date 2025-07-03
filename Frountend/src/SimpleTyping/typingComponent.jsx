@@ -101,19 +101,19 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect }) => {
 // Stats card component
 const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
   const colorClasses = {
-    blue: "text-blue-800 bg-blue-200/90 dark:bg-blue-900/40",
-    green: "text-green-800 bg-green-200/90 dark:bg-green-900/40",
-    red: "text-red-800 bg-red-200/90 dark:bg-red-900/40",
-    yellow: "text-yellow-800 bg-yellow-200/90 dark:bg-yellow-900/40",
-    purple: "text-purple-800 bg-purple-200/90 dark:bg-purple-900/40"
+    blue: "text-blue-900 bg-blue-200/90 dark:bg-blue-900/40",
+    green: "text-green-900 bg-green-200/90 dark:bg-green-900/40",
+    red: "text-red-900 bg-red-200/90 dark:bg-red-900/40",
+    yellow: "text-yellow-900 bg-yellow-200/90 dark:bg-yellow-900/40",
+    purple: "text-purple-900 bg-purple-200/90 dark:bg-purple-900/40"
   };
 
   return (
     <div className={`glass-card p-4 rounded-xl ${colorClasses[color]} transition-all duration-300 hover:scale-105`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 drop-shadow-md">{label}</p>
-          <p className="text-2xl font-extrabold text-gray-900 dark:text-white drop-shadow-md">{value}</p>
+          <p className="text-sm font-semibold text-black dark:text-gray-100 drop-shadow-md">{label}</p>
+          <p className="text-2xl font-extrabold text-black dark:text-white drop-shadow-md">{value}</p>
         </div>
         <Icon className={`w-8 h-8 ${colorClasses[color].split(' ')[0]} drop-shadow-md`} />
       </div>
@@ -122,7 +122,7 @@ const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
 };
 
 // Main typing interface component
-const TypingInterface = () => {
+const TypingInterface = ({darkMode}) => {
   // Core state
   const [currentText, setCurrentText] = useState('');
   const [inputText, setInputText] = useState('');
@@ -130,7 +130,7 @@ const TypingInterface = () => {
   const [isActive, setIsActive] = useState(false);
   const [isStarted, setIsStarted] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
+  const [ setDarkMode] = useState(false);
   
   // Timer state
   const [timeLeft, setTimeLeft] = useState(60);
@@ -419,14 +419,14 @@ const TypingInterface = () => {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-white to-indigo-200'}`}>
+    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-blue-800 via-purple-700 to-indigo-900 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-blue-700 via-fuchsia-500 to-indigo-700 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">
             Typing Speed Test
           </h1>
-          <p className="text-lg font-semibold text-gray-900 dark:text-gray-100 drop-shadow-md">
+          <p className="text-lg font-semibold text-black dark:text-gray-100 drop-shadow-md">
             Test your typing speed and accuracy
           </p>
         </div>
@@ -460,12 +460,7 @@ const TypingInterface = () => {
             Reset
           </button>
           
-          <button
-            onClick={() => setDarkMode(!darkMode)}
-            className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors"
-          >
-            {darkMode ? '☀️' : '🌙'}
-          </button>
+        
         </div>
 
         {/* Stats */}
@@ -557,8 +552,17 @@ const TypingInterface = () => {
                         title: { display: false },
                       },
                       scales: {
-                        x: { title: { display: true, text: 'Time (s)' } },
-                        y: { title: { display: true, text: 'WPM' }, beginAtZero: true },
+                        x: {
+                          title: { display: true, text: 'Time (s)', color: '#111' },
+                          ticks: { color: '#111' },
+                          grid: { color: 'rgba(0,0,0,0.07)' },
+                        },
+                        y: {
+                          title: { display: true, text: 'WPM', color: '#111' },
+                          ticks: { color: '#111' },
+                          grid: { color: 'rgba(0,0,0,0.07)' },
+                          beginAtZero: true,
+                        },
                       },
                     }}
                     height={220}
@@ -578,25 +582,25 @@ const TypingInterface = () => {
         {/* Results */}
         {isFinished && (
           <div className="glass-card rounded-xl p-6 shadow-lg">
-            <h2 className="text-2xl font-extrabold text-center mb-6 bg-gradient-to-r from-green-500 to-blue-500 dark:from-green-200 dark:to-blue-300 bg-clip-text text-transparent drop-shadow-lg">
+            <h2 className="text-2xl font-extrabold text-center mb-6 bg-gradient-to-r from-green-600 to-blue-700 dark:from-green-200 dark:to-blue-300 bg-clip-text text-transparent drop-shadow-lg">
               Test Complete! 🎉
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-3xl font-extrabold text-green-600 dark:text-green-200 drop-shadow-lg">{wpm}</div>
-                <div className="text-sm text-gray-700 dark:text-gray-100">WPM</div>
+                <div className="text-3xl font-extrabold text-green-900 dark:text-green-200 drop-shadow-lg">{wpm}</div>
+                <div className="text-sm text-black dark:text-gray-100">WPM</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-extrabold text-blue-600 dark:text-blue-200 drop-shadow-lg">{accuracy}%</div>
-                <div className="text-sm text-gray-700 dark:text-gray-100">Accuracy</div>
+                <div className="text-3xl font-extrabold text-blue-900 dark:text-blue-200 drop-shadow-lg">{accuracy}%</div>
+                <div className="text-sm text-black dark:text-gray-100">Accuracy</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-extrabold text-purple-600 dark:text-purple-200 drop-shadow-lg">{correctChars}</div>
-                <div className="text-sm text-gray-700 dark:text-gray-100">Correct</div>
+                <div className="text-3xl font-extrabold text-purple-900 dark:text-purple-200 drop-shadow-lg">{correctChars}</div>
+                <div className="text-sm text-black dark:text-gray-100">Correct</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-extrabold text-red-600 dark:text-red-200 drop-shadow-lg">{mistakes}</div>
-                <div className="text-sm text-gray-700 dark:text-gray-100">Mistakes</div>
+                <div className="text-3xl font-extrabold text-red-900 dark:text-red-200 drop-shadow-lg">{mistakes}</div>
+                <div className="text-sm text-black dark:text-gray-100">Mistakes</div>
               </div>
             </div>
           </div>
@@ -610,12 +614,12 @@ export default TypingInterface;
 
 <style jsx global>{`
   .glass-card {
-    background: rgba(245,245,255,0.85);
-    box-shadow: 0 8px 32px 0 rgba(31,38,135,0.10);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    border-radius: 16px;
-    border: 1px solid rgba(180,180,220,0.18);
+    background: rgba(255,255,255,0.92);
+    box-shadow: 0 8px 32px 0 rgba(80,80,180,0.10), 0 2px 8px 0 rgba(0,0,0,0.04);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 18px;
+    border: 1.5px solid rgba(180,180,220,0.18);
   }
   .dark .glass-card {
     background: rgba(30,41,59,0.45);
