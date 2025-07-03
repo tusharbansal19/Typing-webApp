@@ -168,6 +168,18 @@ const MatchInterface = ({darkMode}) => {
     };
   }, [socket, dispatch]);
 
+  // Listen for 'statusUpdated' event and update Redux participants
+  React.useEffect(() => {
+    if (!socket) return;
+    const handleStatusUpdated = ({ participants, roomName: eventRoomName }) => {
+      dispatch(setParticipants(participants));
+    };
+    socket.on('statusUpdated', handleStatusUpdated);
+    return () => {
+      socket.off('statusUpdated', handleStatusUpdated);
+    };
+  }, [socket, dispatch]);
+
   // Initialize text
   useEffect(() => {
     resetTest();
