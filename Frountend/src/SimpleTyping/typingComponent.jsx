@@ -155,7 +155,7 @@ const TypingInterface = () => {
       activeCharRef.current.scrollIntoView({
         behavior: 'smooth',
         block: 'center',
-        inline: 'nearest'
+        inline: 'start'
       });
     }
   }, [currentIndex]);
