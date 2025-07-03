@@ -3,6 +3,7 @@ import axios from '../../api/axiosInstance';
 
 const initialState = {
   isAuthenticated: false,
+  email: localStorage.getItem('email'),
   user: null, // { uid, email, displayName, ... }
   accessToken: localStorage.getItem('accessToken') || null,
   matchHistory: [],

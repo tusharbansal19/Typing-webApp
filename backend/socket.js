@@ -155,6 +155,20 @@ function initSocket(server) {
         io.to(roomName).emit('userLeft', { user: removedUser, participants: newParticipants, roomName });
       }
     });
+
+    // CHANGE STATUS (toggle ready)
+    socket.on('changeStatus', async ({ roomName, email }) => {
+      if (!roomName || !email) return;
+      let roomState = await redis.hgetall(`match:${roomName}`);
+      if (!roomState.participants) return;
+      let participants = [];
+      try { participants = JSON.parse(roomState.participants); } catch { participants = []; }
+      participants = participants.map(p =>
+        p.email === email ? { ...p, ready: !p.ready } : p
+      );
+      await redis.hset(`match:${roomName}`, 'participants', JSON.stringify(participants));
+      io.to(roomName).emit('statusUpdated', { participants, roomName });
+    });
   });
 }
 
