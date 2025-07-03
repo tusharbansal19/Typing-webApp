@@ -31,6 +31,8 @@ export const loginUser = createAsyncThunk(
       const res = await axios.post('/user/login', payload);
       if (res.data.accessToken) {
         localStorage.setItem('accessToken', res.data.accessToken);
+        localStorage.setItem('user', JSON.stringify(res.data.user));
+        localStorage.setItem('email', res.data.user.email);
       }
       return res.data;
     } catch (err) {
@@ -66,6 +68,8 @@ const userSlice = createSlice({
       state.personalBest = { wpm: 0, accuracy: 0 };
       state.error = null;
       localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      localStorage.removeItem('email');
     },
     setUser(state, action) {
       state.user = action.payload;

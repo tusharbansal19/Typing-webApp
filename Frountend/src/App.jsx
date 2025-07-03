@@ -63,16 +63,16 @@ function App() {
             } />
           <Route path="/host" element={
             <ComppProtect>
-              {/* <SocketProvider> */}
+              <SocketProvider>
                 <HostPage darkMode={darkMode} setDarkMode={setDarkMode} />
-              {/* </SocketProvider> */}
+              </SocketProvider>
             </ComppProtect>
           } />
           <Route path='/dashboard' element={<ComppProtect>
             <UserDashboard darkMode={darkMode} />
           </ComppProtect>
             } />
-          <Route path='/match' element={<ComppProtect>
+          <Route path='/match/:roomName' element={<ComppProtect>
             <SocketProvider>
               <GroupComponent darkMode={darkMode} />
             </SocketProvider>

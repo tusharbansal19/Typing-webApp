@@ -44,11 +44,17 @@ class FakeRedis {
 
   async hgetall(key) {
     const entry = this.store.get(key);
-    if (!entry) return {};
-    if (entry.expiresAt && Date.now() > entry.expiresAt) {
-      this.store.delete(key);
+    console.log(`[FakeRedis] hgetall called for key: ${key}`);
+    if (!entry) {
+      console.log(`[FakeRedis] No entry found for key: ${key}`);
       return {};
     }
+    if (entry.expiresAt && Date.now() > entry.expiresAt) {
+      this.store.delete(key);
+      console.log(`[FakeRedis] Entry expired for key: ${key}`);
+      return {};
+    }
+    console.log(`[FakeRedis] Entry for key: ${key}:`, entry.value);
     return entry.value || {};
   }
 

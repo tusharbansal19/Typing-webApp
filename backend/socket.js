@@ -1,5 +1,6 @@
 const socketIo = require('socket.io');
 
+// Rooms are created dynamically on 'joinRoom' event from socket clients, not via REST API.
 function initSocket(server) {
   const io = socketIo(server, {
     cors: {

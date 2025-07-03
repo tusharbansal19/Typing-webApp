@@ -6,6 +6,7 @@ import { MdGroups, MdSpeed } from "react-icons/md";
 import axios from '../api/axiosInstance';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { useSocket } from '../Context/Socket';
 
 const Hostpage = ({ darkMode }) => {
   const { user } = useSelector((state) => state.user);
@@ -23,6 +24,7 @@ const Hostpage = ({ darkMode }) => {
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
   const navigate = useNavigate();
+  const { socket } = useSocket();
 
   // Handle copy room code
   const handleCopyCode = async (code) => {
@@ -48,6 +50,14 @@ const Hostpage = ({ darkMode }) => {
       setHostName(response.data.hostName);
       setHostEmail(response.data.hostEmail);
       setIsCreating(false);
+      // Emit joinRoom after successful creation
+      if (socket && response.data.roomId) {
+        socket.emit('joinRoom', {
+          roomName: response.data.roomId,
+          socketId: socket.id,
+          email: user?.email,
+        });
+      }
     } catch (err) {
       setCreateError(err.response?.data?.message || 'Failed to create room');
     } finally {
@@ -66,20 +76,55 @@ const Hostpage = ({ darkMode }) => {
         name: user?.name,
         email: user?.email,
       });
+      setRoomCode(joinCode);
       setHostName(response.data.hostName);
       setHostEmail(response.data.hostEmail);
       setJoinedRoom(joinCode);
       setJoinSuccess(true);
       setIsJoining(false);
+      // Emit joinRoom after successful join
+      if (socket && joinCode) {
+        socket.emit('joinRoom', {
+          roomName: joinCode,
+          socketId: socket.id,
+          email: user?.email,
+        });
+      }
     } catch (err) {
       setJoinError(err.response?.data?.message || 'Failed to join room');
     } finally {
       setLoading(false);
     }
   };
-
-  const handleGoToMatch = () => {
-    navigate('/match');
+  
+  // Add participant to match if not host, then navigate
+  const handleEnterBattle = async () => {
+    const isHost = user?.email && user?.email === hostEmail;
+    const roomId = createdRoom || joinedRoom;
+    if (!roomId) return;
+    if (!isHost) {
+      try {
+        setLoading(true);
+        await axios.post('/match/add-participant', {
+          roomId,
+          name: user?.name,
+          email: user?.email,
+        });
+        // Emit joinRoom after add-participant
+        if (socket && roomId) {
+          socket.emit('joinRoom', {
+            roomName: roomId,
+            socketId: socket.id,
+            email: user?.email,
+          });
+        }
+      } catch (err) {
+        // Optionally handle error, but proceed if already exists
+      } finally {
+        setLoading(false);
+      }
+    }
+    navigate(`/match/${roomId}`);
   };
 
   return (
@@ -259,7 +304,7 @@ const Hostpage = ({ darkMode }) => {
                     </div>
 
                     <button
-                      onClick={handleGoToMatch}
+                      onClick={handleEnterBattle}
                       className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl ${
                         darkMode
                           ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
@@ -384,7 +429,7 @@ const Hostpage = ({ darkMode }) => {
                     </div>
 
                     <button
-                      onClick={handleGoToMatch}
+                      onClick={handleEnterBattle}
                       className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl ${
                         darkMode
                           ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
