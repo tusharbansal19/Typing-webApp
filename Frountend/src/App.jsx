@@ -17,11 +17,12 @@ import ContestSection from './components/Contest';
 import LearnPage from './components/Learn';
 import { SocketProvider } from './Context/Socket';
 import HostPage from './components/Hostpage';
-import GroupComponent from './MatchComponents/GameComponent';
 import PageLoader from './components/PageLoader';
 import { useSelector, useDispatch } from 'react-redux';
 import { checkAuth } from './features/user/userSlice';
 import TypingInterface from './SimpleTyping/typingComponent';
+import MatchInterface from './ComplexTyping.jsx/MatchInterface';
+
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
@@ -73,10 +74,11 @@ function App() {
             <UserDashboard darkMode={darkMode} />
           </ComppProtect>
             } />
+            
           <Route path='/match/:roomName' element={<ComppProtect>
-            <SocketProvider>
-              <GroupComponent darkMode={darkMode} />
-            </SocketProvider>
+            {/* <SocketProvider> */}
+              <MatchInterface darkMode={darkMode} setDarkMode={setDarkMode} />
+            {/* </SocketProvider> */}
           </ComppProtect>
             } />
           <Route path='/contact' element={<ComppProtect>

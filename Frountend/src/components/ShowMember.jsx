@@ -4,7 +4,6 @@ import { MdOutlineRestartAlt } from "react-icons/md";
 import { useSocket } from '../Context/Socket';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { useAuth } from '../Context/AuthContext';
 
 const ShowMember = ({ darkMode }) => {
 
