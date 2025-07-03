@@ -36,6 +36,7 @@ router.post('/create', auth, async (req, res) => {
       
       startedAt: null,
       endedAt: null,
+      isStarted: false,
       winnerId: null,
     });
     const roomId = matchDoc._id.toString();

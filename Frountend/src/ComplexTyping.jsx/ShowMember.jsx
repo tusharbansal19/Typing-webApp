@@ -4,6 +4,7 @@ import { MdOutlineRestartAlt } from "react-icons/md";
 import { useSocket } from '../Context/Socket';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useAuth } from '../Context/AuthContext';
 
 const ShowMember = ({ darkMode }) => {
 
@@ -92,7 +93,7 @@ console.log("userEmail",userEmail);
     }, [socket, roomName]);
 
     return (
-        <div className={`w-full lg:w-1/4  lg:mt-0 lg:ml-6 p-6 mt-12 rounded-lg shadow-lg ${darkMode ? 'bg-gradient-to-br text-white from-black to-blue-900' : 'bg-gradient-to-br from-blue-200 to-white'}`}>
+        <div className={`w-full min-h-screen  lg:mt-0 lg:ml-6 p-6 mt-12 rounded-lg shadow-lg ${darkMode ? 'bg-gradient-to-br text-white from-black to-blue-900' : 'bg-gradient-to-br from-blue-200 to-white'}`}>
         <h2 className="text-xl font-semibold mt-12 mb-4"> Room name : {roomName}</h2>
         
         {joinMessage && (

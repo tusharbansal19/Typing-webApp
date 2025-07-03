@@ -16,6 +16,7 @@ import Controls from './Controls.jsx';
 import TextDisplay from './TextDisplay.jsx';
 import Results from './Results.jsx';
 import TypingChartOrKeyboard from './TypingChartOrKeyboard.jsx';
+import ShowMember from './ShowMember.jsx';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Text samples for typing test
@@ -32,55 +33,6 @@ const KEYBOARD_LAYOUT = [
   ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
   ['z', 'x', 'c', 'v', 'b', 'n', 'm']
 ];
-
-// Virtual keyboard component
-const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect }) => {
-  return (
-    <div className="glass-card rounded-xl p-6 shadow-lg mb-8">
-      <div className="flex items-center justify-center mb-4">
-        <Keyboard className="w-6 h-6 mr-2 text-blue-600 dark:text-blue-200 drop-shadow-lg" />
-        <h3 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-500 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
-          Virtual Keyboard
-        </h3>
-      </div>
-      <div className="flex flex-col items-center space-y-2">
-        {KEYBOARD_LAYOUT.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex justify-center">
-            {row.map((key) => (
-              <KeyboardKey
-                key={key}
-                keyChar={key}
-                isPressed={pressedKey === key}
-                isCorrect={isCorrect}
-                isIncorrect={isIncorrect}
-              />
-            ))}
-          </div>
-        ))}
-        
-        {/* Spacebar */}
-        <div className="flex justify-center mt-2">
-          <div
-            className={`
-              flex items-center justify-center w-40 h-10 rounded-lg font-semibold
-              transition-all duration-150 ease-in-out
-              ${pressedKey === ' ' 
-                ? isCorrect 
-                  ? 'bg-green-400/80 text-white shadow-[0_0_8px_2px_rgba(34,197,94,0.7)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)]'
-                  : isIncorrect 
-                    ? 'bg-red-400/80 text-white shadow-[0_0_8px_2px_rgba(239,68,68,0.7)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)]'
-                    : 'bg-yellow-300/80 text-black shadow-[0_0_8px_2px_rgba(253,224,71,0.7)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)]'
-                : 'bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 backdrop-blur-md border border-white/30 dark:border-gray-500/30'
-              }
-            `}
-          >
-            SPACE
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Stats card component
 const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
@@ -403,83 +355,83 @@ const MatchInterface = ({darkMode}) => {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}>
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <Header />
+    <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}>
+      <div className="w-full mx-auto px-4 py-8">
+        {/* Responsive layout: main + sidebar */}
+        <div className="flex flex-col lg:flex-row lg:items-start w-full">
+          {/* Main content */}
+          <div className="flex-1 w-full lg:w-3/4 lg:ml-6">
+            {/* Header */}
+            <Header />
 
-        {/* Controls */}
-        <Controls
-          testDuration={testDuration}
-          setTestDuration={setTestDuration}
-          setTimeLeft={setTimeLeft}
-          isActive={isActive}
-          resetTest={resetTest}
-        />
+            {/* Controls */}
+            <Controls
+              testDuration={testDuration}
+              setTestDuration={setTestDuration}
+              setTimeLeft={setTimeLeft}
+              isActive={isActive}
+              resetTest={resetTest}
+            />
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
-          <StatsCard icon={Target} label="WPM" value={wpm} color="green" />
-          <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
-          <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
-        </div>
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
+              <StatsCard icon={Target} label="WPM" value={wpm} color="green" />
+              <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
+              <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
+            </div>
 
-        {/* Start prompt */}
-        {!isStarted && (
-          <div className="text-center mb-8">
-            <p className="text-2xl text-gray-600 dark:text-gray-300 animate-pulse">
-              Press any key to start typing...
-            </p>
+            {/* Start prompt */}
+            {!isStarted && (
+              <div className="text-center mb-8">
+                <p className="text-2xl text-gray-600 dark:text-gray-300 animate-pulse">
+                  Press any key to start typing...
+                </p>
+              </div>
+            )}
+
+            {/* Text display */}
+            <TextDisplay
+              currentText={currentText}
+              inputText={inputText}
+              currentIndex={currentIndex}
+              textRef={textRef}
+              activeCharRef={activeCharRef}
+              getCharStyle={getCharStyle}
+            />
+
+            {/* ShowMember below text area on mobile */}
+            <div className="block lg:hidden mt-4">
+              <ShowMember darkMode={darkMode} />
+            </div>
+
+            {/* Virtual keyboard or Chart */}
+            <TypingChartOrKeyboard
+              isFinished={isFinished}
+              testDuration={testDuration}
+              progressData={progressData}
+              pressedKey={pressedKey}
+              isCorrectKey={isCorrectKey}
+              isIncorrectKey={isIncorrectKey}
+            />
+
+            {/* Results */}
+            <Results
+              isFinished={isFinished}
+              wpm={wpm}
+              accuracy={accuracy}
+              correctChars={correctChars}
+              mistakes={mistakes}
+            />
           </div>
-        )}
-
-        {/* Text display */}
-        <TextDisplay
-          currentText={currentText}
-          inputText={inputText}
-          currentIndex={currentIndex}
-          textRef={textRef}
-          activeCharRef={activeCharRef}
-          getCharStyle={getCharStyle}
-        />
-
-        {/* Virtual keyboard or Chart */}
-        <TypingChartOrKeyboard
-          isFinished={isFinished}
-          testDuration={testDuration}
-          progressData={progressData}
-          pressedKey={pressedKey}
-          isCorrectKey={isCorrectKey}
-          isIncorrectKey={isIncorrectKey}
-        />
-
-        {/* Results */}
-        <Results
-          isFinished={isFinished}
-          wpm={wpm}
-          accuracy={accuracy}
-          correctChars={correctChars}
-          mistakes={mistakes}
-        />
+          {/* Sidebar on large screens */}
+          <div className="hidden lg:block lg:w-1/4 lg:ml-6">
+            <ShowMember darkMode={darkMode} />
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
 export default MatchInterface;
-
-<style jsx global>{`
-  .glass-card {
-    background: rgba(255,255,255,0.92);
-    box-shadow: 0 8px 32px 0 rgba(80,80,180,0.10), 0 2px 8px 0 rgba(0,0,0,0.04);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-radius: 18px;
-    border: 1.5px solid rgba(180,180,220,0.18);
-  }
-  .dark .glass-card {
-    background: rgba(30,41,59,0.45);
-    border: 1px solid rgba(255,255,255,0.10);
-  }
-`}</style>
