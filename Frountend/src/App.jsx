@@ -76,9 +76,9 @@ function App() {
             } />
             
           <Route path='/match/:roomName' element={<ComppProtect>
-            {/* <SocketProvider> */}
+            <SocketProvider>
               <MatchInterface darkMode={darkMode} setDarkMode={setDarkMode} />
-            {/* </SocketProvider> */}
+            </SocketProvider>
           </ComppProtect>
             } />
           <Route path='/contact' element={<ComppProtect>

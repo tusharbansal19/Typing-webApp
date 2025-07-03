@@ -11,6 +11,11 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
+import Header from './Header.jsx';
+import Controls from './Controls.jsx';
+import TextDisplay from './TextDisplay.jsx';
+import Results from './Results.jsx';
+import TypingChartOrKeyboard from './TypingChartOrKeyboard.jsx';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Text samples for typing test
@@ -27,30 +32,6 @@ const KEYBOARD_LAYOUT = [
   ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
   ['z', 'x', 'c', 'v', 'b', 'n', 'm']
 ];
-
-// Key component for virtual keyboard
-const KeyboardKey = ({ keyChar, isPressed, isCorrect, isIncorrect }) => {
-  const getKeyStyle = () => {
-    if (isPressed) {
-      if (isCorrect) return 'bg-green-500/90 text-white shadow-[0_0_12px_4px_rgba(34,197,94,0.3)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)] transform scale-95';
-      if (isIncorrect) return 'bg-red-500/90 text-white shadow-[0_0_12px_4px_rgba(239,68,68,0.3)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)] transform scale-95';
-      return 'bg-yellow-400/90 text-black shadow-[0_0_12px_4px_rgba(253,224,71,0.3)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)] transform scale-95';
-    }
-    return 'bg-white/90 dark:bg-gray-700/60 hover:bg-white/100 dark:hover:bg-gray-600/80 backdrop-blur-md border border-white/50 dark:border-gray-500/30';
-  };
-
-  return (
-    <div
-      className={`
-        flex items-center justify-center w-10 h-10 m-1 rounded-lg font-semibold
-        transition-all duration-150 ease-in-out cursor-pointer
-        ${getKeyStyle()}
-      `}
-    >
-      {keyChar.toUpperCase()}
-    </div>
-  );
-};
 
 // Virtual keyboard component
 const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect }) => {
@@ -425,46 +406,16 @@ const MatchInterface = ({darkMode}) => {
     <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-4xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-blue-700 via-fuchsia-500 to-indigo-700 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-2xl">
-            Typing Speed Test
-          </h1>
-          <p className="text-lg font-semibold text-black dark:text-gray-100 drop-shadow-md">
-            Test your typing speed and accuracy
-          </p>
-        </div>
+        <Header />
 
         {/* Controls */}
-        <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-gray-600 dark:text-gray-300" />
-            <select
-              value={testDuration}
-              onChange={(e) => {
-                setTestDuration(Number(e.target.value));
-                setTimeLeft(Number(e.target.value));
-              }}
-              className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-              disabled={isActive}
-            >
-            <option value={10}>10 seconds</option>
-              <option value={30}>30 seconds</option>
-              <option value={60}>1 minute</option>
-              <option value={120}>2 minutes</option>
-              <option value={300}>5 minutes</option>
-            </select>
-          </div>
-          
-          <button
-            onClick={resetTest}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Reset
-          </button>
-          
-        
-        </div>
+        <Controls
+          testDuration={testDuration}
+          setTestDuration={setTestDuration}
+          setTimeLeft={setTimeLeft}
+          isActive={isActive}
+          resetTest={resetTest}
+        />
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
@@ -484,130 +435,33 @@ const MatchInterface = ({darkMode}) => {
         )}
 
         {/* Text display */}
-        <div className="mb-8">
-          <div
-            ref={textRef}
-            className="glass-card rounded-xl p-6 shadow-lg max-h-64"
-            style={{
-              overflow: 'hidden',
-              pointerEvents: 'none',
-            }}
-          >
-            <div className="text-xl md:text-2xl leading-relaxed font-mono">
-              {currentText.split('').map((char, index) => (
-                <span
-                  key={index}
-                  ref={index === currentIndex ? activeCharRef : null}
-                  className={`${getCharStyle(index)} px-0.5 rounded transition-colors duration-150`}
-                >
-                  {char}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
+        <TextDisplay
+          currentText={currentText}
+          inputText={inputText}
+          currentIndex={currentIndex}
+          textRef={textRef}
+          activeCharRef={activeCharRef}
+          getCharStyle={getCharStyle}
+        />
 
         {/* Virtual keyboard or Chart */}
-        <div className="mb-8">
-          {isFinished ? (<>
-            <div className="glass-card rounded-xl p-6 shadow-lg">
-              <h3 className="text-xl font-bold mb-4 text-center bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
-                Progress Chart (WPM every 5 seconds)
-              </h3>
-              {(() => {
-                // Build x-axis: 0, 5, 10, ..., testDuration
-                const interval = 5;
-                const times = [];
-                for (let t = 0; t <= testDuration; t += interval) times.push(t);
-                // Map progressData to a dict for fast lookup
-                const wpmMap = {};
-                progressData.forEach(d => { wpmMap[d.time] = d.wpm; });
-                // Build y-axis: for each time, use the closest previous WPM value
-                let lastWpm = 0;
-                const wpmPoints = times.map(t => {
-                  if (wpmMap.hasOwnProperty(t)) lastWpm = wpmMap[t];
-                  return lastWpm;
-                });
-                // If no data, show message
-                if (wpmPoints.length <= 1) {
-                  return <div className="text-center text-gray-500 dark:text-gray-300">Not enough data to display chart.</div>;
-                }
-                return (
-                  <Line
-                    data={{
-                      labels: times.map(t => `${t}s`),
-                      datasets: [
-                        {
-                          label: 'WPM',
-                          data: wpmPoints,
-                          borderColor: '#3b82f6',
-                          backgroundColor: 'rgba(99,102,241,0.2)',
-                          pointBackgroundColor: '#a21caf',
-                          tension: 0.3,
-                          borderWidth: 3,
-                        },
-                      ],
-                    }}
-                    options={{
-                      responsive: true,
-                      plugins: {
-                        legend: { display: false },
-                        title: { display: false },
-                      },
-                      scales: {
-                        x: {
-                          title: { display: true, text: 'Time (s)', color: '#111' },
-                          ticks: { color: '#111' },
-                          grid: { color: 'rgba(0,0,0,0.07)' },
-                        },
-                        y: {
-                          title: { display: true, text: 'WPM', color: '#111' },
-                          ticks: { color: '#111' },
-                          grid: { color: 'rgba(0,0,0,0.07)' },
-                          beginAtZero: true,
-                        },
-                      },
-                    }}
-                    height={220}
-                  />
-                );
-              })()}
-            </div>
-          </>) : (
-            <VirtualKeyboard
-              pressedKey={pressedKey}
-              isCorrect={isCorrectKey}
-              isIncorrect={isIncorrectKey}
-            />
-          )}
-        </div>
+        <TypingChartOrKeyboard
+          isFinished={isFinished}
+          testDuration={testDuration}
+          progressData={progressData}
+          pressedKey={pressedKey}
+          isCorrectKey={isCorrectKey}
+          isIncorrectKey={isIncorrectKey}
+        />
 
         {/* Results */}
-        {isFinished && (
-          <div className="glass-card rounded-xl p-6 shadow-lg">
-            <h2 className="text-2xl font-extrabold text-center mb-6 bg-gradient-to-r from-green-600 to-blue-700 dark:from-green-200 dark:to-blue-300 bg-clip-text text-transparent drop-shadow-lg">
-              Test Complete! 🎉
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-3xl font-extrabold text-green-900 dark:text-green-200 drop-shadow-lg">{wpm}</div>
-                <div className="text-sm text-black dark:text-gray-100">WPM</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-extrabold text-blue-900 dark:text-blue-200 drop-shadow-lg">{accuracy}%</div>
-                <div className="text-sm text-black dark:text-gray-100">Accuracy</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-extrabold text-purple-900 dark:text-purple-200 drop-shadow-lg">{correctChars}</div>
-                <div className="text-sm text-black dark:text-gray-100">Correct</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl font-extrabold text-red-900 dark:text-red-200 drop-shadow-lg">{mistakes}</div>
-                <div className="text-sm text-black dark:text-gray-100">Mistakes</div>
-              </div>
-            </div>
-          </div>
-        )}
+        <Results
+          isFinished={isFinished}
+          wpm={wpm}
+          accuracy={accuracy}
+          correctChars={correctChars}
+          mistakes={mistakes}
+        />
       </div>
     </div>
   );
