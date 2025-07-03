@@ -1,5 +1,17 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { RotateCcw, Play, Pause, Trophy, Target, Clock, AlertCircle, Keyboard } from 'lucide-react';
+import { Line } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Text samples for typing test
 const TEXT_SAMPLES = [  
@@ -142,6 +154,8 @@ const TypingInterface = () => {
   const mistakesRef = useRef(0);
   const correctCharsRef = useRef(0);
   const startTimeRef = useRef(null);
+  const [progressData, setProgressData] = useState([]); // Array of {time, wpm}
+  const [intervalStep, setIntervalStep] = useState(0); // Track elapsed time in 5s steps
 
   // Initialize text
   useEffect(() => {
@@ -197,6 +211,58 @@ const TypingInterface = () => {
   useEffect(() => {
     calculateStats();
   }, [inputText, calculateStats]);
+
+  // Track WPM every 5 seconds and at start
+  useEffect(() => {
+    if (!isActive) return;
+    // Add a data point at time 0 when test starts
+    if (progressData.length === 0) {
+      setProgressData([{ time: 0, wpm: 0 }]);
+      setIntervalStep(0);
+    }
+    const interval = setInterval(() => {
+      setIntervalStep(prev => {
+        const nextStep = prev + 5;
+        // Calculate WPM at this interval
+        const elapsed = nextStep;
+        const wordsTyped = correctCharsRef.current / 5;
+        const currentWpm = elapsed > 0 ? Math.round((wordsTyped / elapsed) * 60) : 0;
+        setProgressData(prevData => ([...prevData, { time: nextStep, wpm: currentWpm }]));
+        return nextStep;
+      });
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isActive]);
+
+  // Reset progress data and interval step on new test
+  useEffect(() => {
+    if (!isActive && !isStarted) {
+      setProgressData([]);
+      setIntervalStep(0);
+    }
+  }, [isActive, isStarted]);
+
+  // Push a final WPM data point and fill missing intervals when the test ends
+  useEffect(() => {
+    if (isFinished && progressData.length > 0) {
+      // Fill in missing intervals up to testDuration
+      const last = progressData[progressData.length - 1];
+      let filled = [...progressData];
+      let t = last.time;
+      const wordsTyped = correctCharsRef.current / 5;
+      const finalWpm = t > 0 ? Math.round((wordsTyped / t) * 60) : 0;
+      while (t < testDuration) {
+        t += 5;
+        filled.push({ time: t > testDuration ? testDuration : t, wpm: finalWpm });
+        if (t >= testDuration) break;
+      }
+      // Ensure last point is at testDuration
+      if (filled[filled.length - 1].time !== testDuration) {
+        filled.push({ time: testDuration, wpm: finalWpm });
+      }
+      setProgressData(filled);
+    }
+  }, [isFinished]);
 
   // Handle keyboard input
   useEffect(() => {
@@ -378,6 +444,7 @@ const TypingInterface = () => {
               className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
               disabled={isActive}
             >
+            <option value={10}>10 seconds</option>
               <option value={30}>30 seconds</option>
               <option value={60}>1 minute</option>
               <option value={120}>2 minutes</option>
@@ -442,13 +509,70 @@ const TypingInterface = () => {
           </div>
         </div>
 
-        {/* Virtual keyboard */}
+        {/* Virtual keyboard or Chart */}
         <div className="mb-8">
-          <VirtualKeyboard
-            pressedKey={pressedKey}
-            isCorrect={isCorrectKey}
-            isIncorrect={isIncorrectKey}
-          />
+          {isFinished ? (
+            <div className="glass-card rounded-xl p-6 shadow-lg">
+              <h3 className="text-xl font-bold mb-4 text-center bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
+                Progress Chart (WPM every 5 seconds)
+              </h3>
+              {(() => {
+                // Build x-axis: 0, 5, 10, ..., testDuration
+                const interval = 5;
+                const times = [];
+                for (let t = 0; t <= testDuration; t += interval) times.push(t);
+                // Map progressData to a dict for fast lookup
+                const wpmMap = {};
+                progressData.forEach(d => { wpmMap[d.time] = d.wpm; });
+                // Build y-axis: for each time, use the closest previous WPM value
+                let lastWpm = 0;
+                const wpmPoints = times.map(t => {
+                  if (wpmMap.hasOwnProperty(t)) lastWpm = wpmMap[t];
+                  return lastWpm;
+                });
+                // If no data, show message
+                if (wpmPoints.length <= 1) {
+                  return <div className="text-center text-gray-500 dark:text-gray-300">Not enough data to display chart.</div>;
+                }
+                return (
+                  <Line
+                    data={{
+                      labels: times.map(t => `${t}s`),
+                      datasets: [
+                        {
+                          label: 'WPM',
+                          data: wpmPoints,
+                          borderColor: '#3b82f6',
+                          backgroundColor: 'rgba(99,102,241,0.2)',
+                          pointBackgroundColor: '#a21caf',
+                          tension: 0.3,
+                          borderWidth: 3,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      plugins: {
+                        legend: { display: false },
+                        title: { display: false },
+                      },
+                      scales: {
+                        x: { title: { display: true, text: 'Time (s)' } },
+                        y: { title: { display: true, text: 'WPM' }, beginAtZero: true },
+                      },
+                    }}
+                    height={220}
+                  />
+                );
+              })()}
+            </div>
+          ) : (
+            <VirtualKeyboard
+              pressedKey={pressedKey}
+              isCorrect={isCorrectKey}
+              isIncorrect={isIncorrectKey}
+            />
+          )}
         </div>
 
         {/* Results */}
