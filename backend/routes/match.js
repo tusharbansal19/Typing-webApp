@@ -21,6 +21,7 @@ router.post('/create', auth, async (req, res) => {
     const participantObj = {
       user: dbUser._id,
       username: req.user.name,
+      email: req.user.email,
       wpm: 0,
       accuracy: 0,
       errors: 0,
@@ -79,21 +80,23 @@ router.post('/add-participant', auth, async (req, res) => {
     if (!dbUser) {
       return res.status(404).json({ message: 'User not found in database' });
     }
-    let participants = [];
+    let participants;
     try {
       participants = JSON.parse(matchState.participants);
       if (!Array.isArray(participants)) participants = [];
     } catch (e) {
       participants = [];
     }
+    console.log("participants of add-participant",roomId," ; ", participants);
     // If user already exists (by user ObjectId), do not add again
     if (participants.find(p => String(p.user) === String(dbUser._id))) {
       const host = participants[0];
-      return res.status(200).json({ message: 'Participant already exists', participants, hostName: host?.username, hostEmail: email });
+      return res.status(200).json({ message: 'Participant already exists', participants, hostName: host?.username, hostEmail: host?.email });
     }
     // Add new participant
     const newParticipant = {
       user: dbUser._id,
+      email: email,
       username: name,
       wpm: 0,
       accuracy: 0,
@@ -101,6 +104,7 @@ router.post('/add-participant', auth, async (req, res) => {
       totalTyped: 0,
     };
     participants.push(newParticipant);
+    // console.log("participants of add-participant", participants);
     try {
       await redis.hset(`match:${roomId}`, 'participants', JSON.stringify(participants));
       console.log(`[REDIS] Updated match:${roomId} participants:`, participants);
@@ -108,7 +112,7 @@ router.post('/add-participant', auth, async (req, res) => {
       return res.status(500).json({ message: 'Failed to update participants in Redis', error: redisErr.message });
     }
     const host = participants[0];
-    return res.status(200).json({ message: 'Participant added', participants, hostName: host?.username, hostEmail: email });
+    return res.status(200).json({ message: 'Participant added', participants, hostName: host?.username, hostEmail: host?.email });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -145,7 +149,7 @@ router.post('/join', auth, async (req, res) => {
       return res.status(500).json({ message: 'Participants data corrupted' });
     }
     const host = participants[0];
-    return res.status(200).json({ message: 'Match info', participants, hostName: host?.username, hostEmail: req.user.email });
+    return res.status(200).json({ message: 'Match info', participants, hostName: host?.username, hostEmail: host?.email });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
