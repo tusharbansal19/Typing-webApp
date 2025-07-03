@@ -37,6 +37,8 @@ router.post('/create', auth, async (req, res) => {
       winnerId: null,
     });
     const roomId = matchDoc._id.toString();
+    participantObj.isReady = false;
+    console.log("participantObj",participantObj);
     // Save match state in Redis using the same ObjectId
     try {
       await redis.hmset(`match:${roomId}`, {
@@ -97,6 +99,7 @@ router.post('/add-participant', auth, async (req, res) => {
     const newParticipant = {
       user: dbUser._id,
       email: email,
+      isReady: false,
       username: name,
       wpm: 0,
       accuracy: 0,
