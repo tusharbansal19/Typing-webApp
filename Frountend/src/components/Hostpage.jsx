@@ -50,8 +50,14 @@ const Hostpage = ({ darkMode }) => {
       setHostName(response.data.hostName);
       setHostEmail(response.data.hostEmail);
       setIsCreating(false);
+      // Reset joined group state
+      setJoinedRoom(null);
+      setJoinCode('');
+      setRoomCode('');
+      setJoinSuccess(false);
       // Emit joinRoom after successful creation
       if (socket && response.data.roomId) {
+        console.log('Emitting joinRoom with roomId (create):', response.data.roomId);
         socket.emit('joinRoom', {
           roomName: response.data.roomId,
           socketId: socket.id,
@@ -82,8 +88,11 @@ const Hostpage = ({ darkMode }) => {
       setJoinedRoom(joinCode);
       setJoinSuccess(true);
       setIsJoining(false);
+      // Reset created group state
+      setCreatedRoom(null);
       // Emit joinRoom after successful join
       if (socket && joinCode) {
+        console.log('Emitting joinRoom with roomId (join):', joinCode);
         socket.emit('joinRoom', {
           roomName: joinCode,
           socketId: socket.id,
@@ -100,6 +109,7 @@ const Hostpage = ({ darkMode }) => {
   // Add participant to match if not host, then navigate
   const handleEnterBattle = async () => {
     const isHost = user?.email && user?.email === hostEmail;
+    // Always use the most recent roomId
     const roomId = createdRoom || joinedRoom;
     if (!roomId) return;
     if (!isHost) {
@@ -112,6 +122,7 @@ const Hostpage = ({ darkMode }) => {
         });
         // Emit joinRoom after add-participant
         if (socket && roomId) {
+          console.log('Emitting joinRoom with roomId (add-participant):', roomId);
           socket.emit('joinRoom', {
             roomName: roomId,
             socketId: socket.id,

@@ -15,12 +15,17 @@ function initSocket(server) {
     console.log('New socket connection:', socket.id);
 
     socket.on('joinRoom', ({ roomName, socketId, email }) => {
+      console.log(`[SOCKET] joinRoom for roomName: ${roomName}`);
       socket.join(roomName);
       if (!rooms[roomName]) {
         rooms[roomName] = { members: [], readyPlayers: [], emails: [] };
       }
-      rooms[roomName].members.push(socketId);
-      rooms[roomName].emails.push(email);
+      if (!rooms[roomName].members.includes(socketId)) {
+        rooms[roomName].members.push(socketId);
+      }
+      if (!rooms[roomName].emails.includes(email)) {
+        rooms[roomName].emails.push(email);
+      }
       io.to(roomName).emit('addNewMember', {
         members: rooms[roomName].members,
         emails: rooms[roomName].emails,
@@ -29,6 +34,7 @@ function initSocket(server) {
     });
 
     socket.on('submitResult', ({ roomName, speed, accuracy, email }) => {
+      console.log(`[SOCKET] submitResult for roomName: ${roomName}`);
       if (!rooms[roomName]) return;
       if (!rooms[roomName].submissions) rooms[roomName].submissions = [];
       rooms[roomName].submissions.push({ id: socket.id, speed, accuracy, email });
@@ -43,6 +49,7 @@ function initSocket(server) {
     });
 
     socket.on('playerReady', ({ roomName, isReady }) => {
+      console.log(`[SOCKET] playerReady for roomName: ${roomName}`);
       if (!rooms[roomName]) return;
       if (isReady) {
         if (!rooms[roomName].readyPlayers.includes(socket.id)) {
@@ -78,6 +85,7 @@ function initSocket(server) {
     });
 
     socket.on('createGroupToJoin', ({ roomName, userName }) => {
+      console.log(`[SOCKET] createGroupToJoin for roomName: ${roomName}`);
       socket.join(roomName);
       if (!rooms[roomName]) rooms[roomName] = [];
       rooms[roomName].push({ id: socket.id, userName });
@@ -85,10 +93,12 @@ function initSocket(server) {
     });
 
     socket.on('startGame', (roomName) => {
+      console.log(`[SOCKET] startGame for roomName: ${roomName}`);
       io.in(roomName).emit('gameStarted', { message: 'The game has started!' });
     });
 
     socket.on('gameOver', (roomName) => {
+      console.log(`[SOCKET] gameOver for roomName: ${roomName}`);
       io.in(roomName).emit('gameOver', { message: 'Game Over!' });
     });
   });
