@@ -52,18 +52,11 @@ const Hostpage = ({ darkMode }) => {
       setIsCreating(false);
       // Reset joined group state
       setJoinedRoom(null);
-      setJoinCode('');
-      setRoomCode('');
+      setJoinCode(response.data.roomId);
+      setRoomCode(response.data.roomId);
       setJoinSuccess(false);
       // Emit joinRoom after successful creation
-      if (socket && response.data.roomId) {
-        console.log('Emitting joinRoom with roomId (create):', response.data.roomId);
-        socket.emit('joinRoom', {
-          roomName: response.data.roomId,
-          socketId: socket.id,
-          email: user?.email,
-        });
-      }
+  
     } catch (err) {
       setCreateError(err.response?.data?.message || 'Failed to create room');
     } finally {
@@ -88,17 +81,12 @@ const Hostpage = ({ darkMode }) => {
       setJoinedRoom(joinCode);
       setJoinSuccess(true);
       setIsJoining(false);
+      setJoinCode(joinCode);
       // Reset created group state
-      setCreatedRoom(null);
+      setCreatedRoom('');
+      console.log("createdRoom of handleJoinGroup", createdRoom);
       // Emit joinRoom after successful join
-      if (socket && joinCode) {
-        console.log('Emitting joinRoom with roomId (join):', joinCode);
-        socket.emit('joinRoom', {
-          roomName: joinCode,
-          socketId: socket.id,
-          email: user?.email,
-        });
-      }
+     
     } catch (err) {
       setJoinError(err.response?.data?.message || 'Failed to join room');
     } finally {
@@ -106,13 +94,15 @@ const Hostpage = ({ darkMode }) => {
     }
   };
   
+  
   // Add participant to match if not host, then navigate
   const handleEnterBattle = async () => {
-    const isHost = user?.email && user?.email === hostEmail;
+    const isHost = user?.email;
     // Always use the most recent roomId
     const roomId = createdRoom || joinedRoom;
     if (!roomId) return;
-    if (!isHost) {
+    if (isHost) {
+      console.log("roomId of handleEnterBattle", roomId, "isHost", isHost);
       try {
         setLoading(true);
         await axios.post('/match/add-participant', {
@@ -121,6 +111,7 @@ const Hostpage = ({ darkMode }) => {
           email: user?.email,
         });
         // Emit joinRoom after add-participant
+        console.log("socket of handleEnterBattle", roomId);
         if (socket && roomId) {
           console.log('Emitting joinRoom with roomId (add-participant):', roomId);
           socket.emit('joinRoom', {
@@ -130,12 +121,13 @@ const Hostpage = ({ darkMode }) => {
           });
         }
       } catch (err) {
+        console.log("err of handleEnterBattle", err);
         // Optionally handle error, but proceed if already exists
       } finally {
         setLoading(false);
+        navigate(`/match/${roomId}`);
       }
     }
-    navigate(`/match/${roomId}`);
   };
 
   return (
@@ -368,7 +360,7 @@ const Hostpage = ({ darkMode }) => {
             type="text"
                   placeholder="Enter room code (e.g. ABC123)"
                   value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                  onChange={(e) => setJoinCode(e.target.value)}
                   disabled={loading}
                   className={`w-full py-4 px-6 rounded-xl text-lg font-mono transition-all duration-300 focus:ring-4 focus:outline-none disabled:opacity-50 ${
                     darkMode 

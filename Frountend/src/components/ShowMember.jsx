@@ -17,8 +17,8 @@ const navigator=useNavigate();
       if (!socket) return;
       console.log(localStorage.getItem('email'));
       let email = localStorage.getItem('email') 
-      socket.emit('joinRoom', { roomName, socketId:socket.id,email,
-       });
+    //   socket.emit('joinRoom', { roomName, socketId:socket.id,email,
+    //    });
       socket.on('addNewMember', ({members,emails, readyPlayersList}) => {
         setGroupMembers(members);
         setEmails(emails);

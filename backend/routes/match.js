@@ -36,7 +36,7 @@ router.post('/create', auth, async (req, res) => {
       endedAt: null,
       winnerId: null,
     });
-    const roomId = matchDoc._id.toString().toLowerCase();
+    const roomId = matchDoc._id.toString();
     // Save match state in Redis using the same ObjectId
     try {
       await redis.hmset(`match:${roomId}`, {
@@ -62,7 +62,7 @@ router.post('/add-participant', auth, async (req, res) => {
   if (!roomId || typeof roomId !== 'string') {
     return res.status(400).json({ message: 'Room ID required and must be a string' });
   }
-  roomId = roomId.toLowerCase();
+  // roomId = roomId.toLowerCase();
   if (!name || !email) {
     return res.status(400).json({ message: 'Name and email are required' });
   }
@@ -88,8 +88,8 @@ router.post('/add-participant', auth, async (req, res) => {
       participants = [];
     }
     console.log("participants of add-participant",roomId," ; ", participants);
-    // If user already exists (by user ObjectId), do not add again
-    if (participants.find(p => String(p.user) === String(dbUser._id))) {
+    // If user already exists (by user ObjectId or email), do not add again
+    if (participants.find(p => String(p.user) === String(dbUser._id) || p.email === email)) {
       const host = participants[0];
       return res.status(200).json({ message: 'Participant already exists', participants, hostName: host?.username, hostEmail: host?.email });
     }
@@ -105,9 +105,10 @@ router.post('/add-participant', auth, async (req, res) => {
     };
     participants.push(newParticipant);
     // console.log("participants of add-participant", participants);
+    await redis.hset(`match:${roomId}`, 'participants', JSON.stringify(participants));
+    console.log(`[REDIS] Updated match:${roomId} participants    -> : `, participants);
     try {
-      await redis.hset(`match:${roomId}`, 'participants', JSON.stringify(participants));
-      console.log(`[REDIS] Updated match:${roomId} participants:`, participants);
+      console.log("participants of add-participant", roomId, " ; ", participants);
     } catch (redisErr) {
       return res.status(500).json({ message: 'Failed to update participants in Redis', error: redisErr.message });
     }
@@ -127,7 +128,7 @@ router.post('/join', auth, async (req, res) => {
   if (!roomId || typeof roomId !== 'string') {
     return res.status(400).json({ message: 'Room ID required and must be a string' });
   }
-  roomId = roomId.toLowerCase();
+  // roomId = roomId.toLowerCase();
   try {
     const matchState = await redis.hgetall(`match:${roomId}`);
     if (!matchState) {
