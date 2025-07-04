@@ -171,6 +171,68 @@ function initSocket(server) {
         });
       }
     });
+
+    // MATCH FINISH - Handle when a user completes the typing test
+    socket.on('matchFinish', async (userStats) => {
+      console.log('[SOCKET] matchFinish received:', userStats);
+      const { roomName, name, email, wpm, accuracy, mistakes, correctChars, totalTime } = userStats;
+      
+      if (!roomName) {
+        console.log('[SOCKET] matchFinish called with undefined roomName, ignoring.');
+        return;
+      }
+
+      // Store the result in Redis
+      let roomState = await redis.hgetall(`match:${roomName}`);
+      let results = [];
+      try { 
+        results = JSON.parse(roomState.results || '[]'); 
+      } catch { 
+        results = []; 
+      }
+
+      // Add the user's result
+      const userResult = {
+        name,
+        email,
+        wpm,
+        accuracy,
+        mistakes,
+        correctChars,
+        totalTime,
+        timestamp: Date.now()
+      };
+
+      results.push(userResult);
+      await redis.hset(`match:${roomName}`, 'results', JSON.stringify(results));
+
+      // Get all participants to check if everyone has finished
+      let participants = [];
+      try { 
+        participants = JSON.parse(roomState.participants || '[]'); 
+      } catch { 
+        participants = []; 
+      }
+
+      // If all participants have finished, emit matchResult with top 5
+      if (results.length >= participants.length) {
+        // Sort by WPM (highest first), then by accuracy, then by fewer mistakes
+        const rankedResults = results
+          .sort((a, b) => {
+            if (b.wpm !== a.wpm) return b.wpm - a.wpm;
+            if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
+            return a.mistakes - b.mistakes;
+          })
+          .slice(0, 5) // Get top 5
+          .map((result, index) => ({
+            ...result,
+            position: index + 1
+          }));
+
+        console.log('[SOCKET] Emitting matchResult with ranked results:', rankedResults);
+        io.to(roomName).emit('matchResult', { ranked: rankedResults });
+      }
+    });
   });
 }
 

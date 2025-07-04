@@ -18,6 +18,7 @@ import Results from './Results.jsx';
 import TypingChartOrKeyboard from './TypingChartOrKeyboard.jsx';
 import ShowMember from './ShowMember.jsx';
 import { useSocket } from '../Context/Socket';
+import { useAuth } from '../Context/AuthContext';
 import { useSelector, useDispatch } from 'react-redux';
 import { setRoomName, setParticipants, setMode, setTimeLimit, setWordList, setStarted } from '../features/matchRealtimeSlice';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -94,12 +95,19 @@ const MatchInterface = ({darkMode}) => {
   const [progressData, setProgressData] = useState([]); // Array of {time, wpm}
   const [intervalStep, setIntervalStep] = useState(0); // Track elapsed time in 5s steps
   const { socket } = useSocket();
+  const { userEmail, userName } = useAuth();
   const dispatch = useDispatch();
   const roomName = useSelector(state => state.matchRealtime.roomName);
   const participants = useSelector(state => state.matchRealtime.participants);
   const [isTypingActive, setIsTypingActive] = useState(false);
   const [cooldown, setCooldown] = useState(false);
   const [cooldownValue, setCooldownValue] = useState(3);
+  const matchFinishTimeoutRef = useRef(null);
+  // Add refs for latest stats
+  const wpmRef = useRef(0);
+  const accuracyRef = useRef(100);
+  const mistakesStateRef = useRef(0);
+  const correctCharsStateRef = useRef(0);
 
   // Listen for 'all participants' event and update Redux
   React.useEffect(() => {
@@ -118,18 +126,7 @@ const MatchInterface = ({darkMode}) => {
   React.useEffect(() => {
     if (!socket) return;
     const handleMatchStart = ({ roomName, participants, mode, timeLimit, wordList, isStarted = true }) => {
-      console.log('DEBUG setRoomName:', setRoomName);
-      console.log('DEBUG setParticipants:', setParticipants);
-      console.log('DEBUG setMode:', setMode);
-      console.log('DEBUG setTimeLimit:', setTimeLimit);
-      console.log('DEBUG setWordList:', setWordList);
-      console.log('DEBUG setIsStarted:', setIsStarted);
-      console.log('setRoomName(roomName):', setRoomName(roomName));
-      console.log('setParticipants(participants):', setParticipants(participants));
-      console.log('setMode(mode):', setMode(mode));
-      console.log('setTimeLimit(timeLimit):', setTimeLimit(timeLimit));
-      console.log('setWordList(wordList):', setWordList(wordList));
-      console.log('setStarted(isStarted):', setStarted(isStarted));
+       
       dispatch(setMode(mode));
       dispatch(setTimeLimit(timeLimit));
       dispatch(setWordList(wordList));
@@ -146,12 +143,42 @@ const MatchInterface = ({darkMode}) => {
       setIsIncorrectKey(false);
       let countdown = 3;
       setCooldownValue(countdown);
+
+
+
+
+
+
+  // Simple setTimeout for matchFinish event
+  const totalTime = (timeLimit || 60) + 3;
+  matchFinishTimeoutRef.current = setTimeout(() => {
+    if (socket) {
+      const userStats = {
+        name: userName || 'Anonymous',
+        email: userEmail || 'anonymous@example.com',
+        roomName: roomName,
+        wpm: wpmRef.current,
+        accuracy: accuracyRef.current,
+        mistakes: mistakesStateRef.current,
+        correctChars: correctCharsStateRef.current,
+        totalTime: timeLimit || 60
+      };
+      console.log('Emitting matchFinish with stats:', userStats);
+      socket.emit('matchFinish', userStats);
+    }
+  }, totalTime * 1000);
+
+
+
+
+
       const interval = setInterval(() => {
         countdown--;
         setCooldownValue(countdown);
         if (countdown <= 0) {
           clearInterval(interval);
           setCooldown(false);
+          setTestDuration(timeLimit || 60);
           setIsTypingActive(true);
           setTimeLeft(timeLimit || 60);
           setIsActive(true); // Start timer immediately after cooldown
@@ -159,12 +186,17 @@ const MatchInterface = ({darkMode}) => {
           setCurrentIndex(0);
           setIsStarted(true);
           setIsFinished(false);
+          
+       
         }
       }, 1000);
     };
     socket.on('matchStart', handleMatchStart);
     return () => {
       socket.off('matchStart', handleMatchStart);
+      if (matchFinishTimeoutRef.current) {
+        clearTimeout(matchFinishTimeoutRef.current);
+      }
     };
   }, [socket, dispatch]);
 
@@ -208,6 +240,11 @@ const MatchInterface = ({darkMode}) => {
     setAccuracy(currentAccuracy);
     setMistakes(mistakesRef.current);
     setCorrectChars(correctCharsRef.current);
+    // Update refs for latest stats
+    wpmRef.current = currentWpm;
+    accuracyRef.current = currentAccuracy;
+    mistakesStateRef.current = mistakesRef.current;
+    correctCharsStateRef.current = correctCharsRef.current;
   }, [timeLeft, testDuration]);
 
   // Timer logic
