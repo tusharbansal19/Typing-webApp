@@ -50,7 +50,7 @@ function App() {
           <Route path="/otp" element={<ProtectLogin><OtpPage /></ProtectLogin>} />
 
           {/* All other pages: with navbar/footer */}
-          <Route element={<MainLayout darkMode={darkMode} setDarkMode={setDarkMode} />}>
+          <Route path='/'  element={<MainLayout darkMode={darkMode}  setDarkMode={setDarkMode} />}>
             <Route path="/" element={<Home darkMode={darkMode}/>} />
             <Route path="/typing" element={<TypingInterface darkMode={darkMode} setDarkMode={setDarkMode} />} />
             <Route path="/host" element={<ComppProtect><HostPage darkMode={darkMode} setDarkMode={setDarkMode} /></ComppProtect>} />
