@@ -19,6 +19,9 @@ const iconMap = [
 ];
 
 const ResultLeaderboard = ({ ranked = [] }) => {
+
+
+  console.log("this is rank ",ranked);
   const navigate = useNavigate();
   
   useEffect(() => {

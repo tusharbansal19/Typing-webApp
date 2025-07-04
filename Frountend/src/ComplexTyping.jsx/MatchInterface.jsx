@@ -21,6 +21,7 @@ import { useSocket } from '../Context/Socket';
 import { useAuth } from '../Context/AuthContext';
 import { useSelector, useDispatch } from 'react-redux';
 import { setRoomName, setParticipants, setMode, setTimeLimit, setWordList, setStarted } from '../features/matchRealtimeSlice';
+import ResultLeaderboard from './ResultLeaderboard.jsx';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Text samples for typing test
@@ -108,6 +109,8 @@ const MatchInterface = ({darkMode}) => {
   const accuracyRef = useRef(100);
   const mistakesStateRef = useRef(0);
   const correctCharsStateRef = useRef(0);
+  // Leaderboard state
+  const [leaderboardData, setLeaderboardData] = useState(null);
 
   // Listen for 'all participants' event and update Redux
   React.useEffect(() => {
@@ -211,6 +214,18 @@ const MatchInterface = ({darkMode}) => {
       socket.off('statusUpdated', handleStatusUpdated);
     };
   }, [socket, dispatch]);
+
+  // Listen for 'matchResult' event and update leaderboard state
+  React.useEffect(() => {
+    if (!socket) return;
+    const handleMatchResult = (rankedArray) => {
+      setLeaderboardData(rankedArray);
+    };
+    socket.on('matchResult', handleMatchResult);
+    return () => {
+      socket.off('matchResult', handleMatchResult);
+    };
+  }, [socket]);
 
   // Initialize text
   useEffect(() => {
@@ -560,6 +575,10 @@ const MatchInterface = ({darkMode}) => {
                   correctChars={correctChars}
                   mistakes={mistakes}
                 />
+                {/* Leaderboard */}
+                {isFinished && leaderboardData && (
+                  <ResultLeaderboard ranked={leaderboardData.ranked} />
+                )}
               </>
             )}
           </div>
