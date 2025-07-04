@@ -56,13 +56,13 @@ function App() {
             <OtpPage />
           </ProtectLogin>
             } />
-          <Route path="/" element={<ComppProtect>
+          <Route path="/" element={
             <Home darkMode={darkMode}/>
-          </ComppProtect>
+        
             } />
-          <Route path="/typing" element={<ComppProtect>
+          <Route path="/typing" element={
             <TypingInterface darkMode={darkMode} setDarkMode={setDarkMode} />
-          </ComppProtect>
+          
             } />
           <Route path="/host" element={
             <ComppProtect>
@@ -86,21 +86,21 @@ function App() {
             
           </ComppProtect>
             } />
-          <Route path='/contact' element={<ComppProtect>
+          <Route path='/contact' element={
             <ContactUsPage  darkMode={darkMode} />
-          </ComppProtect>
+       
             } />
-          <Route path ="/about" element={<ComppProtect>
+          <Route path ="/about" element={
             <AboutUsPage darkMode={darkMode}/>
-          </ComppProtect>
+       
             } />
-          <Route path='/contest' element={<ComppProtect>
+          <Route path='/contest' element={
             <ContestSection darkMode={darkMode} />
-          </ComppProtect>
+         
             } />
-          <Route path='/learn' element={<ComppProtect>
+          <Route path='/learn' element={
             <LearnPage darkMode={darkMode}/>
-          </ComppProtect>
+         
             }/>
           <Route path='/*' element={
             <h1>not reachable</h1>
