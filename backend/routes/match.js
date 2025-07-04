@@ -32,22 +32,32 @@ router.post('/create', auth, async (req, res) => {
       participants: [participantObj],
       mode: 'multiplayer',
       timeLimit: 60,
-      wordList: [],
+      wordList: "a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed",
       
       startedAt: null,
       endedAt: null,
+      isStarted: false,
       winnerId: null,
     });
     const roomId = matchDoc._id.toString();
     participantObj.isReady = false;
-    console.log("participantObj",participantObj);
+    ////console.log("participantObj",participantObj);
     // Save match state in Redis using the same ObjectId
     try {
       await redis.hmset(`match:${roomId}`, {
+        mode: 'multiplayer',
+        timeLimit: 60,
+        isStarted: false,
+        endedAt: null,
+        winnerId: null,
+        startedAt: null,
+        winner: null,
+
         started: false,
         participants: JSON.stringify([participantObj]),
+        wordList: "a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed",
       });
-      console.log(`[REDIS] Created match:${roomId} with participants:`, [participantObj]);
+      ////console.log(`[REDIS] Created match:${roomId} with participants:`, [participantObj]);
     } catch (redisErr) {
       return res.status(500).json({ message: 'Failed to save match in Redis', error: redisErr.message });
     }
@@ -91,7 +101,7 @@ router.post('/add-participant', auth, async (req, res) => {
     } catch (e) {
       participants = [];
     }
-    console.log("participants of add-participant",roomId," ; ", participants);
+    ////console.log("participants of add-participant",roomId," ; ", participants);
     // If user already exists (by user ObjectId or email), do not add again
     if (participants.find(p => String(p.user) === String(dbUser._id) || p.email === email)) {
       const host = participants[0];
@@ -109,11 +119,11 @@ router.post('/add-participant', auth, async (req, res) => {
       totalTyped: 0,
     };
     participants.push(newParticipant);
-    // console.log("participants of add-participant", participants);
+    // ////console.log("participants of add-participant", participants);
     await redis.hset(`match:${roomId}`, 'participants', JSON.stringify(participants));
-    console.log(`[REDIS] Updated match:${roomId} participants    -> : `, participants);
+    ////console.log(`[REDIS] Updated match:${roomId} participants    -> : `, participants);
     try {
-      console.log("participants of add-participant", roomId, " ; ", participants);
+      ////console.log("participants of add-participant", roomId, " ; ", participants);
     } catch (redisErr) {
       return res.status(500).json({ message: 'Failed to update participants in Redis', error: redisErr.message });
     }
@@ -142,8 +152,8 @@ router.post('/join', auth, async (req, res) => {
     if (matchState.started === 'true') {
       return res.status(403).json({ message: 'Match already started' });
     }
-    console.log("matchState of join", matchState);
-    console.log("matchState of join", matchState.participants);
+    ////console.log("matchState of join", matchState);
+    ////console.log("matchState of join", matchState.participants);
     if (!matchState.participants) {
       return res.status(500).json({ message: 'Participants missing in match state' });
     }
@@ -165,10 +175,10 @@ router.post('/join', auth, async (req, res) => {
 const fn= async (req, res) => {
   try {
     const result = await Match.deleteMany({});
-    console.log("Deleted all matches....");
+    ////console.log("Deleted all matches....");
     // return res.status(200).json({ message: 'All matches deleted', deletedCount: result.deletedCount });
   } catch (err) {
-    console.log("Error deleting matches....");
+    ////console.log("Error deleting matches....");
     // return res.status(500).json({ message: err.message });
   }}
 fn();

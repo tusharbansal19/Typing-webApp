@@ -22,6 +22,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { checkAuth } from './features/user/userSlice';
 import TypingInterface from './SimpleTyping/typingComponent';
 import MatchInterface from './ComplexTyping.jsx/MatchInterface';
+import { MatchProvider } from './Context/MatchContext';
 
 
 function App() {
@@ -65,9 +66,9 @@ function App() {
             } />
           <Route path="/host" element={
             <ComppProtect>
-              <SocketProvider>
+              {/* <SocketProvider> */}
                 <HostPage darkMode={darkMode} setDarkMode={setDarkMode} />
-              </SocketProvider>
+              {/* </SocketProvider> */}
             </ComppProtect>
           } />
           <Route path='/dashboard' element={<ComppProtect>
@@ -76,9 +77,13 @@ function App() {
             } />
             
           <Route path='/match/:roomName' element={<ComppProtect>
-            <SocketProvider>
+           
+            <MatchProvider>
+              <SocketProvider>
               <MatchInterface darkMode={darkMode} setDarkMode={setDarkMode} />
             </SocketProvider>
+            </MatchProvider>
+            
           </ComppProtect>
             } />
           <Route path='/contact' element={<ComppProtect>
@@ -103,6 +108,7 @@ function App() {
         </Routes>
       </Router>
     </AuthProvider>
+    
   );
 }
 

@@ -16,6 +16,13 @@ import Controls from './Controls.jsx';
 import TextDisplay from './TextDisplay.jsx';
 import Results from './Results.jsx';
 import TypingChartOrKeyboard from './TypingChartOrKeyboard.jsx';
+import ShowMember from './ShowMember.jsx';
+import { useSocket } from '../Context/Socket';
+import { useAuth } from '../Context/AuthContext';
+import { useSelector, useDispatch } from 'react-redux';
+import { setRoomName, setParticipants, setMode, setTimeLimit, setWordList, setStarted } from '../features/matchRealtimeSlice';
+import ResultLeaderboard from './ResultLeaderboard.jsx';
+import { useParams } from 'react-router-dom';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Text samples for typing test
@@ -27,60 +34,7 @@ const TEXT_SAMPLES = [
 "a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed",];
 
 // Virtual keyboard layout
-const KEYBOARD_LAYOUT = [
-  ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
-  ['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'],
-  ['z', 'x', 'c', 'v', 'b', 'n', 'm']
-];
 
-// Virtual keyboard component
-const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect }) => {
-  return (
-    <div className="glass-card rounded-xl p-6 shadow-lg mb-8">
-      <div className="flex items-center justify-center mb-4">
-        <Keyboard className="w-6 h-6 mr-2 text-blue-600 dark:text-blue-200 drop-shadow-lg" />
-        <h3 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-500 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
-          Virtual Keyboard
-        </h3>
-      </div>
-      <div className="flex flex-col items-center space-y-2">
-        {KEYBOARD_LAYOUT.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex justify-center">
-            {row.map((key) => (
-              <KeyboardKey
-                key={key}
-                keyChar={key}
-                isPressed={pressedKey === key}
-                isCorrect={isCorrect}
-                isIncorrect={isIncorrect}
-              />
-            ))}
-          </div>
-        ))}
-        
-        {/* Spacebar */}
-        <div className="flex justify-center mt-2">
-          <div
-            className={`
-              flex items-center justify-center w-40 h-10 rounded-lg font-semibold
-              transition-all duration-150 ease-in-out
-              ${pressedKey === ' ' 
-                ? isCorrect 
-                  ? 'bg-green-400/80 text-white shadow-[0_0_8px_2px_rgba(34,197,94,0.7)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)]'
-                  : isIncorrect 
-                    ? 'bg-red-400/80 text-white shadow-[0_0_8px_2px_rgba(239,68,68,0.7)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)]'
-                    : 'bg-yellow-300/80 text-black shadow-[0_0_8px_2px_rgba(253,224,71,0.7)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)]'
-                : 'bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 backdrop-blur-md border border-white/30 dark:border-gray-500/30'
-              }
-            `}
-          >
-            SPACE
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // Stats card component
 const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
@@ -107,7 +61,9 @@ const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
 
 // Main typing interface component
 const MatchInterface = ({darkMode}) => {
+  // simple typing test................................................................................
   // Core state
+
   const [currentText, setCurrentText] = useState('');
   const [inputText, setInputText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -140,6 +96,163 @@ const MatchInterface = ({darkMode}) => {
   const startTimeRef = useRef(null);
   const [progressData, setProgressData] = useState([]); // Array of {time, wpm}
   const [intervalStep, setIntervalStep] = useState(0); // Track elapsed time in 5s steps
+  const { socket } = useSocket();
+  const { userEmail, userName } = useAuth();
+  const dispatch = useDispatch();
+  const roomName = useSelector(state => state.matchRealtime.roomName);
+  const participants = useSelector(state => state.matchRealtime.participants);
+  const [isTypingActive, setIsTypingActive] = useState(false);
+  const [cooldown, setCooldown] = useState(false);
+  const [cooldownValue, setCooldownValue] = useState(3);
+  const matchFinishTimeoutRef = useRef(null);
+  // Add refs for latest stats
+  const wpmRef = useRef(0);
+  const accuracyRef = useRef(100);
+  const mistakesStateRef = useRef(0);
+  const correctCharsStateRef = useRef(0);
+  // Leaderboard state
+  const [leaderboardData, setLeaderboardData] = useState(null);
+  const { roomName: urlRoomName } = useParams();
+  const [socketReady, setSocketReady] = useState(false);
+
+  useEffect(() => {
+    if (!socket || !urlRoomName || !userEmail) return;
+    if (socket.connected) {
+      socket.emit('joinRoom', {
+        roomName: urlRoomName,
+        socketId: socket.id,
+        email: userEmail,
+      });
+      setSocketReady(true);
+    } else {
+      // Wait for socket to connect
+      const onConnect = () => {
+        socket.emit('joinRoom', {
+          roomName: urlRoomName,
+          socketId: socket.id,
+          email: userEmail,
+        });
+        setSocketReady(true);
+      };
+      socket.on('connect', onConnect);
+      return () => socket.off('connect', onConnect);
+    }
+  }, [socket, urlRoomName, userEmail]);
+
+  // Listen for 'all participants' event and update Redux
+  React.useEffect(() => {
+    if (!socket) return;
+    const handleAllParticipants = ({ roomName, participants }) => {
+      dispatch(setRoomName(roomName));
+      dispatch(setParticipants(participants));
+    };
+    socket.on('all participants', handleAllParticipants);
+    return () => {
+      socket.off('all participants', handleAllParticipants);
+    };
+  }, [socket, dispatch]);
+
+  // Listen for 'matchStart' event and update Redux
+  React.useEffect(() => {
+    if (!socket) return;
+    const handleMatchStart = ({ roomName, participants, mode, timeLimit, wordList, isStarted = true }) => {
+       
+      dispatch(setMode(mode));
+      dispatch(setTimeLimit(timeLimit));
+      dispatch(setWordList(wordList));
+      dispatch(setStarted(true));
+      setCooldown(true);
+      setIsTypingActive(false);
+      setCooldownValue(3);
+      setCurrentText(wordList);
+      mistakesRef.current = 0;
+      correctCharsRef.current = 0;
+      startTimeRef.current = null;
+      setPressedKey('');
+      setIsCorrectKey(false);
+      setIsIncorrectKey(false);
+      let countdown = 3;
+      setCooldownValue(countdown);
+
+
+
+
+
+
+  // Simple setTimeout for matchFinish event
+  const totalTime = (timeLimit || 60) + 3;
+  matchFinishTimeoutRef.current = setTimeout(() => {
+    if (socket) {
+      const userStats = {
+        name: userName || 'Anonymous',
+        email: userEmail || 'anonymous@example.com',
+        roomName: roomName,
+        wpm: wpmRef.current,
+        accuracy: accuracyRef.current,
+        mistakes: mistakesStateRef.current,
+        correctChars: correctCharsStateRef.current,
+        totalTime: timeLimit || 60
+      };
+      console.log('Emitting matchFinish with stats:', userStats);
+      socket.emit('matchFinish', userStats);
+    }
+  }, totalTime * 1000);
+
+
+
+
+
+      const interval = setInterval(() => {
+        countdown--;
+        setCooldownValue(countdown);
+        if (countdown <= 0) {
+          clearInterval(interval);
+          setCooldown(false);
+          setTestDuration(timeLimit || 60);
+          setIsTypingActive(true);
+          setTimeLeft(timeLimit || 60);
+          setIsActive(true); // Start timer immediately after cooldown
+          setInputText('');
+          setCurrentIndex(0);
+          setIsStarted(true);
+          setIsFinished(false);
+          
+       
+        }
+      }, 1000);
+    };
+    socket.on('matchStart', handleMatchStart);
+    return () => {
+      socket.off('matchStart', handleMatchStart);
+      if (matchFinishTimeoutRef.current) {
+        clearTimeout(matchFinishTimeoutRef.current);
+      }
+    };
+  }, [socket, dispatch]);
+
+  // Listen for 'statusUpdated' event and update Redux participants
+  React.useEffect(() => {
+    if (!socket) return;
+    const handleStatusUpdated = ({ participants, roomName: eventRoomName }) => {
+      dispatch(setParticipants(participants));
+    };
+    socket.on('statusUpdated', handleStatusUpdated);
+    return () => {
+      socket.off('statusUpdated', handleStatusUpdated);
+    };
+  }, [socket, dispatch]);
+
+  // Listen for 'matchResult' event and update leaderboard state
+  React.useEffect(() => {
+    if (!socket) return;
+    const handleMatchResult = (rankedArray) => {
+      setLeaderboardData(rankedArray);
+    };
+    socket.on('matchResult', handleMatchResult);
+    return () => {
+      socket.off('matchResult', handleMatchResult);
+    };
+  }, [socket]);
 
   // Initialize text
   useEffect(() => {
@@ -169,6 +282,11 @@ const MatchInterface = ({darkMode}) => {
     setAccuracy(currentAccuracy);
     setMistakes(mistakesRef.current);
     setCorrectChars(correctCharsRef.current);
+    // Update refs for latest stats
+    wpmRef.current = currentWpm;
+    accuracyRef.current = currentAccuracy;
+    mistakesStateRef.current = mistakesRef.current;
+    correctCharsStateRef.current = correctCharsRef.current;
   }, [timeLeft, testDuration]);
 
   // Timer logic
@@ -402,84 +520,113 @@ const MatchInterface = ({darkMode}) => {
     return 'text-gray-700 dark:text-gray-300';
   };
 
+ 
+
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}>
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <Header />
-
-        {/* Controls */}
-        <Controls
-          testDuration={testDuration}
-          setTestDuration={setTestDuration}
-          setTimeLeft={setTimeLeft}
-          isActive={isActive}
-          resetTest={resetTest}
-        />
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
-          <StatsCard icon={Target} label="WPM" value={wpm} color="green" />
-          <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
-          <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
-        </div>
-
-        {/* Start prompt */}
-        {!isStarted && (
-          <div className="text-center mb-8">
-            <p className="text-2xl text-gray-600 dark:text-gray-300 animate-pulse">
-              Press any key to start typing...
-            </p>
+    <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}>
+      <div className="w-full mx-auto px-4 py-8">
+        {/* Loader until socket is ready */}
+        {!socketReady ? (
+          <div className="flex flex-col items-center justify-center min-h-[300px]">
+            <div className="loader mb-4"></div>
+            <p className="text-xl font-semibold text-gray-700 dark:text-gray-200">Connecting to match room...</p>
           </div>
+        ) : (
+          <>
+            {/* Responsive layout: main + sidebar */}
+            {/* Leaderboard */}
+            {isFinished && leaderboardData ? (
+              <div className='w-full min-h-screem'>
+                <ResultLeaderboard ranked={leaderboardData.ranked} />
+                <div className="w-full flex flex-col items-center justify-center">
+                  <Results
+                    isFinished={isFinished}
+                    wpm={wpm}
+                    accuracy={accuracy}
+                    correctChars={correctChars}
+                    mistakes={mistakes}
+                    testDuration={testDuration}
+                    progressData={progressData}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col lg:flex-row lg:items-start w-full">
+                {/* Main content */}
+                <div className="flex-1 w-full lg:w-3/4 lg:ml-6">
+                  {cooldown || !isTypingActive ? (
+                    <div className="flex flex-col items-center justify-center min-h-[300px] relative">
+                      <h2 className="text-3xl font-bold text-center mt-12">Get Ready...</h2>
+                      {cooldown && (
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                          <span className="text-7xl font-extrabold text-yellow-400 drop-shadow-lg animate-pulse">{cooldownValue > 0 ? cooldownValue : ''}</span>
+                        </div>
+                      )}
+                      <div className="block lg:hidden mt-4">
+                        <ShowMember darkMode={darkMode} />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Header */}
+                      <Header />
+                      {/* Controls */}
+                      {/* <Controls
+                        testDuration={testDuration}
+                        setTestDuration={setTestDuration}
+                        setTimeLeft={setTimeLeft}
+                        isActive={isActive}
+                        resetTest={resetTest}
+                      /> */}
+                      {/* Stats */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
+                        <StatsCard icon={Target} label="WPM" value={wpm} color="green" />
+                        <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
+                        <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
+                      </div>
+                      {/* Start prompt */}
+                      {!isStarted && (
+                        <div className="text-center mb-8">
+                          <p className="text-2xl text-gray-600 dark:text-gray-300 animate-pulse">
+                            Press any key to start typing...
+                          </p>
+                        </div>
+                      )}
+                      {/* Text display */}
+                      <TextDisplay
+                        currentText={currentText}
+                        inputText={inputText}
+                        currentIndex={currentIndex}
+                        textRef={textRef}
+                        activeCharRef={activeCharRef}
+                        getCharStyle={getCharStyle}
+                      />
+                      {/* ShowMember below text area on mobile */}
+                      {/* Virtual keyboard or Chart */}
+                      <TypingChartOrKeyboard
+                        isFinished={isFinished}
+                        testDuration={testDuration}
+                        progressData={progressData}
+                        pressedKey={pressedKey}
+                        isCorrectKey={isCorrectKey}
+                        isIncorrectKey={isIncorrectKey}
+                      />
+                    </>
+                  )}
+                </div>
+                {/* Sidebar on large screens */}
+                {cooldown || !isTypingActive &&
+                  <div className="hidden lg:block lg:w-1/4 lg:ml-6">
+                    <ShowMember darkMode={darkMode} />
+                  </div>}
+              </div>
+            )}
+          </>
         )}
-
-        {/* Text display */}
-        <TextDisplay
-          currentText={currentText}
-          inputText={inputText}
-          currentIndex={currentIndex}
-          textRef={textRef}
-          activeCharRef={activeCharRef}
-          getCharStyle={getCharStyle}
-        />
-
-        {/* Virtual keyboard or Chart */}
-        <TypingChartOrKeyboard
-          isFinished={isFinished}
-          testDuration={testDuration}
-          progressData={progressData}
-          pressedKey={pressedKey}
-          isCorrectKey={isCorrectKey}
-          isIncorrectKey={isIncorrectKey}
-        />
-
-        {/* Results */}
-        <Results
-          isFinished={isFinished}
-          wpm={wpm}
-          accuracy={accuracy}
-          correctChars={correctChars}
-          mistakes={mistakes}
-        />
       </div>
     </div>
   );
 };
 
 export default MatchInterface;
-
-<style jsx global>{`
-  .glass-card {
-    background: rgba(255,255,255,0.92);
-    box-shadow: 0 8px 32px 0 rgba(80,80,180,0.10), 0 2px 8px 0 rgba(0,0,0,0.04);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border-radius: 18px;
-    border: 1.5px solid rgba(180,180,220,0.18);
-  }
-  .dark .glass-card {
-    background: rgba(30,41,59,0.45);
-    border: 1px solid rgba(255,255,255,0.10);
-  }
-`}</style>
