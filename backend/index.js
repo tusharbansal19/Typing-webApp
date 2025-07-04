@@ -14,7 +14,7 @@ const PORT_NO = process.env.PORT || 3000; // Fallback to 3000 if PORT isn't set
 const server = http.createServer(app); // HTTP server
 
 // Connect to MongoDB
-connect("mongodb://127.0.0.1:27017/ukurl");
+connect(process.env.URL);
 
 // Middleware
 app.use(cors(

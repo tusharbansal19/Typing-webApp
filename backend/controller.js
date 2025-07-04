@@ -3,11 +3,11 @@ let url = require("./url");
 
 async function handlepost(req, res) {
   let {urlid,email} = req.body;
-  console.log(email)
+  //console.log(email)
   let sid=shortid();
   let urll = "http://localhost:8000/"+sid;
   
-  console.log(urlid, "short is is ", sid);
+  //console.log(urlid, "short is is ", sid);
 
   let x = await url.create({
     email,
@@ -15,7 +15,7 @@ async function handlepost(req, res) {
     sorturl: sid,
     visits: [],
   });
-  console.log(x)
+  //console.log(x)
   return res.status(201).json({urll,
   });
 }
@@ -29,7 +29,7 @@ async function handlerender(req, res) {
   );
   }
     catch(err){
-      console.log(err);
+      //console.log(err);
       return res.status(402).json(err,);
     }
 }

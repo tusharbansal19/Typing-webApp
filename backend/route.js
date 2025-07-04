@@ -18,8 +18,8 @@ router.get("/visits/:id",handlegetpatch);
 // Route to search for a URL across multiple fields
 router.post("/search", async (req, res) => {
   const {query,email} = req.body;
-  console.log("query"+query,email);
-  console.log("email"+email)
+  //console.log("query"+query,email);
+  //console.log("email"+email)
   try {
     const results = await url.find({
         email,  // Only search URLs associated with the given email address
@@ -29,11 +29,11 @@ router.post("/search", async (req, res) => {
        
       ],
     });
-    console.log("results"+results);
+    //console.log("results"+results);
 
     return res.status(200).json(results);
   } catch (error) {
-    console.error("Error during search: ", error);
+    //console.error("Error during search: ", error);
     return res.status(500).json({ error: "Server error" });
   }
 });

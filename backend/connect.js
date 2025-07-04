@@ -1,6 +1,11 @@
 const mongoose  = require("mongoose");
 
+let isConnected = false;
+
 async function connect(url){
-await mongoose.connect(url).then(()=>console.log("mongo DB connected..."));
+  if (isConnected) return;
+  await mongoose.connect(url);
+  isConnected = true;
+  console.log("mongo DB connected...");
 }
-module.exports={connect,};
+module.exports = { connect };

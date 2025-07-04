@@ -9,7 +9,7 @@ const matchRoutes = require('./routes/match');
 const app = express();
 
 // Connect to MongoDB
-connect(process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/ukurl');
+// connect(process.env.MONGO_URL || 'mongodb://127.0.0.1:27017/ukurl');
 
 // CORS setup for credentials
 app.use(cors({
