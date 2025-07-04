@@ -10,7 +10,7 @@ export const SocketProvider = ({ children }) => {
   const [roomName, setRoomName] = useState("");
 
   useEffect(() => {
-    const newSocket = io("http://localhost:3000", {
+    const newSocket = io("https://typing-webapp-backend.onrender.com/", {
       transports: ['websocket'],
       reconnection: true,
     });
