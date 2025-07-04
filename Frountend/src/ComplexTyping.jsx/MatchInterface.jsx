@@ -499,7 +499,27 @@ const MatchInterface = ({darkMode}) => {
     <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}>
       <div className="w-full mx-auto px-4 py-8">
         {/* Responsive layout: main + sidebar */}
-        <div className="flex flex-col lg:flex-row lg:items-start w-full">
+      
+                {/* Leaderboard */}
+                {isFinished && leaderboardData ? (               <div className='w-full min-h-screem'>
+
+                  <ResultLeaderboard ranked={leaderboardData.ranked} />
+                  <div className="w-full flex flex-col items-center justify-center">
+
+                  <Results
+                  isFinished={isFinished}
+                  wpm={wpm}
+                  accuracy={accuracy}
+                  correctChars={correctChars}
+                  mistakes={mistakes}
+                  testDuration={testDuration}
+                  progressData={progressData}
+                  />
+                  </div>
+                  </div>
+                
+                ) : (
+                  <div className="flex flex-col lg:flex-row lg:items-start w-full">
           {/* Main content */}
           <div className="flex-1 w-full lg:w-3/4 lg:ml-6">
             {cooldown || !isTypingActive ? (
@@ -568,17 +588,7 @@ const MatchInterface = ({darkMode}) => {
                 />
 
                 {/* Results */}
-                <Results
-                  isFinished={isFinished}
-                  wpm={wpm}
-                  accuracy={accuracy}
-                  correctChars={correctChars}
-                  mistakes={mistakes}
-                />
-                {/* Leaderboard */}
-                {isFinished && leaderboardData && (
-                  <ResultLeaderboard ranked={leaderboardData.ranked} />
-                )}
+              
               </>
             )}
           </div>
@@ -587,6 +597,8 @@ const MatchInterface = ({darkMode}) => {
             <ShowMember darkMode={darkMode} />
           </div>
         </div>
+                )}
+       
       </div>
     </div>
   );
