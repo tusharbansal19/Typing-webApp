@@ -27,7 +27,7 @@ import MainLayout from './components/MainLayout';
 
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const dispatch = useDispatch();
   const isAuthLoading = useSelector((state) => state.user.isAuthLoading);
 
