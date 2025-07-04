@@ -22,6 +22,7 @@ import { useAuth } from '../Context/AuthContext';
 import { useSelector, useDispatch } from 'react-redux';
 import { setRoomName, setParticipants, setMode, setTimeLimit, setWordList, setStarted } from '../features/matchRealtimeSlice';
 import ResultLeaderboard from './ResultLeaderboard.jsx';
+import { useParams } from 'react-router-dom';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Text samples for typing test
@@ -111,6 +112,32 @@ const MatchInterface = ({darkMode}) => {
   const correctCharsStateRef = useRef(0);
   // Leaderboard state
   const [leaderboardData, setLeaderboardData] = useState(null);
+  const { roomName: urlRoomName } = useParams();
+  const [socketReady, setSocketReady] = useState(false);
+
+  useEffect(() => {
+    if (!socket || !urlRoomName || !userEmail) return;
+    if (socket.connected) {
+      socket.emit('joinRoom', {
+        roomName: urlRoomName,
+        socketId: socket.id,
+        email: userEmail,
+      });
+      setSocketReady(true);
+    } else {
+      // Wait for socket to connect
+      const onConnect = () => {
+        socket.emit('joinRoom', {
+          roomName: urlRoomName,
+          socketId: socket.id,
+          email: userEmail,
+        });
+        setSocketReady(true);
+      };
+      socket.on('connect', onConnect);
+      return () => socket.off('connect', onConnect);
+    }
+  }, [socket, urlRoomName, userEmail]);
 
   // Listen for 'all participants' event and update Redux
   React.useEffect(() => {
@@ -498,108 +525,105 @@ const MatchInterface = ({darkMode}) => {
   return (
     <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}>
       <div className="w-full mx-auto px-4 py-8">
-        {/* Responsive layout: main + sidebar */}
-      
-                {/* Leaderboard */}
-                {isFinished && leaderboardData ? (               <div className='w-full min-h-screem'>
-
-                  <ResultLeaderboard ranked={leaderboardData.ranked} />
-                  <div className="w-full flex flex-col items-center justify-center">
-
+        {/* Loader until socket is ready */}
+        {!socketReady ? (
+          <div className="flex flex-col items-center justify-center min-h-[300px]">
+            <div className="loader mb-4"></div>
+            <p className="text-xl font-semibold text-gray-700 dark:text-gray-200">Connecting to match room...</p>
+          </div>
+        ) : (
+          <>
+            {/* Responsive layout: main + sidebar */}
+            {/* Leaderboard */}
+            {isFinished && leaderboardData ? (
+              <div className='w-full min-h-screem'>
+                <ResultLeaderboard ranked={leaderboardData.ranked} />
+                <div className="w-full flex flex-col items-center justify-center">
                   <Results
-                  isFinished={isFinished}
-                  wpm={wpm}
-                  accuracy={accuracy}
-                  correctChars={correctChars}
-                  mistakes={mistakes}
-                  testDuration={testDuration}
-                  progressData={progressData}
+                    isFinished={isFinished}
+                    wpm={wpm}
+                    accuracy={accuracy}
+                    correctChars={correctChars}
+                    mistakes={mistakes}
+                    testDuration={testDuration}
+                    progressData={progressData}
                   />
-                  </div>
-                  </div>
-                
-                ) : (
-                  <div className="flex flex-col lg:flex-row lg:items-start w-full">
-          {/* Main content */}
-          <div className="flex-1 w-full lg:w-3/4 lg:ml-6">
-            {cooldown || !isTypingActive ? (
-              <div className="flex flex-col items-center justify-center min-h-[300px] relative">
-                <h2 className="text-3xl font-bold text-center mt-12">Get Ready...</h2>
-                {cooldown && (
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                    <span className="text-7xl font-extrabold text-yellow-400 drop-shadow-lg animate-pulse">{cooldownValue > 0 ? cooldownValue : ''}</span>
-                  </div>
-                )}
-                <div className="block lg:hidden mt-4">
-                  <ShowMember darkMode={darkMode} />
                 </div>
               </div>
             ) : (
-              <>
-                {/* Header */}
-                <Header />
-
-                {/* Controls */}
-                <Controls
-                  testDuration={testDuration}
-                  setTestDuration={setTestDuration}
-                  setTimeLeft={setTimeLeft}
-                  isActive={isActive}
-                  resetTest={resetTest}
-                />
-
-                {/* Stats */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                  <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
-                  <StatsCard icon={Target} label="WPM" value={wpm} color="green" />
-                  <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
-                  <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
+              <div className="flex flex-col lg:flex-row lg:items-start w-full">
+                {/* Main content */}
+                <div className="flex-1 w-full lg:w-3/4 lg:ml-6">
+                  {cooldown || !isTypingActive ? (
+                    <div className="flex flex-col items-center justify-center min-h-[300px] relative">
+                      <h2 className="text-3xl font-bold text-center mt-12">Get Ready...</h2>
+                      {cooldown && (
+                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                          <span className="text-7xl font-extrabold text-yellow-400 drop-shadow-lg animate-pulse">{cooldownValue > 0 ? cooldownValue : ''}</span>
+                        </div>
+                      )}
+                      <div className="block lg:hidden mt-4">
+                        <ShowMember darkMode={darkMode} />
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Header */}
+                      <Header />
+                      {/* Controls */}
+                      {/* <Controls
+                        testDuration={testDuration}
+                        setTestDuration={setTestDuration}
+                        setTimeLeft={setTimeLeft}
+                        isActive={isActive}
+                        resetTest={resetTest}
+                      /> */}
+                      {/* Stats */}
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                        <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
+                        <StatsCard icon={Target} label="WPM" value={wpm} color="green" />
+                        <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
+                        <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
+                      </div>
+                      {/* Start prompt */}
+                      {!isStarted && (
+                        <div className="text-center mb-8">
+                          <p className="text-2xl text-gray-600 dark:text-gray-300 animate-pulse">
+                            Press any key to start typing...
+                          </p>
+                        </div>
+                      )}
+                      {/* Text display */}
+                      <TextDisplay
+                        currentText={currentText}
+                        inputText={inputText}
+                        currentIndex={currentIndex}
+                        textRef={textRef}
+                        activeCharRef={activeCharRef}
+                        getCharStyle={getCharStyle}
+                      />
+                      {/* ShowMember below text area on mobile */}
+                      {/* Virtual keyboard or Chart */}
+                      <TypingChartOrKeyboard
+                        isFinished={isFinished}
+                        testDuration={testDuration}
+                        progressData={progressData}
+                        pressedKey={pressedKey}
+                        isCorrectKey={isCorrectKey}
+                        isIncorrectKey={isIncorrectKey}
+                      />
+                    </>
+                  )}
                 </div>
-
-                {/* Start prompt */}
-                {!isStarted && (
-                  <div className="text-center mb-8">
-                    <p className="text-2xl text-gray-600 dark:text-gray-300 animate-pulse">
-                      Press any key to start typing...
-                    </p>
-                  </div>
-                )}
-
-                {/* Text display */}
-                <TextDisplay
-                  currentText={currentText}
-                  inputText={inputText}
-                  currentIndex={currentIndex}
-                  textRef={textRef}
-                  activeCharRef={activeCharRef}
-                  getCharStyle={getCharStyle}
-                />
-
-                {/* ShowMember below text area on mobile */}
-
-                {/* Virtual keyboard or Chart */}
-                <TypingChartOrKeyboard
-                  isFinished={isFinished}
-                  testDuration={testDuration}
-                  progressData={progressData}
-                  pressedKey={pressedKey}
-                  isCorrectKey={isCorrectKey}
-                  isIncorrectKey={isIncorrectKey}
-                />
-
-                {/* Results */}
-              
-              </>
+                {/* Sidebar on large screens */}
+                {cooldown || !isTypingActive &&
+                  <div className="hidden lg:block lg:w-1/4 lg:ml-6">
+                    <ShowMember darkMode={darkMode} />
+                  </div>}
+              </div>
             )}
-          </div>
-          {/* Sidebar on large screens */}
-          {cooldown || !isTypingActive &&
-          <div className="hidden lg:block lg:w-1/4 lg:ml-6">
-            <ShowMember darkMode={darkMode} />
-          </div>}
-        </div>
-                )}
-       
+          </>
+        )}
       </div>
     </div>
   );
