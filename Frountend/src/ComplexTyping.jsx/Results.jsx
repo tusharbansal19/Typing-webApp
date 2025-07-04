@@ -28,7 +28,7 @@ const Results = ({ isFinished, wpm, accuracy, correctChars, mistakes, testDurati
       {/* Progress Chart (moved from TypingChartOrKeyboard) */}
       {isFinished && progressData && progressData.length > 1 && (
         (() => {
-          const interval = 5;
+          const interval = 20;
           const times = [];
           for (let t = 0; t <= testDuration; t += interval) times.push(t);
           const wpmMap = {};

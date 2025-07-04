@@ -1,5 +1,6 @@
 const socketIo = require('socket.io');
 const redis = require('./utils/redis');
+const Match = require('./model/match');
 
 // Rooms are created dynamically on 'joinRoom' event from socket clients, not via REST API.
 function initSocket(server) {
@@ -223,14 +224,53 @@ function initSocket(server) {
             if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
             return a.mistakes - b.mistakes;
           })
-          .slice(0, 5) // Get top 5
           .map((result, index) => ({
             ...result,
             position: index + 1
           }));
+        const top5 = rankedResults.slice(0, 5);
+        console.log('[SOCKET] Emitting matchResult with ranked results:', top5);
+        io.to(roomName).emit('matchResult', { ranked: top5 });
 
-        console.log('[SOCKET] Emitting matchResult with ranked results:', rankedResults);
-        io.to(roomName).emit('matchResult', { ranked: rankedResults });
+        // Prepare data for Match schema
+        const matchParticipants = rankedResults.map(r => ({
+          user: null, // If you have userId, set it here
+          username: r.name || r.email,
+          wpm: r.wpm,
+          accuracy: r.accuracy,
+          errors: r.mistakes,
+          totalTyped: r.correctChars
+        }));
+        const mode = roomState.mode || 'multiplayer';
+        const timeLimit = roomState.timeLimit ? Number(roomState.timeLimit) : 60;
+        const wordList = roomState.wordList || '';
+        const startedAt = roomState.startedAt ? new Date(roomState.startedAt) : new Date(Date.now() - (timeLimit * 1000));
+        const endedAt = new Date();
+        const winnerId = null; // If you have userId for winner, set it here
+        // Save to MongoDB
+        try {
+          await Match.create({
+            participants: matchParticipants,
+            mode,
+            timeLimit,
+            wordList,
+            startedAt,
+            endedAt,
+            winnerId
+          });
+          console.log('[SOCKET] Saved match results to MongoDB');
+        } catch (err) {
+          console.error('[SOCKET] Error saving match results to MongoDB:', err);
+        }
+        // After 5 seconds, clear Redis for this room
+        setTimeout(async () => {
+          try {
+            await redis.del(`match:${roomName}`);
+            console.log(`[SOCKET] Cleared Redis data for room: ${roomName}`);
+          } catch (err) {
+            console.error(`[SOCKET] Error clearing Redis for room ${roomName}:`, err);
+          }
+        }, 2000);
       }
     });
   });

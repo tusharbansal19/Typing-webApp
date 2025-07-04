@@ -14,7 +14,7 @@ const matchSchema = new Schema({
   ],
   mode: { type: String, enum: ['solo', 'multiplayer'], required: true },
   timeLimit: { type: Number, required: true },
-  wordList: [{ type: String, required: true }],
+  wordList: { type: String, required: true },
   startedAt: { type: Date },
   endedAt: { type: Date },
   winnerId: { type: Types.ObjectId, ref: 'User' },
