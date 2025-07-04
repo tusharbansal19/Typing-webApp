@@ -19,7 +19,7 @@ connect(process.env.URL);
 // Middleware
 app.use(cors(
   {
-    origin: "http://localhost:5173" || "https://typing-webapp-frountend.onrender.com"||"*",
+    origin: "https://typing-webapp-frountend.onrender.com"||"*",
     credentials: true,
   }
 )); 

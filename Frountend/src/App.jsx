@@ -23,6 +23,7 @@ import { checkAuth } from './features/user/userSlice';
 import TypingInterface from './SimpleTyping/typingComponent';
 import MatchInterface from './ComplexTyping.jsx/MatchInterface';
 import { MatchProvider } from './Context/MatchContext';
+import MainLayout from './components/MainLayout';
 
 
 function App() {
@@ -42,73 +43,28 @@ function App() {
   return (
     <AuthProvider>
       <Router>
-        <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
         <Routes>
-          <Route path="/signup" element={<ProtectLogin>
-            <SignUpPage />
-          </ProtectLogin>
-            } />
-          <Route path="/login" element={<ProtectLogin>
-            <LoginPage />
-          </ProtectLogin>
-            } />
-          <Route path='/otp' element={<ProtectLogin>
-            <OtpPage />
-          </ProtectLogin>
-            } />
-          <Route path="/" element={
-            <Home darkMode={darkMode}/>
-        
-            } />
-          <Route path="/typing" element={
-            <TypingInterface darkMode={darkMode} setDarkMode={setDarkMode} />
-          
-            } />
-          <Route path="/host" element={
-            <ComppProtect>
-              {/* <SocketProvider> */}
-                <HostPage darkMode={darkMode} setDarkMode={setDarkMode} />
-              {/* </SocketProvider> */}
-            </ComppProtect>
-          } />
-          <Route path='/dashboard' element={<ComppProtect>
-            <UserDashboard darkMode={darkMode} />
-          </ComppProtect>
-            } />
-            
-          <Route path='/match/:roomName' element={<ComppProtect>
-           
-            <MatchProvider>
-              <SocketProvider>
-              <MatchInterface darkMode={darkMode} setDarkMode={setDarkMode} />
-            </SocketProvider>
-            </MatchProvider>
-            
-          </ComppProtect>
-            } />
-          <Route path='/contact' element={
-            <ContactUsPage  darkMode={darkMode} />
-       
-            } />
-          <Route path ="/about" element={
-            <AboutUsPage darkMode={darkMode}/>
-       
-            } />
-          <Route path='/contest' element={
-            <ContestSection darkMode={darkMode} />
-         
-            } />
-          <Route path='/learn' element={
-            <LearnPage darkMode={darkMode}/>
-         
-            }/>
-          <Route path='/*' element={
-            <h1>not reachable</h1>
-          } />
+          {/* Auth pages: no navbar/footer */}
+          <Route path="/signup" element={<ProtectLogin><SignUpPage /></ProtectLogin>} />
+          <Route path="/login" element={<ProtectLogin><LoginPage /></ProtectLogin>} />
+          <Route path="/otp" element={<ProtectLogin><OtpPage /></ProtectLogin>} />
+
+          {/* All other pages: with navbar/footer */}
+          <Route element={<MainLayout darkMode={darkMode} setDarkMode={setDarkMode} />}>
+            <Route path="/" element={<Home darkMode={darkMode}/>} />
+            <Route path="/typing" element={<TypingInterface darkMode={darkMode} setDarkMode={setDarkMode} />} />
+            <Route path="/host" element={<ComppProtect><HostPage darkMode={darkMode} setDarkMode={setDarkMode} /></ComppProtect>} />
+            <Route path="/dashboard" element={<ComppProtect><UserDashboard darkMode={darkMode} /></ComppProtect>} />
+            <Route path="/match/:roomName" element={<ComppProtect><MatchProvider><SocketProvider><MatchInterface darkMode={darkMode} setDarkMode={setDarkMode} /></SocketProvider></MatchProvider></ComppProtect>} />
+            <Route path="/contact" element={<ContactUsPage darkMode={darkMode} />} />
+            <Route path="/about" element={<AboutUsPage darkMode={darkMode}/>} />
+            <Route path="/contest" element={<ContestSection darkMode={darkMode} />} />
+            <Route path="/learn" element={<LearnPage darkMode={darkMode}/>} />
+            <Route path="/*" element={<h1>not reachable</h1>} />
+          </Route>
         </Routes>
       </Router>
     </AuthProvider>
-    
   );
 }
 
