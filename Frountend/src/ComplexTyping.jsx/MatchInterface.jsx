@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { RotateCcw, Play, Pause, Trophy, Target, Clock, AlertCircle, Keyboard } from 'lucide-react';
+import { RotateCcw, Play, Pause, Trophy, Target, Clock, AlertCircle, Keyboard, TrendingUp } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -26,15 +26,9 @@ import { useParams } from 'react-router-dom';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Text samples for typing test
-const TEXT_SAMPLES = [  
-"this is a very extensive string composed of random words and phrases designed to meet your specific length requirement it continues to grow with various vocabulary choices ensuring it surpasses the five hundred character mark without using any punctuation whatsoever only lowercase letters and spaces are present throughout its entirety providing a continuous flow of text for your needs we are carefully adding more words to increase its overall length making sure it remains well above your requested minimum this paragraph demonstrates a large block of text suitable for many applications where a long character sequence without special symbols is desired it keeps going and going with more random words and less meaning sometimes just for the sake of length and character count validation we hope this extended passage serves its purpose effectively this is a very extensive string composed of random words and phrases designed to meet your specific length requirement it continues to grow with various vocabulary choices ensuring it surpasses the five hundred character mark without using any punctuation whatsoever only lowercase letters and spaces are present throughout its entirety providing a continuous flow of text for your needs we are carefully adding more words to increase its overall length making sure it remains well above your requested minimum this paragraph demonstrates a large block of text suitable for many applications where a long character sequence without special symbols is desired it keeps going and going with more random words and less meaning sometimes just for the sake of length and character count validation we hope this extended passage serves its purpose effectively",
-,
-"learning new things is always an exciting adventure expanding your knowledge and understanding of the world around you every book you read every skill you acquire adds another layer to your personal growth and development the process of discovery can be incredibly rewarding opening up new perspectives and challenging your existing beliefs it encourages critical thinking and creativity allowing you to approach problems from different angles and find innovative solutions practice and persistence are key components in mastering any new subject or ability as consistent effort often leads to significant progress over time embracing mistakes as learning opportunities helps you refine your approach and build resilience the journey of continuous learning is endless with countless subjects and disciplines waiting to be explored it fosters curiosity and a lifelong passion for gaining insights into various fields whether it is science art history or technology there is always something fascinating to delve into and comprehend the more you learn the more you realize how much more there is to know which only fuels your desire for further exploration and intellectual enrichment making life a constant classroom of endless possibilities and exciting discoveries for every curious mind that seeks knowledge and understanding",
-"a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed",
-"a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed",];
-
-// Virtual keyboard layout
-
+const TEXT_SAMPLES = [
+  "a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed",
+];
 
 // Stats card component
 const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
@@ -63,7 +57,6 @@ const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
 const MatchInterface = ({darkMode}) => {
   // simple typing test................................................................................
   // Core state
-
   const [currentText, setCurrentText] = useState('');
   const [inputText, setInputText] = useState('');
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -156,7 +149,6 @@ const MatchInterface = ({darkMode}) => {
   React.useEffect(() => {
     if (!socket) return;
     const handleMatchStart = ({ roomName, participants, mode, timeLimit, wordList, isStarted = true }) => {
-       
       dispatch(setMode(mode));
       dispatch(setTimeLimit(timeLimit));
       dispatch(setWordList(wordList));
@@ -174,33 +166,24 @@ const MatchInterface = ({darkMode}) => {
       let countdown = 3;
       setCooldownValue(countdown);
 
-
-
-
-
-
-  // Simple setTimeout for matchFinish event
-  const totalTime = (timeLimit || 60) + 3;
-  matchFinishTimeoutRef.current = setTimeout(() => {
-    if (socket) {
-      const userStats = {
-        name: userName || 'Anonymous',
-        email: userEmail || 'anonymous@example.com',
-        roomName: roomName,
-        wpm: wpmRef.current,
-        accuracy: accuracyRef.current,
-        mistakes: mistakesStateRef.current,
-        correctChars: correctCharsStateRef.current,
-        totalTime: timeLimit || 60
-      };
-      console.log('Emitting matchFinish with stats:', userStats);
-      socket.emit('matchFinish', userStats);
-    }
-  }, totalTime * 1000);
-
-
-
-
+      // Simple setTimeout for matchFinish event
+      const totalTime = (timeLimit || 60) + 3;
+      matchFinishTimeoutRef.current = setTimeout(() => {
+        if (socket) {
+          const userStats = {
+            name: userName || 'Anonymous',
+            email: userEmail || 'anonymous@example.com',
+            roomName: roomName,
+            wpm: wpmRef.current,
+            accuracy: accuracyRef.current,
+            mistakes: mistakesStateRef.current,
+            correctChars: correctCharsStateRef.current,
+            totalTime: timeLimit || 60
+          };
+          console.log('Emitting matchFinish with stats:', userStats);
+          socket.emit('matchFinish', userStats);
+        }
+      }, totalTime * 1000);
 
       const interval = setInterval(() => {
         countdown--;
@@ -216,8 +199,6 @@ const MatchInterface = ({darkMode}) => {
           setCurrentIndex(0);
           setIsStarted(true);
           setIsFinished(false);
-          
-       
         }
       }, 1000);
     };
@@ -520,8 +501,6 @@ const MatchInterface = ({darkMode}) => {
     return 'text-gray-700 dark:text-gray-300';
   };
 
- 
-
   return (
     <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}>
       <div className="w-full mx-auto px-4 py-8">
@@ -570,26 +549,18 @@ const MatchInterface = ({darkMode}) => {
                     <>
                       {/* Header */}
                       <Header />
-                      {/* Controls */}
-                      {/* <Controls
-                        testDuration={testDuration}
-                        setTestDuration={setTestDuration}
-                        setTimeLeft={setTimeLeft}
-                        isActive={isActive}
-                        resetTest={resetTest}
-                      /> */}
                       {/* Stats */}
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                         <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
-                        <StatsCard icon={Target} label="WPM" value={wpm} color="green" />
+                        <StatsCard icon={TrendingUp} label="WPM" value={wpm} color="green" />
                         <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
                         <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
                       </div>
                       {/* Start prompt */}
                       {!isStarted && (
                         <div className="text-center mb-8">
-                          <p className="text-2xl text-gray-600 dark:text-gray-300 animate-pulse">
-                            Press any key to start typing...
+                          <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                            Press any key to start typing!
                           </p>
                         </div>
                       )}
@@ -598,16 +569,11 @@ const MatchInterface = ({darkMode}) => {
                         currentText={currentText}
                         inputText={inputText}
                         currentIndex={currentIndex}
-                        textRef={textRef}
                         activeCharRef={activeCharRef}
                         getCharStyle={getCharStyle}
                       />
-                      {/* ShowMember below text area on mobile */}
                       {/* Virtual keyboard or Chart */}
                       <TypingChartOrKeyboard
-                        isFinished={isFinished}
-                        testDuration={testDuration}
-                        progressData={progressData}
                         pressedKey={pressedKey}
                         isCorrectKey={isCorrectKey}
                         isIncorrectKey={isIncorrectKey}
@@ -616,7 +582,7 @@ const MatchInterface = ({darkMode}) => {
                   )}
                 </div>
                 {/* Sidebar on large screens */}
-                {cooldown || !isTypingActive &&
+                {(cooldown || !isTypingActive) &&
                   <div className="hidden lg:block lg:w-1/4 lg:ml-6">
                     <ShowMember darkMode={darkMode} />
                   </div>}
