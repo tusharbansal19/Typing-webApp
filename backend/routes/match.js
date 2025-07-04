@@ -46,7 +46,7 @@ router.post('/create', auth, async (req, res) => {
     try {
       await redis.hmset(`match:${roomId}`, {
         mode: 'multiplayer',
-        timeLimit: 10,
+        timeLimit: 60,
         isStarted: false,
         endedAt: null,
         winnerId: null,

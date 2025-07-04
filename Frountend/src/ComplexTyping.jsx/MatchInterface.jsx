@@ -593,9 +593,10 @@ const MatchInterface = ({darkMode}) => {
             )}
           </div>
           {/* Sidebar on large screens */}
+          {cooldown || !isTypingActive &&
           <div className="hidden lg:block lg:w-1/4 lg:ml-6">
             <ShowMember darkMode={darkMode} />
-          </div>
+          </div>}
         </div>
                 )}
        
