@@ -167,9 +167,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
     }
   };
 
-  if (!isAuthenticated) {
-    return null;
-  }
+
 
   return (
     <nav
