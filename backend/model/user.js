@@ -30,9 +30,13 @@ const userSchema = new Schema({
   avatarUrl: { type: String },
   matches: [{ type: Types.ObjectId, ref: "Match" }],
   personalBest: {
-    wpm: { type: Number },
-    accuracy: { type: Number },
+    wpm: { type: Number, default: 0 },
+    accuracy: { type: Number, default: 0 },
   },
+  totalMatches: { type: Number, default: 0 },
+  wins: { type: Number, default: 0 },
+  currentStreak: { type: Number, default: 0 },
+  status: { type: String, default: "Available for Challenge" }
 }, { timestamps: true });
 
 const User = model("User", userSchema);

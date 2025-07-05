@@ -1,6 +1,44 @@
 const socketIo = require('socket.io');
 const redis = require('./utils/redis');
 const Match = require('./model/match');
+const { User } = require('./model/user');
+
+// Helper function to update user match details
+async function updateUserMatchDetails(userEmail, matchId, isWinner = false, wpm = 0, accuracy = 0) {
+  try {
+    const user = await User.findOne({ email: userEmail });
+    if (!user) {
+      console.log(`[SOCKET] User not found for email: ${userEmail}`);
+      return false;
+    }
+
+    // Update user's match history and stats
+    const updateData = {
+      $push: { matches: matchId },
+      $inc: { totalMatches: 1 }
+    };
+
+    // Update personal best if current performance is better
+    if (wpm > (user.personalBest?.wpm || 0)) {
+      updateData.$set = { ...updateData.$set, 'personalBest.wpm': wpm };
+    }
+    if (accuracy > (user.personalBest?.accuracy || 0)) {
+      updateData.$set = { ...updateData.$set, 'personalBest.accuracy': accuracy };
+    }
+
+    // Update wins count if user is winner
+    if (isWinner) {
+      updateData.$inc.wins = 1;
+    }
+
+    await User.findByIdAndUpdate(user._id, updateData);
+    console.log(`[SOCKET] Updated user ${userEmail} match details`);
+    return true;
+  } catch (error) {
+    console.error(`[SOCKET] Error updating user ${userEmail} match details:`, error);
+    return false;
+  }
+}
 
 // Rooms are created dynamically on 'joinRoom' event from socket clients, not via REST API.
 function initSocket(server) {
@@ -32,8 +70,6 @@ function initSocket(server) {
       ////console.log("socket.id :: ",socket.id,"roomName :: ",roomName);
       // Fetch or create match state from Redis
       let roomState = await redis.hgetall(`match:${roomName}`);
-
-
       if(roomState.isStarted){
         return socket.to(socket.id).emit('matchAlreadyStarted', { message: 'Match already started' });
       }
@@ -237,24 +273,58 @@ function initSocket(server) {
         //console.log('[SOCKET] Emitting matchResult with ranked results:', top5);
         io.to(roomName).emit('matchResult', { ranked: top5 });
 
-        // Prepare data for Match schema
-        const matchParticipants = rankedResults.map(r => ({
-          user: null, // If you have userId, set it here
-          username: r.name || r.email,
-          wpm: r.wpm,
-          accuracy: r.accuracy,
-          errors: r.mistakes,
-          totalTyped: r.correctChars
-        }));
+        // Prepare data for Match schema and get user IDs
+        const matchParticipants = [];
+        const userIds = [];
+        
+        for (const r of rankedResults) {
+          try {
+            // Find user by email
+            const user = await User.findOne({ email: r.email });
+            if (user) {
+              matchParticipants.push({
+                user: user._id,
+                username: r.name || r.email,
+                wpm: r.wpm,
+                accuracy: r.accuracy,
+                errors: r.mistakes,
+                totalTyped: r.correctChars
+              });
+              userIds.push(user._id);
+            } else {
+              // Fallback for users not found
+              matchParticipants.push({
+                user: null,
+                username: r.name || r.email,
+                wpm: r.wpm,
+                accuracy: r.accuracy,
+                errors: r.mistakes,
+                totalTyped: r.correctChars
+              });
+            }
+          } catch (err) {
+            console.error('[SOCKET] Error finding user:', err);
+            matchParticipants.push({
+              user: null,
+              username: r.name || r.email,
+              wpm: r.wpm,
+              accuracy: r.accuracy,
+              errors: r.mistakes,
+              totalTyped: r.correctChars
+            });
+          }
+        }
+        
         const mode = roomState.mode || 'multiplayer';
         const timeLimit = roomState.timeLimit ? Number(roomState.timeLimit) : 60;
         const wordList = roomState.wordList || '';
         const startedAt = roomState.startedAt ? new Date(roomState.startedAt) : new Date(Date.now() - (timeLimit * 1000));
         const endedAt = new Date();
-        const winnerId = null; // If you have userId for winner, set it here
+        const winnerId = userIds[0] || null; // First user is the winner
+        
         // Save to MongoDB
         try {
-          await Match.create({
+          const match = await Match.create({
             participants: matchParticipants,
             mode,
             timeLimit,
@@ -263,9 +333,26 @@ function initSocket(server) {
             endedAt,
             winnerId
           });
-          //console.log('[SOCKET] Saved match results to MongoDB');
+          
+          console.log('[SOCKET] Saved match results to MongoDB');
+          
+          // Update each participant's match details
+          for (let i = 0; i < rankedResults.length; i++) {
+            const result = rankedResults[i];
+            const isWinner = i === 0; // First result is the winner
+            
+            await updateUserMatchDetails(
+              result.email,
+              match._id,
+              isWinner,
+              result.wpm,
+              result.accuracy
+            );
+          }
+          
+          console.log('[SOCKET] Updated all participants match details');
         } catch (err) {
-          //console.error('[SOCKET] Error saving match results to MongoDB:', err);
+          console.error('[SOCKET] Error saving match results to MongoDB:', err);
         }
         // After 5 seconds, clear Redis for this room
         setTimeout(async () => {
