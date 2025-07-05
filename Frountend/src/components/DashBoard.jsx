@@ -26,8 +26,9 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchUserProfile, fetchUserMatches, updateUserProfile } from '../features/user/userSlice';
 import { useAuth } from '../Context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
-const DashBoard = ({ darkMode = false }) => {
+const DashBoard = ({ darkMode = false , setDarkMode} ) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [editMode, setEditMode] = useState(false);
@@ -58,16 +59,58 @@ const DashBoard = ({ darkMode = false }) => {
     }
   }, [profileData]);
 
-  // Mock performance data (this would come from API in real implementation)
-  const performanceData = [
-    { day: 'Mon', wpm: 78, accuracy: 94 },
-    { day: 'Tue', wpm: 82, accuracy: 96 },
-    { day: 'Wed', wpm: 85, accuracy: 95 },
-    { day: 'Thu', wpm: 89, accuracy: 97 },
-    { day: 'Fri', wpm: 92, accuracy: 98 },
-    { day: 'Sat', wpm: 95, accuracy: 97 },
-    { day: 'Sun', wpm: 91, accuracy: 96 }
-  ];
+  // Calculate real performance data from match history
+  const calculatePerformanceData = () => {
+    if (!profileData?.recentMatches || profileData.recentMatches.length === 0) {
+      return [
+        { day: 'No Data', wpm: 0, accuracy: 0 }
+      ];
+    }
+
+    // Get last 7 matches or all matches if less than 7
+    const recentMatches = profileData.recentMatches.slice(0, 7);
+    
+    // Group matches by day of the week
+    const dayMap = {
+      'Sun': { wpm: [], accuracy: [] },
+      'Mon': { wpm: [], accuracy: [] },
+      'Tue': { wpm: [], accuracy: [] },
+      'Wed': { wpm: [], accuracy: [] },
+      'Thu': { wpm: [], accuracy: [] },
+      'Fri': { wpm: [], accuracy: [] },
+      'Sat': { wpm: [], accuracy: [] }
+    };
+
+    recentMatches.forEach(match => {
+      if (match.startedAt) {
+        const date = new Date(match.startedAt);
+        const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+        
+        if (dayMap[dayName]) {
+          dayMap[dayName].wpm.push(match.wpm);
+          dayMap[dayName].accuracy.push(match.accuracy);
+        }
+      }
+    });
+
+    // Calculate averages for each day
+    const performanceData = Object.entries(dayMap).map(([day, data]) => {
+      const avgWpm = data.wpm.length > 0 ? Math.round(data.wpm.reduce((a, b) => a + b, 0) / data.wpm.length) : 0;
+      const avgAccuracy = data.accuracy.length > 0 ? Math.round(data.accuracy.reduce((a, b) => a + b, 0) / data.accuracy.length) : 0;
+      
+      return {
+        day,
+        wpm: avgWpm,
+        accuracy: avgAccuracy,
+        matchCount: data.wpm.length
+      };
+    });
+
+    // Filter out days with no data and return
+    return performanceData.filter(day => day.matchCount > 0);
+  };
+
+  const performanceData = calculatePerformanceData();
 
   // Use real data from API or fallback to defaults
   const userData = profileData?.user || {
@@ -88,13 +131,73 @@ const DashBoard = ({ darkMode = false }) => {
 
   const recentMatches = profileData?.recentMatches || [];
 
-  const achievements = [
-    { id: 1, name: 'Speed Demon', description: 'Achieved 90+ WPM', icon: '🚀', unlocked: true },
-    { id: 2, name: 'Accuracy Master', description: 'Maintained 95%+ accuracy', icon: '🎯', unlocked: true },
-    { id: 3, name: 'Streak Champion', description: '10 wins in a row', icon: '🔥', unlocked: true },
-    { id: 4, name: 'Century Club', description: '100+ matches played', icon: '💯', unlocked: true },
-    { id: 5, name: 'Perfectionist', description: 'Achieve 100% accuracy', icon: '⭐', unlocked: false }
-  ];
+  // Calculate achievements based on real user performance
+  const calculateAchievements = () => {
+    const personalBestWpm = stats.personalBest.wpm || 0;
+    const personalBestAccuracy = stats.personalBest.accuracy || 0;
+    const totalMatches = stats.totalMatches || 0;
+    const wins = stats.wins || 0;
+    const winRate = stats.winRate || 0;
+
+    return [
+      { 
+        id: 1, 
+        name: 'Speed Demon', 
+        description: 'Achieved 90+ WPM', 
+        icon: '🚀', 
+        unlocked: personalBestWpm >= 90,
+        progress: Math.min(personalBestWpm, 90),
+        target: 90
+      },
+      { 
+        id: 2, 
+        name: 'Accuracy Master', 
+        description: 'Maintained 95%+ accuracy', 
+        icon: '🎯', 
+        unlocked: personalBestAccuracy >= 95,
+        progress: Math.min(personalBestAccuracy, 95),
+        target: 95
+      },
+      { 
+        id: 3, 
+        name: 'Win Streak', 
+        description: 'Achieved 70%+ win rate', 
+        icon: '🔥', 
+        unlocked: winRate >= 70,
+        progress: Math.min(winRate, 70),
+        target: 70
+      },
+      { 
+        id: 4, 
+        name: 'Century Club', 
+        description: '100+ matches played', 
+        icon: '💯', 
+        unlocked: totalMatches >= 100,
+        progress: Math.min(totalMatches, 100),
+        target: 100
+      },
+      { 
+        id: 5, 
+        name: 'Perfectionist', 
+        description: 'Achieve 100% accuracy', 
+        icon: '⭐', 
+        unlocked: personalBestAccuracy >= 100,
+        progress: Math.min(personalBestAccuracy, 100),
+        target: 100
+      },
+      { 
+        id: 6, 
+        name: 'Speed Racer', 
+        description: 'Achieved 120+ WPM', 
+        icon: '⚡', 
+        unlocked: personalBestWpm >= 120,
+        progress: Math.min(personalBestWpm, 120),
+        target: 120
+      }
+    ];
+  };
+
+  const achievements = calculateAchievements();
 
   const sidebarItems = [
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
@@ -111,6 +214,7 @@ const DashBoard = ({ darkMode = false }) => {
     "Every keystroke counts towards greatness."
   ];
 
+  const navigator  = useNavigate();
   const [currentQuote] = useState(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -218,24 +322,55 @@ const DashBoard = ({ darkMode = false }) => {
               <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                 Weekly Performance
               </h3>
-              <div className="w-full overflow-x-auto">
-                <ResponsiveContainer width="100%" height={300} minWidth={400}>
-                  <LineChart data={performanceData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
-                    <XAxis dataKey="day" stroke={darkMode ? '#9ca3af' : '#6b7280'} />
-                    <YAxis stroke={darkMode ? '#9ca3af' : '#6b7280'} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: darkMode ? '#1f2937' : '#ffffff',
-                        border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
-                        borderRadius: '8px'
-                      }}
-                    />
-                    <Line type="monotone" dataKey="wpm" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="accuracy" stroke="#10b981" strokeWidth={3} dot={{ r: 4 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
+              {performanceData.length > 0 && performanceData[0].day !== 'No Data' ? (
+                <div className="w-full overflow-x-auto">
+                  <ResponsiveContainer width="100%" height={300} minWidth={400}>
+                    <LineChart data={performanceData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
+                      <XAxis dataKey="day" stroke={darkMode ? '#9ca3af' : '#6b7280'} />
+                      <YAxis stroke={darkMode ? '#9ca3af' : '#6b7280'} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+                          border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
+                          borderRadius: '8px'
+                        }}
+                        formatter={(value, name) => [
+                          name === 'wpm' ? `${value} WPM` : `${value}%`,
+                          name === 'wpm' ? 'Words Per Minute' : 'Accuracy'
+                        ]}
+                        labelFormatter={(label) => `${label} (${performanceData.find(d => d.day === label)?.matchCount || 0} matches)`}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="wpm" 
+                        stroke="#3b82f6" 
+                        strokeWidth={3} 
+                        dot={{ r: 4, fill: '#3b82f6' }}
+                        name="WPM"
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="accuracy" 
+                        stroke="#10b981" 
+                        strokeWidth={3} 
+                        dot={{ r: 4, fill: '#10b981' }}
+                        name="Accuracy"
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <TrendingUp className={`w-16 h-16 mb-4 ${darkMode ? 'text-gray-600' : 'text-gray-400'}`} />
+                  <p className={`text-lg font-medium ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                    No performance data yet
+                  </p>
+                  <p className={`text-sm ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                    Complete some typing matches to see your performance trends
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Motivational Quote */}
@@ -257,20 +392,53 @@ const DashBoard = ({ darkMode = false }) => {
           <div className="space-y-4 sm:space-y-6">
             <h2 className={`text-xl sm:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Achievements</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {achievements.map((achievement) => (
-                <div key={achievement.id} className={`${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gradient-to-br from-white/80 to-sky-50/80 border-sky-200/50'} backdrop-blur-sm border rounded-xl p-4 sm:p-6 ${achievement.unlocked ? 'opacity-100' : 'opacity-50'}`}>
-                  <div className="text-center">
-                    <div className="text-3xl sm:text-4xl mb-2">{achievement.icon}</div>
-                    <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>{achievement.name}</h3>
-                    <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>{achievement.description}</p>
-                    {achievement.unlocked && (
-                      <div className="mt-2">
-                        <Check className="w-5 h-5 text-green-500 mx-auto" />
+              {achievements.map((achievement) => {
+                const progressPercentage = (achievement.progress / achievement.target) * 100;
+                return (
+                  <div key={achievement.id} className={`${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gradient-to-br from-white/80 to-sky-50/80 border-sky-200/50'} backdrop-blur-sm border rounded-xl p-4 sm:p-6 transition-all duration-300 ${achievement.unlocked ? 'opacity-100 scale-105' : 'opacity-70 hover:opacity-90'}`}>
+                    <div className="text-center">
+                      <div className={`text-3xl sm:text-4xl mb-2 ${achievement.unlocked ? 'animate-bounce' : ''}`}>
+                        {achievement.icon}
                       </div>
-                    )}
+                      <h3 className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                        {achievement.name}
+                      </h3>
+                      <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-3`}>
+                        {achievement.description}
+                      </p>
+                      
+                      {/* Progress Bar */}
+                      <div className="mb-2">
+                        <div className={`w-full bg-gray-200 rounded-full h-2 ${darkMode ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-500 ${
+                              achievement.unlocked 
+                                ? 'bg-gradient-to-r from-green-400 to-green-600' 
+                                : 'bg-gradient-to-r from-blue-400 to-blue-600'
+                            }`}
+                            style={{ width: `${progressPercentage}%` }}
+                          ></div>
+                        </div>
+                        <div className="flex justify-between text-xs mt-1">
+                          <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                            {achievement.progress}
+                          </span>
+                          <span className={darkMode ? 'text-gray-400' : 'text-gray-600'}>
+                            {achievement.target}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {achievement.unlocked && (
+                        <div className="mt-2">
+                          <Check className="w-5 h-5 text-green-500 mx-auto" />
+                          <p className="text-xs text-green-500 font-medium mt-1">Unlocked!</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
@@ -286,40 +454,230 @@ const DashBoard = ({ darkMode = false }) => {
               </div>
             ) : recentMatches.length > 0 ? (
               <div className="space-y-4">
-                {recentMatches.map((match) => (
-                  <div key={match.id} className={`${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gradient-to-br from-white/80 to-sky-50/80 border-sky-200/50'} backdrop-blur-sm border rounded-xl p-4`}>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                        <div className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${
-                          match.mode === 'multiplayer' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'
-                        }`}>
-                          {match.mode}
+                {recentMatches.map((match) => {
+                  // Format the date
+                  const matchDate = match.startedAt ? new Date(match.startedAt) : new Date();
+                  const formattedDate = matchDate.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  });
+                  
+                  // Determine match result based on position
+                  const getResultDisplay = (position) => {
+                    if (position === 1) return { text: '1st', class: 'bg-yellow-500/20 text-yellow-400' };
+                    if (position === 2) return { text: '2nd', class: 'bg-gray-500/20 text-gray-400' };
+                    if (position === 3) return { text: '3rd', class: 'bg-orange-500/20 text-orange-400' };
+                    return { text: `${position}th`, class: 'bg-blue-500/20 text-blue-400' };
+                  };
+                  
+                  const result = getResultDisplay(match.position || 1);
+                  
+                  return (
+                    <div key={match._id || match.id} className={`${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gradient-to-br from-white/80 to-sky-50/80 border-sky-200/50'} backdrop-blur-sm border rounded-xl p-4 hover:scale-105 transition-all duration-300`}>
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                          <div className={`px-3 py-1 rounded-full text-xs font-medium w-fit ${
+                            match.mode === 'multiplayer' ? 'bg-blue-500/20 text-blue-400' : 'bg-green-500/20 text-green-400'
+                          }`}>
+                            {match.mode || 'multiplayer'}
+                          </div>
+                          <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                            <span className="font-semibold">{match.wpm || 0} WPM</span> • 
+                            <span className="font-semibold"> {match.accuracy || 0}%</span> Accuracy
+                            {match.errors && <span> • {match.errors} errors</span>}
+                          </div>
                         </div>
-                        <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
-                          {match.wpm} WPM • {match.accuracy}% Accuracy
+                        <div className="flex items-center gap-2">
+                          <div className={`px-2 py-1 rounded text-xs font-medium ${result.class}`}>
+                            {result.text}
+                          </div>
+                          <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
+                            {formattedDate}
+                          </span>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className={`px-2 py-1 rounded text-xs font-medium ${
-                          match.result === 'win' ? 'bg-green-500/20 text-green-400' :
-                          match.result === 'loss' ? 'bg-red-500/20 text-red-400' :
-                          'bg-yellow-500/20 text-yellow-400'
-                        }`}>
-                          {match.result === 'pb' ? 'PB' : match.result}
-                        </div>
-                        <span className={`text-xs ${darkMode ? 'text-gray-500' : 'text-gray-500'}`}>
-                          {match.time}
-                        </span>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className={`text-center py-8 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
                 <Clock className="w-12 h-12 mx-auto mb-4 opacity-50" />
                 <p>No matches played yet.</p>
                 <p className="text-sm mt-2">Start typing to see your match history here!</p>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'stats':
+        return (
+          <div className="space-y-4 sm:space-y-6">
+            <h2 className={`text-xl sm:text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Detailed Statistics</h2>
+            
+            {/* Overall Stats Grid */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+              <StatCard 
+                title="Total Matches" 
+                value={stats.totalMatches || 0} 
+                subtitle="All time"
+                icon={Activity} 
+                color="blue" 
+              />
+              <StatCard 
+                title="Total Wins" 
+                value={stats.wins || 0} 
+                subtitle={`${stats.winRate || 0}% win rate`}
+                icon={Trophy} 
+                color="yellow" 
+              />
+              <StatCard 
+                title="Current Streak" 
+                value={stats.currentStreak || 0} 
+                subtitle="Consecutive wins"
+                icon={Zap} 
+                color="green" 
+              />
+              <StatCard 
+                title="Best Performance" 
+                value={`${stats.personalBest?.wpm || 0} WPM`} 
+                subtitle={`${stats.personalBest?.accuracy || 0}% accuracy`}
+                icon={Target} 
+                color="purple" 
+              />
+            </div>
+
+            {/* Performance Analysis */}
+            {recentMatches.length > 0 && (
+              <div className={`${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gradient-to-br from-white/80 to-sky-50/80 border-sky-200/50'} backdrop-blur-sm border rounded-xl p-4 sm:p-6`}>
+                <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Performance Analysis
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* WPM Distribution */}
+                  <div>
+                    <h4 className={`font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>WPM Distribution</h4>
+                    <div className="space-y-2">
+                      {(() => {
+                        const wpmRanges = [
+                          { range: '0-30', label: 'Beginner', color: 'bg-red-500' },
+                          { range: '31-50', label: 'Intermediate', color: 'bg-yellow-500' },
+                          { range: '51-70', label: 'Advanced', color: 'bg-blue-500' },
+                          { range: '71-90', label: 'Expert', color: 'bg-green-500' },
+                          { range: '90+', label: 'Master', color: 'bg-purple-500' }
+                        ];
+                        
+                        const wpmCounts = wpmRanges.map(range => {
+                          const [min, max] = range.range === '90+' ? [90, Infinity] : range.range.split('-').map(Number);
+                          const count = recentMatches.filter(match => {
+                            const wpm = match.wpm || 0;
+                            return range.range === '90+' ? wpm >= min : wpm >= min && wpm <= max;
+                          }).length;
+                          return { ...range, count };
+                        });
+                        
+                        return wpmCounts.map((range, index) => (
+                          <div key={index} className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <div className={`w-3 h-3 rounded-full ${range.color}`}></div>
+                              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                {range.label} ({range.range})
+                              </span>
+                            </div>
+                            <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                              {range.count}
+                            </span>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+
+                  {/* Accuracy Analysis */}
+                  <div>
+                    <h4 className={`font-medium mb-3 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Accuracy Analysis</h4>
+                    <div className="space-y-2">
+                      {(() => {
+                        const accuracyRanges = [
+                          { range: '0-80%', label: 'Needs Improvement', color: 'bg-red-500' },
+                          { range: '81-90%', label: 'Good', color: 'bg-yellow-500' },
+                          { range: '91-95%', label: 'Very Good', color: 'bg-blue-500' },
+                          { range: '96-99%', label: 'Excellent', color: 'bg-green-500' },
+                          { range: '100%', label: 'Perfect', color: 'bg-purple-500' }
+                        ];
+                        
+                        const accuracyCounts = accuracyRanges.map(range => {
+                          const [min, max] = range.range === '100%' ? [100, 100] : range.range.replace('%', '').split('-').map(Number);
+                          const count = recentMatches.filter(match => {
+                            const accuracy = match.accuracy || 0;
+                            return range.range === '100%' ? accuracy === 100 : accuracy >= min && accuracy <= max;
+                          }).length;
+                          return { ...range, count };
+                        });
+                        
+                        return accuracyCounts.map((range, index) => (
+                          <div key={index} className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <div className={`w-3 h-3 rounded-full ${range.color}`}></div>
+                              <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+                                {range.label} ({range.range})
+                              </span>
+                            </div>
+                            <span className={`text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                              {range.count}
+                            </span>
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Recent Performance Trend */}
+            {recentMatches.length > 0 && (
+              <div className={`${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gradient-to-br from-white/80 to-sky-50/80 border-sky-200/50'} backdrop-blur-sm border rounded-xl p-4 sm:p-6`}>
+                <h3 className={`text-lg font-semibold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                  Recent Performance Trend
+                </h3>
+                <div className="w-full overflow-x-auto">
+                  <ResponsiveContainer width="100%" height={300} minWidth={400}>
+                    <BarChart data={recentMatches.slice(0, 10).reverse().map((match, index) => ({
+                      match: `Match ${index + 1}`,
+                      wpm: match.wpm || 0,
+                      accuracy: match.accuracy || 0,
+                      date: match.startedAt ? new Date(match.startedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : 'N/A'
+                    }))}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={darkMode ? '#374151' : '#e5e7eb'} />
+                      <XAxis dataKey="match" stroke={darkMode ? '#9ca3af' : '#6b7280'} />
+                      <YAxis stroke={darkMode ? '#9ca3af' : '#6b7280'} />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: darkMode ? '#1f2937' : '#ffffff',
+                          border: `1px solid ${darkMode ? '#374151' : '#e5e7eb'}`,
+                          borderRadius: '8px'
+                        }}
+                        formatter={(value, name) => [
+                          name === 'wpm' ? `${value} WPM` : `${value}%`,
+                          name === 'wpm' ? 'Words Per Minute' : 'Accuracy'
+                        ]}
+                      />
+                      <Bar dataKey="wpm" fill="#3b82f6" name="WPM" />
+                      <Bar dataKey="accuracy" fill="#10b981" name="Accuracy" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+            )}
+
+            {recentMatches.length === 0 && (
+              <div className={`text-center py-12 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <TrendingUp className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium">No statistics available</p>
+                <p className="text-sm mt-2">Complete some typing matches to see detailed statistics</p>
               </div>
             )}
           </div>
@@ -368,7 +726,7 @@ const DashBoard = ({ darkMode = false }) => {
 
           {/* Navigation Items */}
           <nav className="hidden md:flex items-center space-x-6">
-            <button 
+            <button  onClick={() => navigator("/")}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 darkMode 
                   ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
@@ -377,7 +735,7 @@ const DashBoard = ({ darkMode = false }) => {
             >
               Home
             </button>
-            <button 
+            <button  onClick={() => navigator("/contest")}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 darkMode 
                   ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
@@ -386,7 +744,7 @@ const DashBoard = ({ darkMode = false }) => {
             >
               Contest
             </button>
-            <button 
+            <button  onClick={() => navigator("/typing")}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 darkMode 
                   ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
@@ -413,6 +771,7 @@ const DashBoard = ({ darkMode = false }) => {
                   ? 'text-white hover:bg-gray-700' 
                   : 'text-white hover:bg-white/20'
               }`}
+              onClick={() => setDarkMode(!darkMode)}
             >
               {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>
