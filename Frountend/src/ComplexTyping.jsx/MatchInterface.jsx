@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { RotateCcw, Play, Pause, Trophy, Target, Clock, AlertCircle, Keyboard, TrendingUp } from 'lucide-react';
+import { RotateCcw, Play, Pause, Trophy, Target, Clock, AlertCircle, Keyboard, TrendingUp, X } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -22,7 +22,7 @@ import { useAuth } from '../Context/AuthContext';
 import { useSelector, useDispatch } from 'react-redux';
 import { setRoomName, setParticipants, setMode, setTimeLimit, setWordList, setStarted } from '../features/matchRealtimeSlice';
 import ResultLeaderboard from './ResultLeaderboard.jsx';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 // Text samples for typing test
@@ -107,6 +107,38 @@ const MatchInterface = ({darkMode}) => {
   const [leaderboardData, setLeaderboardData] = useState(null);
   const { roomName: urlRoomName } = useParams();
   const [socketReady, setSocketReady] = useState(false);
+  const navigate = useNavigate();
+  const [showMatchStartedPopup, setShowMatchStartedPopup] = useState(false);
+  const [countdown, setCountdown] = useState(5);
+  
+  const handleMatchAlreadyStarted = ({message}) => {
+    console.log('Match already started:', message);
+    setShowMatchStartedPopup(true);
+    setSocketReady(false);
+    setCountdown(5);
+  };
+
+  const handleClosePopup = () => {
+    setShowMatchStartedPopup(false);
+    navigate('/host');
+  };
+
+  const handleGoBack = () => {
+    setShowMatchStartedPopup(false);
+    navigate('/host');
+  };
+
+  // Auto-navigate after 5 seconds
+  useEffect(() => {
+    if (showMatchStartedPopup && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(prev => prev - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (showMatchStartedPopup && countdown === 0) {
+      navigate('/host');
+    }
+  }, [showMatchStartedPopup, countdown, navigate]);
 
   useEffect(() => {
     if (!socket || !urlRoomName || !userEmail) return;
@@ -139,6 +171,7 @@ const MatchInterface = ({darkMode}) => {
       dispatch(setRoomName(roomName));
       dispatch(setParticipants(participants));
     };
+    socket.on('matchAlreadyStarted', handleMatchAlreadyStarted);
     socket.on('all participants', handleAllParticipants);
     return () => {
       socket.off('all participants', handleAllParticipants);
@@ -591,6 +624,89 @@ const MatchInterface = ({darkMode}) => {
           </>
         )}
       </div>
+
+      {/* Match Already Started Popup */}
+      {showMatchStartedPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
+          <div className={`relative max-w-md w-full mx-4 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 animate-scaleIn ${
+            darkMode 
+              ? 'bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 border border-gray-600' 
+              : 'bg-gradient-to-br from-white via-gray-50 to-white border border-gray-200'
+          }`}>
+            {/* Close button */}
+            <button
+              onClick={handleClosePopup}
+              className={`absolute top-4 right-4 p-2 rounded-full transition-all duration-200 hover:scale-110 ${
+                darkMode 
+                  ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              }`}
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Icon */}
+            <div className="flex justify-center mb-6">
+              <div className={`p-4 rounded-full ${
+                darkMode 
+                  ? 'bg-red-900/30 text-red-400' 
+                  : 'bg-red-100 text-red-600'
+              }`}>
+                <AlertCircle className="w-12 h-12" />
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="text-center">
+              <h3 className={`text-2xl font-bold mb-3 ${
+                darkMode ? 'text-white' : 'text-gray-900'
+              }`}>
+                Match Already Started!
+              </h3>
+              <p className={`text-lg mb-4 ${
+                darkMode ? 'text-gray-300' : 'text-gray-600'
+              }`}>
+                This typing match has already begun. You cannot join a match that's in progress.
+              </p>
+              
+              {/* Countdown Timer */}
+              <div className={`mb-6 p-3 rounded-lg ${
+                darkMode 
+                  ? 'bg-yellow-900/20 text-yellow-400 border border-yellow-600/30' 
+                  : 'bg-yellow-100 text-yellow-700 border border-yellow-300'
+              }`}>
+                <p className="text-sm font-medium">Redirecting in:</p>
+                <p className="text-2xl font-bold">{countdown} seconds</p>
+              </div>
+              
+              {/* Action buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={handleGoBack}
+                  className={`w-full py-3 px-6 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 ${
+                    darkMode
+                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
+                      : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 shadow-lg hover:shadow-xl'
+                  }`}
+                >
+                  Go Back to Host
+                </button>
+                
+                <button
+                  onClick={handleClosePopup}
+                  className={`w-full py-2 px-6 rounded-lg font-medium text-sm transition-all duration-200 ${
+                    darkMode
+                      ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

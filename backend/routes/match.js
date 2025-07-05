@@ -149,7 +149,7 @@ router.post('/join', auth, async (req, res) => {
     if (!matchState) {
       return res.status(404).json({ message: 'Match does not exist' });
     }
-    if (matchState.started === 'true') {
+    if (matchState.isStarted) {
       return res.status(403).json({ message: 'Match already started' });
     }
     ////console.log("matchState of join", matchState);

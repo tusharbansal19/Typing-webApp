@@ -32,6 +32,11 @@ function initSocket(server) {
       ////console.log("socket.id :: ",socket.id,"roomName :: ",roomName);
       // Fetch or create match state from Redis
       let roomState = await redis.hgetall(`match:${roomName}`);
+
+
+      if(roomState.isStarted){
+        return socket.to(socket.id).emit('matchAlreadyStarted', { message: 'Match already started' });
+      }
       ////console.log("roomState :: ",roomName,"room is :: ", roomState);
       let participants = [];
       try { participants = JSON.parse(roomState.participants); } catch { participants = []; }

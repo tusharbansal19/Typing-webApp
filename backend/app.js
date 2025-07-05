@@ -13,7 +13,7 @@ const app = express();
 
 // CORS setup for credentials
 app.use(cors({
-  origin: 'https://typing-webapp-frountend.onrender.com', // Change to your frontend URL
+    origin: "http://localhost:5173"|| 'https://typing-webapp-frountend.onrender.com', // Change to your frontend URL
   credentials: true
 }));
 
