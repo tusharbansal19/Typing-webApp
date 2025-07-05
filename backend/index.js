@@ -1,36 +1,30 @@
-require("dotenv").config();
-const express = require("express");
-const cookieparser = require("cookie-parser");
-const cors = require("cors");
-const http = require("http");
-const socketIo = require("socket.io");
-const { connect } = require("./connect");
-const router = require("./routes/user"); // Main router file
-const matchRouter = require("./routes/match");
-const app = require('./app');
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
+const http = require('http');
+const socketIo = require('socket.io');
+const { connect } = require('./connect');
+const userRoutes = require('./routes/user');
+const matchRoutes = require('./routes/match');
 const initSocket = require('./socket');
 
-const PORT_NO = process.env.PORT || 3000; // Fallback to 3000 if PORT isn't set
-const server = http.createServer(app); // HTTP server
+const app = express();
+const PORT_NO = process.env.PORT || 3000;
+const server = http.createServer(app);
 
 // Connect to MongoDB
 connect(process.env.URL);
 
-// Middleware
+// CORS setup for credentials
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
     const allowedOrigins = [
-
       'https://typing-webapp-frountend.onrender.com',
       'http://localhost:5173',
-
- 
-     
     ];
-    
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -40,26 +34,27 @@ app.use(cors({
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
-})); 
+}));
+
 app.use(express.json());
-app.use(cookieparser());
+app.use(cookieParser());
 
 // Routes
+app.use('/user', userRoutes);
+app.use('/api/match', matchRoutes);
+// Add other routes here
 
-// POST /pt: Handle basic requests with a JSON response
-
-// GET /: Home route to test server status
-app.get("/", (req, res) => {
-  res.json({ message: "Hello from server" });
+// Health check
+app.get('/', (req, res) => {
+  res.json({ message: 'Hello from server' });
 });
 
+// Error handler
+app.use((err, req, res, next) => {
+  res.status(err.status || 500).json({ success: false, message: err.message });
+});
 
-
-// User routes
-app.use("/user", router);
-app.use("/match", matchRouter);
-
-
+// Initialize Socket.IO
 initSocket(server);
 
 // Start the server
