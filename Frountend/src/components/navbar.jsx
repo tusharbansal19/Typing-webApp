@@ -171,7 +171,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ease-in-out transform ${
+      className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-500 ease-in-out transform ${
         showNavbar ? 'translate-y-0' : '-translate-y-full'
       } ${
         darkMode 

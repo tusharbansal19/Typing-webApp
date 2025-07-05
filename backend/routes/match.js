@@ -181,7 +181,7 @@ const fn= async (req, res) => {
     ////console.log("Error deleting matches....");
     // return res.status(500).json({ message: err.message });
   }}
-fn();
+// fn();
 
 // Clear all match keys in Redis (for testing only!)
 router.post('/clear-redis-matches', async (req, res) => {

@@ -341,12 +341,122 @@ const DashBoard = ({ darkMode = false }) => {
 
   return (
     <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-white via-sky-50 to-blue-50'} transition-colors duration-300`}>
-    
+      {/* Scrollable Header */}
+      <header className={`sticky top-0 md:z-[100] ${darkMode ? 'bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-r from-blue-500 to-purple-600 border-blue-400'} backdrop-blur-sm border-b shadow-lg`}>
+        <div className="flex items-center justify-between px-4 py-7">
+          {/* Logo and Title */}
+          <div className="flex items-center space-x-3">
+            <button 
+              onClick={toggleSidebar}
+              className={`lg:hidden p-2 rounded-lg transition-colors ${
+                darkMode 
+                  ? 'text-white hover:bg-gray-700' 
+                  : 'text-white hover:bg-white/20'
+              }`}
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <div className="flex items-center space-x-2">
+              <div className={`w-8 h-8 rounded-lg ${darkMode ? 'bg-white/20' : 'bg-white/30'} flex items-center justify-center`}>
+                <Zap className={`w-5 h-5 ${darkMode ? 'text-yellow-400' : 'text-yellow-300'}`} />
+              </div>
+              <h1 className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-white'} truncate`}>
+                TypeSpeed Pro
+              </h1>
+            </div>
+          </div>
+
+          {/* Navigation Items */}
+          <nav className="hidden md:flex items-center space-x-6">
+            <button 
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                darkMode 
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                  : 'text-white/90 hover:text-white hover:bg-white/20'
+              }`}
+            >
+              Home
+            </button>
+            <button 
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                darkMode 
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                  : 'text-white/90 hover:text-white hover:bg-white/20'
+              }`}
+            >
+              Contest
+            </button>
+            <button 
+              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                darkMode 
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                  : 'text-white/90 hover:text-white hover:bg-white/20'
+              }`}
+            >
+              Typing
+            </button>
+          </nav>
+
+          {/* User Status and Theme Toggle */}
+          <div className="flex items-center space-x-3">
+            <div className={`hidden sm:flex items-center space-x-2 px-3 py-1 rounded-full text-sm ${
+              darkMode 
+                ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                : 'bg-white/20 text-white border border-white/30'
+            }`}>
+              <div className="w-2 h-2 bg-current rounded-full animate-pulse"></div>
+              <span className="hidden md:inline">Online</span>
+            </div>
+            <button 
+              className={`p-2 rounded-lg transition-colors ${
+                darkMode 
+                  ? 'text-white hover:bg-gray-700' 
+                  : 'text-white hover:bg-white/20'
+              }`}
+            >
+              {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Navigation */}
+        <div className="md:hidden  border-t border-white/20">
+          <nav className="flex items-center justify-around px-4 py-2">
+            <button 
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                darkMode 
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                  : 'text-white/90 hover:text-white hover:bg-white/20'
+              }`}
+            >
+              Home
+            </button>
+            <button 
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                darkMode 
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                  : 'text-white/90 hover:text-white hover:bg-white/20'
+              }`}
+            >
+              Contest
+            </button>
+            <button 
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                darkMode 
+                  ? 'text-gray-300 hover:text-white hover:bg-gray-700' 
+                  : 'text-white/90 hover:text-white hover:bg-white/20'
+              }`}
+            >
+              Typing
+            </button>
+          </nav>
+        </div>
+      </header>
 
       <div className="flex">
         {/* Sidebar */}
-        <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 min-h-screen fixed lg:static inset-y-0 left-0 z-50 w-64 ${darkMode ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-sm border-r ${darkMode ? 'border-gray-700' : 'border-sky-200/50'} transition-transform duration-300`}>
-          <div className="p-4 h-full overflow-y-auto">
+        <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40 w-64 ${darkMode ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-sm border-r ${darkMode ? 'border-gray-700' : 'border-sky-200/50'} transition-transform duration-300`}>
+          <div className="p-4 h-full overflow-y-auto pt-20 lg:pt-4">
             <div className="flex items-center justify-between lg:justify-center mb-6">
               <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Profile</h2>
               <button 
@@ -466,7 +576,7 @@ const DashBoard = ({ darkMode = false }) => {
 
         {/* Main Content */}
         <div className="flex-1 lg:ml-0 min-w-0">
-          <main className="p-4 sm:p-6">
+          <main className="p-4 sm:p-6 pt-20 lg:pt-6">
             {profileLoading && activeTab === 'dashboard' ? (
               <div className="flex items-center justify-center min-h-[400px]">
                 <div className="text-center">
@@ -509,7 +619,7 @@ const DashBoard = ({ darkMode = false }) => {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden"
           onClick={toggleSidebar}
         />
       )}

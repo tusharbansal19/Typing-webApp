@@ -9,7 +9,7 @@ import LoginPage from './components/Login';
 import OtpPage from './components/Otp';
 import SignUpPage from './components/Signin';
 import { AuthProvider } from './Context/AuthContext';
-import ComppProtect from './components/ProtectedRoute';
+import ComppProtect, { DashBoardProtect } from './components/ProtectedRoute';
 import ProtectLogin from './components/Protectroutes';
 import Navbar from './components/navbar';
 // import TypingPage from './MatchComponents/MenuSections';
@@ -48,13 +48,13 @@ function App() {
           <Route path="/signup" element={<ProtectLogin><SignUpPage /></ProtectLogin>} />
           <Route path="/login" element={<ProtectLogin><LoginPage /></ProtectLogin>} />
           <Route path="/otp" element={<ProtectLogin><OtpPage /></ProtectLogin>} />
+            <Route path="/dashboard" element={<DashBoardProtect><UserDashboard darkMode={darkMode} setDarkMode={setDarkMode} /></DashBoardProtect>} />
 
           {/* All other pages: with navbar/footer */}
           <Route path='/'  element={<MainLayout darkMode={darkMode}  setDarkMode={setDarkMode} />}>
             <Route path="/" element={<Home darkMode={darkMode}/>} />
             <Route path="/typing" element={<TypingInterface darkMode={darkMode} setDarkMode={setDarkMode} />} />
             <Route path="/host" element={<ComppProtect><HostPage darkMode={darkMode} setDarkMode={setDarkMode} /></ComppProtect>} />
-            <Route path="/dashboard" element={<ComppProtect><UserDashboard darkMode={darkMode} /></ComppProtect>} />
             <Route path="/match/:roomName" element={<ComppProtect><MatchProvider><SocketProvider><MatchInterface darkMode={darkMode} setDarkMode={setDarkMode} /></SocketProvider></MatchProvider></ComppProtect>} />
             <Route path="/contact" element={<ContactUsPage darkMode={darkMode} />} />
             <Route path="/about" element={<AboutUsPage darkMode={darkMode}/>} />
