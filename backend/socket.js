@@ -273,7 +273,7 @@ function initSocket(server) {
 
     // MATCH FINISH - Handle when a user completes the typing test
     socket.on('matchFinish', async (userStats) => {
-      ////console.log('[SOCKET] matchFinish received:', userStats);
+      console.log('[SOCKET] matchFinish received:', userStats);
       const { roomName, name, email, wpm, accuracy, mistakes, correctChars, totalTime } = userStats;
       
       if (!roomName) {
@@ -313,24 +313,23 @@ function initSocket(server) {
         participants = []; 
       }
 
-      // If all participants have finished, emit matchResult with top 5
-      if (results.length >= participants.length) {
-        // Sort by WPM (highest first), then by accuracy, then by fewer mistakes
-        const rankedResults = results
-          .sort((a, b) => {
-            if (b.wpm !== a.wpm) return b.wpm - a.wpm;
-            if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
-            return a.mistakes - b.mistakes;
-          })
-          .map((result, index) => ({
-            ...result,
-            position: index + 1
-          }));
-        const top5 = rankedResults.slice(0, 5);
-        ////console.log('[SOCKET] Emitting matchResult with ranked results:', top5);
-        io.to(roomName).emit('matchResult', { ranked: top5 });
+              // If all participants have finished, emit matchResult with all participants
+        if (results.length >= participants.length) {
+          // Sort by WPM (highest first), then by accuracy, then by fewer mistakes
+          const rankedResults = results
+            .sort((a, b) => {
+              if (b.wpm !== a.wpm) return b.wpm - a.wpm;
+              if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
+              return a.mistakes - b.mistakes;
+            })
+            .map((result, index) => ({
+              ...result,
+              position: index + 1
+            }));
+          ////console.log('[SOCKET] Emitting matchResult with ranked results:', rankedResults);
+          io.to(roomName).emit('matchResult', { ranked: rankedResults });
 
-        // Prepare data for Match schema and get user IDs
+        // Prepare data for Match schema and get user IDs - Save ALL participants, not just top 5
         const matchParticipants = [];
         const userIds = [];
         

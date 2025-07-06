@@ -7,6 +7,7 @@ const initialState = {
   user: null, // { uid, email, displayName, ... }
   accessToken: localStorage.getItem('accessToken') || null,
   matchHistory: [],
+  matchPagination: null, // Add pagination info
   personalBest: { wpm: 0, accuracy: 0 },
   loading: false,
   error: null,
@@ -108,6 +109,7 @@ const userSlice = createSlice({
       state.user = null;
       state.accessToken = null;
       state.matchHistory = [];
+      state.matchPagination = null;
       state.personalBest = { wpm: 0, accuracy: 0 };
       state.error = null;
       localStorage.removeItem('accessToken');
@@ -212,7 +214,14 @@ const userSlice = createSlice({
       })
       .addCase(fetchUserMatches.fulfilled, (state, action) => {
         state.profileLoading = false;
-        state.matchHistory = action.payload.matches;
+        // If it's page 1, replace the matches, otherwise append them
+        if (action.payload.pagination && action.payload.pagination.page === 1) {
+          state.matchHistory = action.payload.matches;
+        } else {
+          // Append new matches to existing ones
+          state.matchHistory = [...state.matchHistory, ...action.payload.matches];
+        }
+        state.matchPagination = action.payload.pagination;
         state.profileError = null;
       })
       .addCase(fetchUserMatches.rejected, (state, action) => {

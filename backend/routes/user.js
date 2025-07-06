@@ -83,7 +83,7 @@ router.get('/profile', auth, async (req, res) => {
       .populate({
         path: 'matches',
         select: 'participants mode timeLimit startedAt endedAt winnerId',
-        options: { sort: { createdAt: -1 }, limit: 10 }
+        options: { sort: { createdAt: -1 }, limit: 50 } // Increased limit to get more matches
       });
     
     if (!user) {
@@ -163,7 +163,7 @@ router.get('/profile', auth, async (req, res) => {
         },
         currentStreak: 0 // This would need to be calculated from match history
       },
-      recentMatches: recentMatches.slice(0, 5)
+      recentMatches: recentMatches.slice(0, 10) // Increased to show more recent matches
     };
 
     return res.status(200).json({ success: true, data: profileData });
@@ -201,8 +201,15 @@ router.put('/profile', auth, async (req, res) => {
 router.get('/matches', auth, async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const limit = parseInt(req.query.limit) || 50; // Increased default limit
     const skip = (page - 1) * limit;
+
+    // Get total count of user's matches
+    const totalMatches = await User.findById(req.user.id).populate({
+      path: 'matches',
+      select: '_id',
+      options: { sort: { createdAt: -1 } }
+    });
 
     const user = await User.findById(req.user.id).populate({
       path: 'matches',
@@ -236,7 +243,7 @@ router.get('/matches', auth, async (req, res) => {
       pagination: {
         page,
         limit,
-        total: user.matches.length
+        total: totalMatches.matches.length
       }
     });
   } catch (err) {

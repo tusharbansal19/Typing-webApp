@@ -172,15 +172,15 @@ router.post('/join', auth, async (req, res) => {
 });
 
 // Delete all matches
-const fn= async (req, res) => {
-  try {
-    const result = await Match.deleteMany({});
-    ////console.log("Deleted all matches....");
-    // return res.status(200).json({ message: 'All matches deleted', deletedCount: result.deletedCount });
-  } catch (err) {
-    ////console.log("Error deleting matches....");
-    // return res.status(500).json({ message: err.message });
-  }}
+// const fn= async (req, res) => {
+//   try {
+//     const result = await Match.deleteMany({});
+//     ////console.log("Deleted all matches....");
+//     // return res.status(200).json({ message: 'All matches deleted', deletedCount: result.deletedCount });
+//   } catch (err) {
+//     ////console.log("Error deleting matches....");
+//     // return res.status(500).json({ message: err.message });
+//   }}
 // fn();
 
 // Get participant stats for a room
