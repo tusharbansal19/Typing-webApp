@@ -464,15 +464,14 @@ const DashBoard = ({ darkMode = false , setDarkMode} ) => {
                     minute: '2-digit'
                   });
                   
-                  // Determine match result based on position
-                  const getResultDisplay = (position) => {
-                    if (position === 1) return { text: '1st', class: 'bg-yellow-500/20 text-yellow-400' };
-                    if (position === 2) return { text: '2nd', class: 'bg-gray-500/20 text-gray-400' };
-                    if (position === 3) return { text: '3rd', class: 'bg-orange-500/20 text-orange-400' };
-                    return { text: `${position}th`, class: 'bg-blue-500/20 text-blue-400' };
+                  // Determine match result based on win/loss
+                  const getResultDisplay = (result) => {
+                    if (result === 'win') return { text: 'WIN', class: 'bg-green-500/20 text-green-400' };
+                    if (result === 'loss') return { text: 'LOSS', class: 'bg-red-500/20 text-red-400' };
+                    return { text: 'N/A', class: 'bg-gray-500/20 text-gray-400' };
                   };
                   
-                  const result = getResultDisplay(match.position || 1);
+                  const result = getResultDisplay(match.result);
                   
                   return (
                     <div key={match._id || match.id} className={`${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gradient-to-br from-white/80 to-sky-50/80 border-sky-200/50'} backdrop-blur-sm border rounded-xl p-4 hover:scale-105 transition-all duration-300`}>
@@ -815,7 +814,7 @@ const DashBoard = ({ darkMode = false , setDarkMode} ) => {
       <div className="flex">
         {/* Sidebar */}
         <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 fixed lg:static inset-y-0 left-0 z-40 w-64 ${darkMode ? 'bg-gray-800/50' : 'bg-white/80'} backdrop-blur-sm border-r ${darkMode ? 'border-gray-700' : 'border-sky-200/50'} transition-transform duration-300`}>
-          <div className="p-4 h-full overflow-y-auto pt-20 lg:pt-4">
+          <div className="p-4 h-full  pt-20 lg:pt-4">
             <div className="flex items-center justify-between lg:justify-center mb-6">
               <h2 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>Profile</h2>
               <button 
@@ -967,14 +966,145 @@ const DashBoard = ({ darkMode = false , setDarkMode} ) => {
       </div>
 
       {/* Footer */}
-      <footer className={`${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white/80 border-sky-200/50'} backdrop-blur-sm border-t mt-8 sm:mt-12`}>
-        <div className="px-4 sm:px-6 py-4 text-center">
-          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-            © 2025 TypeSpeed Pro. Built for speed enthusiasts.
+      <footer className={`${darkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-white/80 border-sky-200/50'} backdrop-blur-sm border-t relative overflow-hidden`}>
+  {/* Background decoration */}
+  <div className={`absolute inset-0 ${darkMode ? 'bg-gradient-to-r from-blue-600/5 to-purple-600/5' : 'bg-gradient-to-r from-sky-500/5 to-blue-500/5'}`}></div>
+  
+  <div className="relative px-4 sm:px-6 py-8">
+    {/* Main footer content */}
+    <div className="max-w-6xl mx-auto">
+      {/* Top section with links */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        {/* Brand section */}
+        <div className="col-span-1 md:col-span-2">
+          <h3 className={`text-lg font-bold ${darkMode ? 'text-white' : 'text-gray-900'} mb-3`}>
+            TypeSpeed Pro
+          </h3>
+          <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'} mb-4 max-w-md`}>
+            Master the art of typing with our advanced speed testing platform. Track your progress, compete with others, and become a typing champion.
           </p>
+          {/* Social links */}
+          <div className="flex space-x-4">
+            <a 
+              href="#" 
+              className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors duration-200`}
+              aria-label="Twitter"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/>
+              </svg>
+            </a>
+            <a 
+              href="#" 
+              className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors duration-200`}
+              aria-label="GitHub"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+              </svg>
+            </a>
+            <a 
+              href="#" 
+              className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors duration-200`}
+              aria-label="Discord"
+            >
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M20.317 4.369a19.791 19.791 0 00-4.885-1.515.074.074 0 00-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 00-5.487 0 12.64 12.64 0 00-.617-1.25.077.077 0 00-.079-.037A19.736 19.736 0 003.677 4.37a.07.07 0 00-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 00.031.057 19.9 19.9 0 005.993 3.03.078.078 0 00.084-.028 14.09 14.09 0 001.226-1.994.076.076 0 00-.041-.106 13.107 13.107 0 01-1.872-.892.077.077 0 01-.008-.128 10.2 10.2 0 00.372-.292.074.074 0 01.077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 01.078.01c.12.098.246.198.373.292a.077.077 0 01-.006.127 12.299 12.299 0 01-1.873.892.077.077 0 00-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 00.084.028 19.839 19.839 0 006.002-3.03.077.077 0 00.032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 00-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+              </svg>
+            </a>
+          </div>
         </div>
-      </footer>
 
+        {/* Quick links */}
+        <div>
+          <h4 className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-900'} mb-3`}>
+            Quick Links
+          </h4>
+          <ul className="space-y-2">
+            <li>
+              <a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors duration-200`}>
+                Speed Test
+              </a>
+            </li>
+            <li>
+              <a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors duration-200`}>
+                Leaderboard
+              </a>
+            </li>
+            <li>
+              <a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors duration-200`}>
+                Practice
+              </a>
+            </li>
+            <li>
+              <a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors duration-200`}>
+                Statistics
+              </a>
+            </li>
+          </ul>
+        </div>
+
+        {/* Support */}
+        <div>
+          <h4 className={`text-sm font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-900'} mb-3`}>
+            Support
+          </h4>
+          <ul className="space-y-2">
+            <li>
+              <a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors duration-200`}>
+                Help Center
+              </a>
+            </li>
+            <li>
+              <a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors duration-200`}>
+                Contact Us
+              </a>
+            </li>
+            <li>
+              <a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors duration-200`}>
+                Privacy Policy
+              </a>
+            </li>
+            <li>
+              <a href="#" className={`text-sm ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors duration-200`}>
+                Terms of Service
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className={`border-t ${darkMode ? 'border-gray-700' : 'border-gray-200'} mb-6`}></div>
+
+      {/* Bottom section */}
+      <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+        {/* Copyright */}
+        <p className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          © 2025 TypeSpeed Pro. Built for speed enthusiasts.
+        </p>
+
+        {/* Additional info */}
+        <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6">
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${darkMode ? 'bg-green-400' : 'bg-green-500'}`}></div>
+            <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              All systems operational
+            </span>
+          </div>
+          <div className="flex items-center space-x-4">
+            <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Made with ❤️ for typists
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Decorative elements */}
+  <div className={`absolute top-0 left-0 w-full h-px ${darkMode ? 'bg-gradient-to-r from-transparent via-blue-500/20 to-transparent' : 'bg-gradient-to-r from-transparent via-sky-500/20 to-transparent'}`}></div>
+</footer>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
