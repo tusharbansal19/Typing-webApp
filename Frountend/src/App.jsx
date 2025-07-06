@@ -11,7 +11,6 @@ import SignUpPage from './components/Signin';
 import { AuthProvider } from './Context/AuthContext';
 import ComppProtect, { DashBoardProtect } from './components/ProtectedRoute';
 import ProtectLogin from './components/Protectroutes';
-import Navbar from './components/navbar';
 // import TypingPage from './MatchComponents/MenuSections';
 import ContestSection from './components/Contest';
 import LearnPage from './components/Learn';
