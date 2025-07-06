@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const instance = axios.create({
-  baseURL: 'https://typing-webapp-backend.onrender.com'
+  baseURL: 'http://localhost:3000'
 });
 
 // Automatically attach token

@@ -8,7 +8,7 @@ async function updateUserMatchDetails(userEmail, matchId, isWinner = false, wpm 
   try {
     const user = await User.findOne({ email: userEmail });
     if (!user) {
-      console.log(`[SOCKET] User not found for email: ${userEmail}`);
+      //console.log(`[SOCKET] User not found for email: ${userEmail}`);
       return false;
     }
 
@@ -32,10 +32,10 @@ async function updateUserMatchDetails(userEmail, matchId, isWinner = false, wpm 
     }
 
     await User.findByIdAndUpdate(user._id, updateData);
-    console.log(`[SOCKET] Updated user ${userEmail} match details`);
+    //console.log(`[SOCKET] Updated user ${userEmail} match details`);
     return true;
   } catch (error) {
-    console.error(`[SOCKET] Error updating user ${userEmail} match details:`, error);
+    //console.error(`[SOCKET] Error updating user ${userEmail} match details:`, error);
     return false;
   }
 }
@@ -52,28 +52,28 @@ function initSocket(server) {
   io.on('connection', (socket) => {
 
 
-    ////console.log('New socket connection:', socket.id);
+    //////console.log('New socket connection:', socket.id);
 
 
     socket.on('joinRoom', async ({ roomName, socketId, email }) => {
 
 
       if (!roomName) {
-        ////console.log('[SOCKET] joinRoom called with undefined roomName, ignoring.');
+        //////console.log('[SOCKET] joinRoom called with undefined roomName, ignoring.');
         return;
       }
 
 
 
-      ////console.log(`[SOCKET] joinRoom for roomName: ${roomName}`);
+      //////console.log(`[SOCKET] joinRoom for roomName: ${roomName}`);
       socket.join(roomName);
-      ////console.log("socket.id :: ",socket.id,"roomName :: ",roomName);
+      //////console.log("socket.id :: ",socket.id,"roomName :: ",roomName);
       // Fetch or create match state from Redis
       let roomState = await redis.hgetall(`match:${roomName}`);
       if(roomState.isStarted){
         return socket.to(socket.id).emit('matchAlreadyStarted', { message: 'Match already started' });
       }
-      ////console.log("roomState :: ",roomName,"room is :: ", roomState);
+      //////console.log("roomState :: ",roomName,"room is :: ", roomState);
       let participants = [];
       try { participants = JSON.parse(roomState.participants); } catch { participants = []; }
       // Ensure each participant has _id, email, username
@@ -98,7 +98,7 @@ function initSocket(server) {
 
     // SUBMIT RESULT
     socket.on('submitResult', async ({ roomName, speed, accuracy, email }) => {
-      ////console.log(`[SOCKET] submitResult for roomName: ${roomName}`);
+      //////console.log(`[SOCKET] submitResult for roomName: ${roomName}`);
       if (!roomName) return;
       let roomState = await redis.hgetall(`match:${roomName}`);
       if (!roomState.members) return;
@@ -136,12 +136,12 @@ function initSocket(server) {
           io.to(key.replace('match:', '')).emit('all participants', { participants, roomName: key.replace('match:', '') });
         }
       }
-      ////console.log('User disconnected:', socket.id);
+      //////console.log('User disconnected:', socket.id);
     });
 
     // CREATE GROUP TO JOIN (legacy, for completeness)
     socket.on('createGroupToJoin', async ({ roomName, userName }) => {
-      ////console.log(`[SOCKET] createGroupToJoin for roomName: ${roomName}`);
+      //////console.log(`[SOCKET] createGroupToJoin for roomName: ${roomName}`);
       if (!roomName) return;
       let roomState = await redis.hgetall(`match:${roomName}`);
       if (!roomState.groupMembers) roomState.groupMembers = JSON.stringify([]);
@@ -154,13 +154,13 @@ function initSocket(server) {
 
     // START GAME
     socket.on('startGame', async (roomName) => {
-      ////console.log(`[SOCKET] startGame for roomName: ${roomName}`);
+      //////console.log(`[SOCKET] startGame for roomName: ${roomName}`);
       io.in(roomName).emit('gameStarted', { message: 'The game has started!' });
     });
 
     // GAME OVER
     socket.on('gameOver', async (roomName) => {
-      ////console.log(`[SOCKET] gameOver for roomName: ${roomName}`);
+      //////console.log(`[SOCKET] gameOver for roomName: ${roomName}`);
       io.in(roomName).emit('gameOver', { message: 'Game Over!' });
     });
 
@@ -194,13 +194,13 @@ function initSocket(server) {
       io.to(roomName).emit('statusUpdated', { participants, roomName });
 
       // Check if all participants are ready
-      ////console.log("RoomState :: ",roomState);
+      //////console.log("RoomState :: ",roomState);
       const allReady = participants.length > 0 && participants.every(p => p.ready);
       if (allReady) {
         // Update isStarted and emit matchStart with full info
         const mode = roomState.mode || 'multiplayer';
         const timeLimit = roomState.timeLimit ? Number(roomState.timeLimit) : 60;
-        ////console.log("roomState.wordList :: ",roomState.wordList);
+        //////console.log("roomState.wordList :: ",roomState.wordList);
         const wordList = roomState.wordList;
         await redis.hset(`match:${roomName}`, 'isStarted', true);
         io.to(roomName).emit('matchStart', {
@@ -214,13 +214,70 @@ function initSocket(server) {
       }
     });
 
+    // REAL-TIME PARTICIPANT UPDATE - Handle live WPM/accuracy updates
+    socket.on('participantUpdate', async (data) => {
+      const { roomName, email, wpm, accuracy } = data;
+      
+      if (!roomName || !email) {
+        //console.log('[SOCKET] participantUpdate called with missing data, ignoring.');
+        return;
+      }
+
+      // Store participant stats in Redis
+      let roomState = await redis.hgetall(`match:${roomName}`);
+      let participantStats = [];
+      try { 
+        participantStats = JSON.parse(roomState.participantStats || '[]'); 
+      } catch { 
+        participantStats = []; 
+      }
+
+      // Update or add participant stats
+      const existingIndex = participantStats.findIndex(p => p.email === email);
+      const updatedStats = {
+        email,
+        wpm: wpm || 0,
+        accuracy: accuracy || 100,
+        timestamp: Date.now()
+      };
+
+      if (existingIndex >= 0) {
+        participantStats[existingIndex] = updatedStats;
+      } else {
+        participantStats.push(updatedStats);
+      }
+
+      // Store updated stats in Redis
+      await redis.hset(`match:${roomName}`, 'participantStats', JSON.stringify(participantStats));
+
+      // Broadcast to all participants in the room
+      io.to(roomName).emit('participantUpdate', updatedStats);
+      
+    });
+
+    // REQUEST ALL PARTICIPANT STATS - Get current stats for all participants
+    socket.on('requestParticipantStats', async (roomName) => {
+      if (!roomName) return;
+      
+      let roomState = await redis.hgetall(`match:${roomName}`);
+      let participantStats = [];
+      try { 
+        participantStats = JSON.parse(roomState.participantStats || '[]'); 
+      } catch { 
+        participantStats = []; 
+      }
+
+      // Send all participant stats to the requesting client
+      socket.emit('allParticipantStats', { participantStats, roomName });
+    });
+
     // MATCH FINISH - Handle when a user completes the typing test
     socket.on('matchFinish', async (userStats) => {
-      //console.log('[SOCKET] matchFinish received:', userStats);
+      ////console.log('[SOCKET] matchFinish received:', userStats);
       const { roomName, name, email, wpm, accuracy, mistakes, correctChars, totalTime } = userStats;
       
       if (!roomName) {
-        //console.log('[SOCKET] matchFinish called with undefined roomName, ignoring.');
+        ////console.log('[SOCKET] matchFinish called with undefined roomName, ignoring.');
         return;
       }
 
@@ -270,7 +327,7 @@ function initSocket(server) {
             position: index + 1
           }));
         const top5 = rankedResults.slice(0, 5);
-        //console.log('[SOCKET] Emitting matchResult with ranked results:', top5);
+        ////console.log('[SOCKET] Emitting matchResult with ranked results:', top5);
         io.to(roomName).emit('matchResult', { ranked: top5 });
 
         // Prepare data for Match schema and get user IDs
@@ -303,7 +360,7 @@ function initSocket(server) {
               });
             }
           } catch (err) {
-            console.error('[SOCKET] Error finding user:', err);
+            //console.error('[SOCKET] Error finding user:', err);
             matchParticipants.push({
               user: null,
               username: r.name || r.email,
@@ -334,7 +391,10 @@ function initSocket(server) {
             winnerId
           });
           
-          console.log('[SOCKET] Saved match results to MongoDB');
+          //console.log('[SOCKET] Saved match results to MongoDB');
+
+
+
           
           // Update each participant's match details
           for (let i = 0; i < rankedResults.length; i++) {
@@ -350,9 +410,9 @@ function initSocket(server) {
             );
           }
           
-          console.log('[SOCKET] Updated all participants match details');
+          //console.log('[SOCKET] Updated all participants match details');
         } catch (err) {
-          console.error('[SOCKET] Error saving match results to MongoDB:', err);
+          //console.error('[SOCKET] Error saving match results to MongoDB:', err);
         }
         // After 5 seconds, clear Redis for this room
         setTimeout(async () => {
@@ -362,7 +422,7 @@ function initSocket(server) {
           } catch (err) {
             //console.error(`[SOCKET] Error clearing Redis for room ${roomName}:`, err);
           }
-        }, 2000);
+        }, 5000);
       }
     });
   });

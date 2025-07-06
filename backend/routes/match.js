@@ -183,6 +183,39 @@ const fn= async (req, res) => {
   }}
 // fn();
 
+// Get participant stats for a room
+router.get('/stats/:roomName', async (req, res) => {
+  try {
+    const { roomName } = req.params;
+    const roomState = await redis.hgetall(`match:${roomName}`);
+    
+    if (!roomState) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Room not found' 
+      });
+    }
+
+    let participantStats = [];
+    try { 
+      participantStats = JSON.parse(roomState.participantStats || '[]'); 
+    } catch { 
+      participantStats = []; 
+    }
+
+    return res.status(200).json({ 
+      success: true, 
+      participantStats,
+      roomName 
+    });
+  } catch (err) {
+    return res.status(500).json({ 
+      success: false, 
+      message: err.message 
+    });
+  }
+});
+
 // Clear all match keys in Redis (for testing only!)
 router.post('/clear-redis-matches', async (req, res) => {
   let count = 0;

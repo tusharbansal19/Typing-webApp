@@ -22,6 +22,7 @@ import { useAuth } from '../Context/AuthContext';
 import { useSelector, useDispatch } from 'react-redux';
 import { setRoomName, setParticipants, setMode, setTimeLimit, setWordList, setStarted } from '../features/matchRealtimeSlice';
 import ResultLeaderboard from './ResultLeaderboard.jsx';
+import RealTimeLeaderboard from './RealTimeLeaderboard.jsx';
 import { useNavigate, useParams } from 'react-router-dom';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -328,6 +329,61 @@ const MatchInterface = ({darkMode}) => {
     calculateStats();
   }, [inputText, calculateStats]);
 
+  // Emit current user's stats to other participants with debouncing
+  useEffect(() => {
+    if (socket && isTypingActive && isActive && userEmail && roomName) {
+      let lastEmittedWpm = 0;
+      let lastEmittedAccuracy = 0;
+      let emitTimeout = null;
+
+      const emitStats = () => {
+        try {
+          // Only emit if stats have changed significantly
+          if (Math.abs(wpm - lastEmittedWpm) >= 2 || Math.abs(accuracy - lastEmittedAccuracy) >= 2) {
+            socket.emit('participantUpdate', {
+              email: userEmail,
+              wpm: wpm,
+              accuracy: accuracy,
+              roomName: roomName
+            });
+            lastEmittedWpm = wpm;
+            lastEmittedAccuracy = accuracy;
+          }
+        } catch (error) {
+          console.error('Error emitting participant stats:', error);
+        }
+      };
+
+      // Debounced emission - only emit after 3 seconds of no changes
+      const debouncedEmit = () => {
+        if (emitTimeout) {
+          clearTimeout(emitTimeout);
+        }
+        emitTimeout = setTimeout(emitStats, 3000);
+      };
+
+      // Emit initial stats immediately with current accuracy
+      socket.emit('participantUpdate', {
+        email: userEmail,
+        wpm: wpm,
+        accuracy: accuracy,
+        roomName: roomName
+      });
+      lastEmittedWpm = wpm;
+      lastEmittedAccuracy = accuracy;
+
+      // Set up periodic emission every 5 seconds (reduced from 2 seconds)
+      const interval = setInterval(debouncedEmit, 5000);
+      
+      return () => {
+        clearInterval(interval);
+        if (emitTimeout) {
+          clearTimeout(emitTimeout);
+        }
+      };
+    }
+  }, [socket, isTypingActive, isActive, userEmail, wpm, accuracy, roomName]);
+
   // Track WPM every 5 seconds and at start
   useEffect(() => {
     if (!isActive) return;
@@ -611,14 +667,32 @@ const MatchInterface = ({darkMode}) => {
                         isCorrectKey={isCorrectKey}
                         isIncorrectKey={isIncorrectKey}
                       />
+                      
+                      {/* Mobile Real-time Leaderboard */}
+                      <div className="block lg:hidden mt-6">
+                        <RealTimeLeaderboard 
+                          darkMode={darkMode} 
+                          isTypingActive={isTypingActive} 
+                          currentUserWpm={wpm}
+                          currentUserAccuracy={accuracy}
+                        />
+                      </div>
                     </>
                   )}
                 </div>
                 {/* Sidebar on large screens */}
-                {(cooldown || !isTypingActive) &&
-                  <div className="hidden lg:block lg:w-1/4 lg:ml-6">
+                <div className="hidden lg:block lg:w-1/4 lg:ml-6">
+                  {cooldown || !isTypingActive ? (
                     <ShowMember darkMode={darkMode} />
-                  </div>}
+                  ) : (
+                    <RealTimeLeaderboard 
+                      darkMode={darkMode} 
+                      isTypingActive={isTypingActive} 
+                      currentUserWpm={wpm}
+                      currentUserAccuracy={accuracy}
+                    />
+                  )}
+                </div>
               </div>
             )}
           </>
