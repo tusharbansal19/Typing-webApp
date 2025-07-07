@@ -6,7 +6,10 @@ import { Outlet } from "react-router-dom";
 const MainLayout = ({ darkMode, setDarkMode }) => (
   <>
     <Navbar darkMode={darkMode} setDarkMode={setDarkMode} />
-    <Outlet />
+    <div className="mt-16">
+
+    {<Outlet />}
+    </div>
     {/* <Footer /> */}
   </>
 );

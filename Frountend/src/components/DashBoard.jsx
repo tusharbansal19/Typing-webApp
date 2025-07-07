@@ -29,6 +29,25 @@ import { fetchUserProfile, fetchUserMatches, updateUserProfile } from '../featur
 import { useAuth } from '../Context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+// CircuitBackground with dual color support
+const CircuitBackground = ({ darkMode }) => (
+  <div className="absolute inset-0 opacity-30 z-0 pointer-events-none">
+    <svg width="100%" height="100%" viewBox="0 0 1000 1000" className="absolute inset-0">
+      <defs>
+        <pattern id="circuit-dashboard" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+          <path d="M10,10 L90,10 L90,90 L10,90 Z" fill="none" stroke={darkMode ? '#7dd3fc' : '#60a5fa'} strokeWidth="0.5" opacity="0.3"/>
+          <circle cx="10" cy="10" r="2" fill={darkMode ? '#a78bfa' : '#60a5fa'} opacity="0.5"/>
+          <circle cx="90" cy="10" r="2" fill={darkMode ? '#a78bfa' : '#60a5fa'} opacity="0.5"/>
+          <circle cx="90" cy="90" r="2" fill={darkMode ? '#a78bfa' : '#60a5fa'} opacity="0.5"/>
+          <circle cx="10" cy="90" r="2" fill={darkMode ? '#a78bfa' : '#60a5fa'} opacity="0.5"/>
+          <path d="M30,30 L70,30 L70,70 L30,70 Z" fill="none" stroke={darkMode ? '#818cf8' : '#bae6fd'} strokeWidth="0.3" opacity="0.2"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#circuit-dashboard)"/>
+    </svg>
+  </div>
+);
+
 const DashBoard = ({ darkMode = false , setDarkMode} ) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -110,10 +129,10 @@ const DashBoard = ({ darkMode = false , setDarkMode} ) => {
     // Calculate averages for each date and sort by date
     let performanceData = Object.entries(dateMap)
       .map(([date, data]) => {
-        const avgWpm = data.wpm.length > 0 ? Math.round(data.wpm.reduce((a, b) => a + b, 0) / data.wpm.length) : 0;
-        const avgAccuracy = data.accuracy.length > 0 ? Math.round(data.accuracy.reduce((a, b) => a + b, 0) / data.accuracy.length) : 0;
-        
-        return {
+      const avgWpm = data.wpm.length > 0 ? Math.round(data.wpm.reduce((a, b) => a + b, 0) / data.wpm.length) : 0;
+      const avgAccuracy = data.accuracy.length > 0 ? Math.round(data.accuracy.reduce((a, b) => a + b, 0) / data.accuracy.length) : 0;
+      
+      return {
           date,
           wpm: avgWpm,
           accuracy: avgAccuracy,
@@ -159,10 +178,10 @@ const DashBoard = ({ darkMode = false , setDarkMode} ) => {
           
           return {
             date,
-            wpm: avgWpm,
-            accuracy: avgAccuracy,
-            matchCount: data.wpm.length
-          };
+        wpm: avgWpm,
+        accuracy: avgAccuracy,
+        matchCount: data.wpm.length
+      };
         })
         .sort((a, b) => {
           const dateA = new Date(a.date + ', ' + new Date().getFullYear());
@@ -221,12 +240,12 @@ const DashBoard = ({ darkMode = false , setDarkMode} ) => {
     
     if (allMatches.length === 0) {
       return {
-        totalMatches: 0,
-        wins: 0,
-        winRate: 0,
-        personalBest: { wpm: 0, accuracy: 0 },
-        currentStreak: 0
-      };
+    totalMatches: 0,
+    wins: 0,
+    winRate: 0,
+    personalBest: { wpm: 0, accuracy: 0 },
+    currentStreak: 0
+  };
     }
 
     let totalMatches = allMatches.length;
@@ -506,7 +525,7 @@ const DashBoard = ({ darkMode = false , setDarkMode} ) => {
               <div className="flex items-center justify-between mb-4">
                 <h3 className={`text-lg font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
                   {performanceData.length > 0 && performanceData[0].date.startsWith('Match') ? 'Recent Matches Performance' : 'Performance by Date'}
-                </h3>
+              </h3>
                 {performanceData.length > 0 && performanceData[0].date !== 'No Data' && (
                   <div className="text-right">
                     <span className={`text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -1124,7 +1143,8 @@ const DashBoard = ({ darkMode = false , setDarkMode} ) => {
   };
 
   return (
-    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-white via-sky-50 to-blue-50'} transition-colors duration-300`}>
+    <div className={`min-h-screen ${darkMode ? 'bg-gray-900' : 'bg-gradient-to-br from-white via-sky-50 to-blue-50'} transition-colors duration-300 relative overflow-hidden`}>
+      <CircuitBackground darkMode={darkMode} />
       {/* Scrollable Header */}
       <header className={`sticky top-0 md:z-[100] ${darkMode ? 'bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700' : 'bg-gradient-to-r from-blue-500 to-purple-600 border-blue-400'} backdrop-blur-sm border-b shadow-lg`}>
         <div className="flex items-center justify-between px-4 py-7">

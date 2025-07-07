@@ -681,7 +681,7 @@ const MatchInterface = ({darkMode}) => {
                   )}
                 </div>
                 {/* Sidebar on large screens */}
-                <div className="hidden lg:block lg:w-1/4 lg:ml-6">
+                  <div className="hidden lg:block lg:w-1/4 lg:ml-6">
                   {cooldown || !isTypingActive ? (
                     <ShowMember darkMode={darkMode} />
                   ) : (

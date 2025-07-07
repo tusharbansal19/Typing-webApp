@@ -314,18 +314,18 @@ function initSocket(server) {
       }
 
               // If all participants have finished, emit matchResult with all participants
-        if (results.length >= participants.length) {
-          // Sort by WPM (highest first), then by accuracy, then by fewer mistakes
-          const rankedResults = results
-            .sort((a, b) => {
-              if (b.wpm !== a.wpm) return b.wpm - a.wpm;
-              if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
-              return a.mistakes - b.mistakes;
-            })
-            .map((result, index) => ({
-              ...result,
-              position: index + 1
-            }));
+      if (results.length >= participants.length) {
+        // Sort by WPM (highest first), then by accuracy, then by fewer mistakes
+        const rankedResults = results
+          .sort((a, b) => {
+            if (b.wpm !== a.wpm) return b.wpm - a.wpm;
+            if (b.accuracy !== a.accuracy) return b.accuracy - a.accuracy;
+            return a.mistakes - b.mistakes;
+          })
+          .map((result, index) => ({
+            ...result,
+            position: index + 1
+          }));
           ////console.log('[SOCKET] Emitting matchResult with ranked results:', rankedResults);
           io.to(roomName).emit('matchResult', { ranked: rankedResults });
 

@@ -1,6 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { FaKeyboard, FaLightbulb } from "react-icons/fa";
 
+// CircuitBackground with dual color support
+const CircuitBackground = ({ darkMode }) => (
+  <div className="absolute inset-0 opacity-30 z-0 pointer-events-none">
+    <svg width="100%" height="100%" viewBox="0 0 1000 1000" className="absolute inset-0">
+      <defs>
+        <pattern id="circuit-learn" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+          <path d="M10,10 L90,10 L90,90 L10,90 Z" fill="none" stroke={darkMode ? '#7dd3fc' : '#60a5fa'} strokeWidth="0.5" opacity="0.3"/>
+          <circle cx="10" cy="10" r="2" fill={darkMode ? '#a78bfa' : '#60a5fa'} opacity="0.5"/>
+          <circle cx="90" cy="10" r="2" fill={darkMode ? '#a78bfa' : '#60a5fa'} opacity="0.5"/>
+          <circle cx="90" cy="90" r="2" fill={darkMode ? '#a78bfa' : '#60a5fa'} opacity="0.5"/>
+          <circle cx="10" cy="90" r="2" fill={darkMode ? '#a78bfa' : '#60a5fa'} opacity="0.5"/>
+          <path d="M30,30 L70,30 L70,70 L30,70 Z" fill="none" stroke={darkMode ? '#818cf8' : '#bae6fd'} strokeWidth="0.3" opacity="0.2"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#circuit-learn)"/>
+    </svg>
+  </div>
+);
+
 const LearnPage = ({ darkMode }) => {
   const practiceWords = [
     "keyboard", "challenge", "efficiency", "focus", "speed", "accuracy", 
@@ -23,7 +42,8 @@ const LearnPage = ({ darkMode }) => {
   };
 
   return (
-    <div className={`${darkMode ? 'bg-gradient-to-br from-black via-blue-900 to-gray-900' : 'bg-gradient-to-br from-blue-200 via-blue-100 to-white'} min-h-screen text-white p-6 md:p-10`}>
+    <div className={`relative min-h-screen ${darkMode ? 'bg-gradient-to-br from-black via-blue-900 to-gray-900' : 'bg-gradient-to-br from-blue-200 via-blue-100 to-white'} text-white p-6 md:p-10 overflow-hidden`}>
+      <CircuitBackground darkMode={darkMode} />
       <div className="max-w-7xl mx-auto space-y-12">
 
         {/* Typing Practice Words Section */}

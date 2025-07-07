@@ -216,7 +216,7 @@ const userSlice = createSlice({
         state.profileLoading = false;
         // If it's page 1, replace the matches, otherwise append them
         if (action.payload.pagination && action.payload.pagination.page === 1) {
-          state.matchHistory = action.payload.matches;
+        state.matchHistory = action.payload.matches;
         } else {
           // Append new matches to existing ones
           state.matchHistory = [...state.matchHistory, ...action.payload.matches];
