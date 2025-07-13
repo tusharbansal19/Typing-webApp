@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Mail, Phone, MapPin, Send, User, MessageSquare, Shield, Github, Linkedin, Twitter, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
-const ContactUsPage = () => {
-  const [darkMode, setDarkMode] = useState(true);
+const ContactUsPage = ({darkMode}) => {
+  const [ setDarkMode] = useState(true);
   const [loader, setLoader] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastType, setToastType] = useState('success');
@@ -222,15 +222,7 @@ const ContactUsPage = () => {
         .opacity-100 { opacity: 1; }
       `}</style>
 
-      {/* Theme Toggle */}
-      <button
-        onClick={toggleTheme}
-        className={`fixed top-6 right-6 z-40 p-3 rounded-full backdrop-blur-sm border transition-all duration-300 hover:scale-110 ${
-          darkMode ? 'bg-gray-800/50 border-gray-700 hover:bg-gray-700/50' : 'bg-white/50 border-gray-200 hover:bg-white/80'
-        } shadow-lg hover:shadow-xl`}
-      >
-        {darkMode ? '🌙' : '☀️'}
-      </button>
+     
 
       {/* Toast Notification */}
       <Toast type={toastType} onClose={() => setShowToast(false)} />

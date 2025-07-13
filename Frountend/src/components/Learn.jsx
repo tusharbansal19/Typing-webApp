@@ -20,16 +20,45 @@ const CircuitBackground = ({ darkMode }) => (
   </div>
 );
 
+// --- Animated Background and Circuit SVG from ContactsUs.jsx ---
+const AnimatedBackground = () => (
+  <div className="fixed inset-0 pointer-events-none z-0">
+    <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-transparent to-cyan-900/20" />
+    <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl animate-pulse"
+           style={{ top: '10%', left: '10%', animation: 'float 20s ease-in-out infinite alternate' }} />
+      <div className="absolute w-80 h-80 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"
+           style={{ bottom: '10%', right: '10%', animation: 'float 25s ease-in-out infinite alternate-reverse' }} />
+    </div>
+  </div>
+);
+
 const LearnPage = ({ darkMode }) => {
   const practiceWords = [
     "keyboard", "challenge", "efficiency", "focus", "speed", "accuracy", 
     "perseverance", "typing", "learning", "development", "improvement"
   ];
   
+  // Update images array to have 18 unique cards
   const images = [
-    { src: 'image1.jpg', alt: 'Focus Typing', caption: 'Focus on Accuracy' },
-    { src: 'image2.jpg', alt: 'Speed Building', caption: 'Increase Your Speed' },
-    { src: 'image3.jpg', alt: 'Typing Techniques', caption: 'Master Typing Techniques' },
+    { src: 'https://media.gettyimages.com/id/1422478091/photo/close-up-of-a-hands-on-a-laptop-keyboard.jpg?s=612x612&w=gi&k=20&c=C4yAFsTwUQ90sHNCiCB3EtOaCvcv2usfaGWh5NiXWG4=', alt: 'Focus Typing', caption: 'Focus on Accuracy' },
+    { src: 'https://images.pexels.com/photos/374720/pexels-photo-374720.jpeg?cs=srgb&dl=pexels-burst-374720.jpg&fm=jpg', alt: 'Speed Building', caption: 'Increase Your Speed' },
+    { src: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUxmHcLg_k98eDPQiDnAXMd3FLxLpVIMrL-g&s', alt: 'Typing Techniques', caption: 'Master Typing Techniques' },
+    { src: 'https://media.gettyimages.com/id/1422478091/photo/close-up-of-a-hands-on-a-laptop-keyboard.jpg?s=612x612&w=gi&k=20&c=C4yAFsTwUQ90sHNCiCB3EtOaCvcv2usfaGWh5NiXWG4=', alt: 'Finger Placement', caption: 'Perfect Finger Placement' },
+    { src: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUxmHcLg_k98eDPQiDnAXMd3FLxLpVIMrL-g&s', alt: 'Consistency', caption: 'Practice Consistently' },
+    { src: 'https://images.pexels.com/photos/374720/pexels-photo-374720.jpeg?cs=srgb&dl=pexels-burst-374720.jpg&fm=jpg', alt: 'Posture', caption: 'Maintain Good Posture' },
+    { src: 'https://images.pexels.com/photos/374720/pexels-photo-374720.jpeg?cs=srgb&dl=pexels-burst-374720.jpg&fm=jpg', alt: 'Breaks', caption: 'Take Regular Breaks' },
+    { src: 'https://media.gettyimages.com/id/1422478091/photo/close-up-of-a-hands-on-a-laptop-keyboard.jpg?s=612x612&w=gi&k=20&c=C4yAFsTwUQ90sHNCiCB3EtOaCvcv2usfaGWh5NiXWG4=', alt: 'Home Row', caption: 'Use the Home Row' },
+    { src: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUxmHcLg_k98eDPQiDnAXMd3FLxLpVIMrL-g&s', alt: 'Shortcuts', caption: 'Learn Keyboard Shortcuts' },
+    { src: 'https://images.pexels.com/photos/374720/pexels-photo-374720.jpeg?cs=srgb&dl=pexels-burst-374720.jpg&fm=jpg', alt: 'Motivation', caption: 'Stay Motivated!' },
+    { src: 'https://media.gettyimages.com/id/1422478091/photo/close-up-of-a-hands-on-a-laptop-keyboard.jpg?s=612x612&w=gi&k=20&c=C4yAFsTwUQ90sHNCiCB3EtOaCvcv2usfaGWh5NiXWG4=', alt: 'Accuracy', caption: 'Aim for Accuracy First' },
+    { src: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUxmHcLg_k98eDPQiDnAXMd3FLxLpVIMrL-g&s', alt: 'Speed Drills', caption: 'Practice Speed Drills' },
+    { src: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUxmHcLg_k98eDPQiDnAXMd3FLxLpVIMrL-g&s', alt: 'Finger Strength', caption: 'Build Finger Strength' },
+    { src: 'https://media.gettyimages.com/id/1422478091/photo/close-up-of-a-hands-on-a-laptop-keyboard.jpg?s=612x612&w=gi&k=20&c=C4yAFsTwUQ90sHNCiCB3EtOaCvcv2usfaGWh5NiXWG4=', alt: 'Discipline', caption: 'Be Consistent and Disciplined' },
+    { src: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUxmHcLg_k98eDPQiDnAXMd3FLxLpVIMrL-g&s', alt: 'Healthy Hands', caption: 'Take Care of Your Hands' },
+    { src: 'https://images.pexels.com/photos/374720/pexels-photo-374720.jpeg?cs=srgb&dl=pexels-burst-374720.jpg&fm=jpg', alt: 'Typing Games', caption: 'Play Typing Games' },
+    { src: 'https://media.gettyimages.com/id/1422478091/photo/close-up-of-a-hands-on-a-laptop-keyboard.jpg?s=612x612&w=gi&k=20&c=C4yAFsTwUQ90sHNCiCB3EtOaCvcv2usfaGWh5NiXWG4=', alt: 'Track Progress', caption: 'Track Your Progress' },
+    { src: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRUxmHcLg_k98eDPQiDnAXMd3FLxLpVIMrL-g&s', alt: 'Challenge Yourself', caption: 'Challenge Yourself Regularly' },
   ];
 
   const [filteredWords, setFilteredWords] = useState(practiceWords);
@@ -42,14 +71,18 @@ const LearnPage = ({ darkMode }) => {
   };
 
   return (
-    <div className={`relative min-h-screen ${darkMode ? 'bg-gradient-to-br from-black via-blue-900 to-gray-900' : 'bg-gradient-to-br from-blue-200 via-blue-100 to-white'} text-white p-6 md:p-10 overflow-hidden`}>
+    <div className={`relative min-h-screen transition-all duration-500 overflow-hidden ${darkMode
+      ? 'bg-gradient-to-br from-blue-950 via-black-900 to-gray-900'
+      : 'bg-gradient-to-br from-blue-100 via-white to-blue-200'}`}
+    >
+      <AnimatedBackground />
       <CircuitBackground darkMode={darkMode} />
       <div className="max-w-7xl mx-auto space-y-12">
 
         {/* Typing Practice Words Section */}
-        <section className={`glass-effect2 space-y-6 p-6 rounded-lg shadow-lg ${darkMode ? '' : ''}`}>
-          <h2 className={`text-3xl font-semibold text-center ${darkMode ? 'text-blue-400' : 'text-gradient'}`}>
-            <span className="gradient-text text-blue-500">Typing Practice Words</span>
+        <section className={`${darkMode ? 'bg-gray-900/80 border-gray-700/80' : 'bg-white/90 border-gray-200/80'} space-y-6 p-6 rounded-2xl shadow-lg`}> 
+          <h2 className={`text-3xl font-bold text-center mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+            <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-cyan-400 bg-clip-text text-transparent">Typing Practice Words</span>
           </h2>
           <input 
             type="text" 
@@ -70,9 +103,9 @@ const LearnPage = ({ darkMode }) => {
         </section>
 
         {/* Instructional Images Section */}
-        <section className={`glass-effect2 space-y-6 p-6 rounded-lg shadow-lg ${darkMode ? '' : ''}`}>
-          <h2 className={`text-3xl font-semibold text-center ${darkMode ? 'text-blue-400' : 'text-gradient'}`}>
-            <span className="gradient-text text-orange-600">Typing Tips & Techniques</span>
+        <section className={`${darkMode ? 'bg-gray-900/80 border-gray-700/80' : 'bg-white/90 border-gray-200/80'} space-y-6 p-6 rounded-2xl shadow-lg`}>
+          <h2 className={`text-3xl font-bold text-center mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
+            <span className="bg-gradient-to-r from-orange-400 to-cyan-400 bg-clip-text text-transparent">Typing Tips & Techniques</span>
           </h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {images.map((img, index) => (

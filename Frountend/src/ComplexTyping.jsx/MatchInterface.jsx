@@ -591,7 +591,11 @@ const MatchInterface = ({darkMode}) => {
   };
 
   return (
-    <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}>
+    <div className={`min-h-screen w-full transition-colors duration-300 ${
+      darkMode
+      ? 'bg-gradient-to-br from-blue-950 via-black-900 to-gray-900'
+      : 'bg-gradient-to-br from-blue-100 via-white to-blue-200'
+  }`}>
       <div className="w-full mx-auto px-4 py-8">
         {/* Loader until socket is ready */}
         {!socketReady ? (

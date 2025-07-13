@@ -120,10 +120,10 @@ const Hostpage = ({ darkMode }) => {
 
   return (
     <main className={`min-h-screen transition-all duration-500 ${
-      darkMode 
-        ? 'bg-gradient-to-br from-slate-900 via-purple-900 to-slate-800' 
-        : 'bg-gradient-to-br from-blue-50 via-indigo-100 to-purple-50'
-    }`}>
+      darkMode
+      ? 'bg-gradient-to-br from-blue-950 via-black-900 to-gray-900'
+      : 'bg-gradient-to-br from-blue-100 via-white to-blue-200'
+  }`}>
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className={`absolute top-10 left-2 w-40 h-40 md:w-72 md:h-72 ${darkMode ? 'bg-blue-500/10' : 'bg-purple-200/20'} rounded-full blur-3xl animate-pulse`}></div>
@@ -141,7 +141,7 @@ const Hostpage = ({ darkMode }) => {
             <HiSparkles className={`${darkMode ? 'text-yellow-400' : 'text-yellow-500'} text-xl md:text-3xl animate-bounce`} />
           </div>
           
-          <h1 className={`text-2xl sm:text-3xl md:text-5xl lg:text-7xl font-extrabold mb-2 md:mb-4 lg:mb-6 ${
+          <h1 className={`text-lg xs:text-xl sm:text-2xl md:text-4xl lg:text-5xl font-extrabold mb-2 md:mb-4 lg:mb-6 ${
             darkMode 
               ? 'bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent' 
               : 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent'
@@ -149,7 +149,7 @@ const Hostpage = ({ darkMode }) => {
             ⚡ Speed Type Battle ⚡
           </h1>
           
-          <p className={`text-sm sm:text-base md:text-lg lg:text-2xl mb-4 md:mb-8 max-w-3xl mx-auto leading-relaxed ${
+          <p className={`text-xs sm:text-sm md:text-base lg:text-lg mb-4 md:mb-8 max-w-3xl mx-auto leading-relaxed ${
             darkMode ? 'text-gray-300' : 'text-gray-700'
           }`}>
             Create epic typing battles with friends! <FaTrophy className="inline text-yellow-500 mx-1 md:mx-2" />
@@ -258,67 +258,83 @@ const Hostpage = ({ darkMode }) => {
             </button>
           )}
 
-              {createdRoom && (
-                <div className={`mt-6 p-6 rounded-2xl border-2 border-dashed transition-all duration-500 ${
-                  darkMode ? 'bg-emerald-900/20 border-emerald-400/50' : 'bg-emerald-50 border-emerald-400'
-                }`}>
-                  <div className="text-center space-y-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <FaTrophy className="text-yellow-500 text-2xl" />
-                      <span className={`text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
-                        Room Created!
-                      </span>
-                    </div>
-                    
-                    <div className={`p-4 rounded-xl ${darkMode ? 'bg-black/20' : 'bg-white/50'}`}>
-                      <div className="flex items-center justify-center gap-3 mb-2">
-                        <span className={`text-lg ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Room Code:</span>
-                        <code className={`text-2xl font-mono font-bold px-3 py-1 rounded-lg ${
-                          darkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
-                        }`}>
-                          {createdRoom}
-                        </code>
-                        <button
-                          onClick={() => handleCopyCode(createdRoom)}
-                          className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
-                            darkMode ? 'hover:bg-white/10' : 'hover:bg-black/10'
-                          }`}
-                        >
-                          {copied ? <FaCheck className="text-green-500" /> : <FaCopy className={darkMode ? 'text-gray-400' : 'text-gray-600'} />}
-                        </button>
+{createdRoom && (
+  <div className={`mt-4 p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl border-2 border-dashed transition-all duration-500 ${
+    darkMode ? 'bg-emerald-900/20 border-emerald-400/50' : 'bg-emerald-50 border-emerald-400'
+  }`}>
+    <div className="text-center space-y-3 sm:space-y-4">
+      <div className="flex items-center justify-center gap-2">
+        <FaTrophy className="text-yellow-500 text-lg sm:text-xl md:text-2xl" />
+        <span className={`text-base sm:text-lg md:text-xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          Room Created!
+        </span>
+      </div>
+      
+      <div className={`p-7 rounded-lg sm:rounded-xl ${darkMode ? 'bg-black/20' : 'bg-white/50'}`}>
+          <span className={`text-sm sm:text-base md:text-lg ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
+            Room Code:
+          </span>
+            <button
+              onClick={() => handleCopyCode(createdRoom)}
+              className={`p-1.5 sm:p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
+                darkMode ? 'hover:bg-white/10' : 'hover:bg-black/10'
+              }`}
+            >
+              {copied ? 
+                <FaCheck className="text-green-500 text-sm sm:text-base" /> : 
+                <FaCopy className={`${darkMode ? 'text-gray-400' : 'text-gray-600'} text-sm sm:text-base`} />
+              }
+            </button>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-3 mb-2">
+          <div className="flex items-center gap-2">
+            <code className={`text-sm sm:text-base md:text-lg font-mono font-bold px-2 sm:px-3 py-1 rounded-lg ${
+              darkMode ? 'bg-blue-600 text-white' : 'bg-blue-500 text-white'
+            }`}>
+              {createdRoom}
+            </code>
+          </div>
         </div>
 
-                      <div className={`text-sm space-y-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        <div>📧 Host: {hostEmail}</div>
-                        <div>👤 Name: {hostName}</div>
-                      </div>
-                    </div>
+        <div className={`text-xs sm:text-sm space-y-1 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+          <div className="flex items-center justify-center gap-1">
+            <span>📧</span>
+            <span className="truncate">Host: {hostEmail}</span>
+          </div>
+          <div className="flex items-center justify-center gap-1">
+            <span>👤</span>
+            <span className="truncate">Name: {hostName}</span>
+          </div>
+        </div>
+      </div>
 
-                    <button
-                      onClick={handleEnterBattle}
-                      disabled={ loading}
-                      className={`w-full py-3 px-6 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-xl ${
-                        darkMode
-                          ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
-                          : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
-                      }`}
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <BiGame className="text-xl" />
-                        Start Battle!
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              )}
+      <button
+        onClick={handleEnterBattle}
+        disabled={loading}
+        className={`w-full py-2 sm:py-3 px-4 sm:px-6 rounded-lg sm:rounded-xl font-semibold text-sm sm:text-base transition-all duration-300 transform hover:scale-105 hover:shadow-xl ${
+          darkMode
+            ? 'bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white'
+            : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white'
+        }`}
+      >
+        <div className="flex items-center justify-center gap-2">
+          <BiGame className="text-base sm:text-lg md:text-xl" />
+          <span>Start Battle!</span>
+        </div>
+      </button>
+    </div>
+  </div>
+)}
 
-              {createError && (
-                <div className={`p-4 rounded-xl border-l-4 ${
-                  darkMode ? 'bg-red-900/20 border-red-400 text-red-300' : 'bg-red-50 border-red-400 text-red-700'
-                }`}>
-                  ❌ {createError}
-                </div>
-              )}
+{createError && (
+  <div className={`p-3 sm:p-4 rounded-lg sm:rounded-xl border-l-4 ${
+    darkMode ? 'bg-red-900/20 border-red-400 text-red-300' : 'bg-red-50 border-red-400 text-red-700'
+  }`}>
+    <div className="flex items-start gap-2">
+      <span className="text-sm sm:text-base">❌</span>
+      <span className="text-sm sm:text-base">{createError}</span>
+    </div>
+  </div>
+)}
             </div>
           </section>
 

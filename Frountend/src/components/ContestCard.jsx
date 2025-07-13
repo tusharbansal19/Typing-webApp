@@ -8,8 +8,10 @@ const ContestCard = ({hostnavigate, title, date, description, darkMode }) => {
   };
   return (
     <div
-      className={`  p-4 rounded-lg shadow-lg transition-all duration-300 min-h-[200px]  hover:shadow-2xl ${
-        darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'
+      className={`p-4 rounded-lg shadow-lg transition-all duration-300 min-h-[200px] hover:shadow-2xl backdrop-blur-sm border ${
+        darkMode
+          ? 'bg-gray-800/30 border-gray-700/50 text-white'
+          : 'bg-white/30 border-gray-200/50 text-gray-800'
       }`}
     >
       {hostnavigate== 1?<>

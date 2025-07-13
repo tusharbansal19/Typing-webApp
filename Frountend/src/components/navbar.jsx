@@ -174,10 +174,11 @@ const Navbar = ({ darkMode, setDarkMode }) => {
       className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-500 ease-in-out transform ${
         showNavbar ? 'translate-y-0' : '-translate-y-full'
       } ${
-        darkMode 
-          ? 'bg-gray-900/95 backdrop-blur-md border-b border-gray-800/50 shadow-xl shadow-gray-900/20' 
-          : 'bg-white/95 backdrop-blur-md border-b border-gray-200/50 shadow-xl shadow-gray-200/20'
-      }`}
+        darkMode
+        ? 'bg-gradient-to-r from-blue-950 via-blue-950 to-gray-900'
+        : 'bg-gradient-to-r from-blue-100 via-white to-blue-200'
+    }`
+    }
       style={{ willChange: 'transform' }}
     >
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -202,7 +203,10 @@ const Navbar = ({ darkMode, setDarkMode }) => {
               darkMode 
                 ? 'bg-gradient-to-r from-blue-500/30 to-purple-500/30 shadow-lg shadow-blue-500/20 border border-blue-500/20' 
                 : 'bg-gradient-to-r from-blue-500/25 to-purple-500/25 shadow-lg shadow-blue-500/15 border border-blue-500/15'
-            }`}
+            }
+            
+            
+            `}
             style={{
               left: highlightStyle.left,
               width: highlightStyle.width,
@@ -286,10 +290,10 @@ const Navbar = ({ darkMode, setDarkMode }) => {
             {userOpen && (
               <div
                 ref={menuRef}
-                className={`absolute right-0 top-16 w-48 rounded-xl shadow-2xl p-4 z-50 transition-all duration-300 transform origin-top-right animate-scale-in ${
+                className={`absolute right-0 top-16 w-48 rounded-xl shadow-2xl p-4 z-50 transition-all duration-300 transform origin-top-right animate-scale-in backdrop-blur-sm border ${
                   darkMode 
-                    ? 'bg-gray-800/95 backdrop-blur-md text-gray-100 border border-gray-700/50 shadow-gray-900/50' 
-                    : 'bg-white/95 backdrop-blur-md text-gray-900 border border-gray-200/50 shadow-gray-400/30'
+                    ? 'bg-gray-800/30 border-gray-700/50 text-gray-100' 
+                    : 'bg-white/30 border-gray-200/50 text-gray-900'
                 }`}
               >
                 <div className="flex items-center mb-4 pb-3 border-b border-gray-700/30">
@@ -355,10 +359,10 @@ const Navbar = ({ darkMode, setDarkMode }) => {
       {isOpen && (
         <div
           ref={dropdownRef}
-          className={`md:hidden transition-all duration-300 transform origin-top ${
+          className={`md:hidden transition-all duration-300 transform origin-top backdrop-blur-sm border-t border ${
             darkMode 
-              ? 'bg-gray-800/95 backdrop-blur-md border-t border-gray-700/50' 
-              : 'bg-white/95 backdrop-blur-md border-t border-gray-200/50'
+              ? 'bg-gray-800/30 border-gray-700/50' 
+              : 'bg-white/30 border-gray-200/50'
           }`}
         >
           <div className="p-4 space-y-2">

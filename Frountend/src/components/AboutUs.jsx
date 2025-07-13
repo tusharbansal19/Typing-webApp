@@ -16,8 +16,8 @@ function useInView(threshold = 0.15) {
   return [ref, inView];
 }
 
-const AboutUs = () => {
-  const [isDark, setIsDark] = useState(true);
+const AboutUs = ({darkMode}) => {
+  const [ setdarkMode] = useState(true);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ const AboutUs = () => {
   }, []);
 
   const toggleTheme = () => {
-    setIsDark(!isDark);
+    setdarkMode(!darkMode);
   };
 
   const FloatingOrbs = () => (
@@ -58,7 +58,7 @@ const AboutUs = () => {
   const AnimatedBadge = ({ text, icon: Icon, delay = 0 }) => (
     <div 
       className={`inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold
-        ${isDark ? 'bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-white border border-purple-500/30' 
+        ${darkMode ? 'bg-gradient-to-r from-purple-500/20 to-cyan-500/20 text-white border border-purple-500/30' 
                  : 'bg-gradient-to-r from-purple-100 to-cyan-100 text-purple-800 border border-purple-200'}
         backdrop-blur-sm shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105
         animate-pulse`}
@@ -72,7 +72,7 @@ const AboutUs = () => {
   const SkillChip = ({ skill, index }) => (
     <span 
       className={`inline-block px-3 py-1 rounded-full text-sm font-medium transition-all duration-300
-        ${isDark ? 'bg-gray-800/50 text-gray-300 border border-gray-700/50 hover:bg-gray-700/50 hover:border-gray-600' 
+        ${darkMode ? 'bg-gray-800/50 text-gray-300 border border-gray-700/50 hover:bg-gray-700/50 hover:border-gray-600' 
                  : 'bg-white/50 text-gray-700 border border-gray-200 hover:bg-white/80 hover:border-gray-300'}
         backdrop-blur-sm hover:scale-105 cursor-default`}
       style={{ animationDelay: `${index * 100}ms` }}
@@ -89,20 +89,15 @@ const AboutUs = () => {
   const [connectRef, connectInView] = useInView(0.15);
 
   return (
-    <div className={`min-h-screen transition-all duration-500 relative overflow-hidden ${
-      isDark
+    <div className={`min-h-screen transition-all duration-500 relative overflow-hidden
+      ${
+      darkMode
         ? 'bg-gradient-to-br from-blue-950 via-black-900 to-gray-900'
         : 'bg-gradient-to-br from-blue-100 via-white to-blue-200'
-    }`}>
-      {/* Theme Toggle */}
-      <button
-        onClick={toggleTheme}
-        className={`fixed top-6 right-6 z-50 p-3 rounded-full backdrop-blur-sm border transition-all duration-300
-          ${isDark ? 'bg-gray-800/50 border-gray-700 hover:bg-gray-700/50' : 'bg-white/50 border-gray-200 hover:bg-white/80'}
-          shadow-lg hover:shadow-xl`}
-      >
-        {isDark ? '🌙' : '☀️'}
-      </button>
+    }
+    `
+    }>
+      
 
       {/* Background Elements */}
       <FloatingOrbs />
@@ -125,7 +120,7 @@ const AboutUs = () => {
                   Championship
                 </span>
               </h1>
-              <p className={`text-xl md:text-2xl mb-8 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+              <p className={`text-xl md:text-2xl mb-8 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
                 Where typing meets innovation. Real-time competition, endless possibilities.
               </p>
             </div>
@@ -178,11 +173,11 @@ const AboutUs = () => {
               }
             ].map((item, index) => (
               <div key={index} className={`p-8 rounded-2xl backdrop-blur-sm border transition-all duration-300 hover:transform hover:scale-105
-                ${isDark ? 'bg-gray-800/30 border-gray-700/50 hover:bg-gray-800/50' : 'bg-white/30 border-gray-200/50 hover:bg-white/50'}
+                ${darkMode ? 'bg-gray-800/30 border-gray-700/50 hover:bg-gray-800/50' : 'bg-white/30 border-gray-200/50 hover:bg-white/50'}
                 shadow-lg hover:shadow-xl`}>
                 <item.icon className="w-12 h-12 text-purple-500 mb-6" />
                 <h3 className="text-2xl font-bold mb-4">{item.title}</h3>
-                <p className={`${isDark ? 'text-gray-300' : 'text-gray-600'} leading-relaxed`}>
+                <p className={`${darkMode ? 'text-gray-300' : 'text-gray-600'} leading-relaxed`}>
                   {item.description}
                 </p>
               </div>
@@ -202,12 +197,12 @@ const AboutUs = () => {
             </span>
           </h2>
           <div className={`p-8 rounded-2xl backdrop-blur-sm border
-            ${isDark ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/30 border-gray-200/50'}
+            ${darkMode ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/30 border-gray-200/50'}
             shadow-lg`}>
-            <p className={`text-lg leading-relaxed mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+            <p className={`text-lg leading-relaxed mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               Born from a passion for both technology and the art of typing, TypeSpeed Championship emerged as a vision to revolutionize how we think about typing competitions. What started as a simple idea has evolved into a comprehensive platform that combines real-time multiplayer functionality with advanced performance analytics.
             </p>
-            <p className={`text-lg leading-relaxed ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+            <p className={`text-lg leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               Built with modern web technologies and powered by Socket.IO for real-time communication, our platform delivers an unparalleled typing experience that connects users worldwide in competitive, engaging, and educational ways.
             </p>
           </div>
@@ -227,7 +222,7 @@ const AboutUs = () => {
           {/* Founder Profile Card */}
           <div className="max-w-4xl mx-auto">
             <div className={`relative group flex flex-col md:flex-row items-center md:items-stretch gap-8 p-8 rounded-3xl backdrop-blur-sm border transition-all duration-500
-              ${isDark ? 'bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700/50' : 'bg-gradient-to-br from-white/50 to-gray-50/50 border-gray-200/50'}
+              ${darkMode ? 'bg-gradient-to-br from-gray-800/50 to-gray-900/50 border-gray-700/50' : 'bg-gradient-to-br from-white/50 to-gray-50/50 border-gray-200/50'}
               shadow-2xl hover:shadow-3xl hover:scale-[1.02] hover:rotate-1`}>
               {/* Glowing Border Effect */}
               <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-purple-500/20 to-cyan-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -263,7 +258,7 @@ const AboutUs = () => {
                 <p className="text-xl text-purple-500 font-semibold mb-4">
                   Founder & Full Stack Developer
                 </p>
-                <p className={`text-lg mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>Passionate about creating real-time web experiences that push the boundaries of modern technology. Specializing in full-stack development with a focus on performance and user experience.</p>
+                <p className={`text-lg mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Passionate about creating real-time web experiences that push the boundaries of modern technology. Specializing in full-stack development with a focus on performance and user experience.</p>
                 {/* Skills */}
                 <div className="mb-8">
                   <h4 className="text-lg font-semibold mb-3">Technical Expertise</h4>
@@ -276,7 +271,7 @@ const AboutUs = () => {
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                   <button className={`group flex items-center gap-2 px-6 py-3 rounded-full font-semibold transition-all duration-300
-                    ${isDark ? 'bg-gray-800 hover:bg-gray-700 border border-gray-700' : 'bg-white hover:bg-gray-50 border border-gray-200'}
+                    ${darkMode ? 'bg-gray-800 hover:bg-gray-700 border border-gray-700' : 'bg-white hover:bg-gray-50 border border-gray-200'}
                     shadow-lg hover:shadow-xl transform hover:scale-105`}>
                     <Github className="w-5 h-5 group-hover:rotate-12 transition-transform" />
                     GitHub
@@ -310,9 +305,9 @@ const AboutUs = () => {
           </h2>
           
           <div className={`p-8 rounded-2xl backdrop-blur-sm border
-            ${isDark ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/30 border-gray-200/50'}
+            ${darkMode ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/30 border-gray-200/50'}
             shadow-lg mb-8`}>
-            <p className={`text-lg leading-relaxed mb-6 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
+            <p className={`text-lg leading-relaxed mb-6 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
               We're always excited to connect with fellow developers, typing enthusiasts, and innovators. 
               Whether you have feedback, ideas, or just want to say hello, we'd love to hear from you.
             </p>
@@ -326,7 +321,7 @@ const AboutUs = () => {
                 </span>
               </button>
               <button className={`group px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300
-                ${isDark ? 'bg-gray-800 hover:bg-gray-700 border border-gray-700' : 'bg-white hover:bg-gray-50 border border-gray-200'}
+                ${darkMode ? 'bg-gray-800 hover:bg-gray-700 border border-gray-700' : 'bg-white hover:bg-gray-50 border border-gray-200'}
                 shadow-lg hover:shadow-xl transform hover:scale-105`}>
                 <span className="flex items-center gap-2">
                   Get Support
@@ -339,9 +334,9 @@ const AboutUs = () => {
         </section>
 
       {/* Footer */}
-      <footer className={`py-12 px-6 border-t ${isDark ? 'border-gray-800' : 'border-gray-200'}`}>
+      <footer className={`py-12 px-6 border-t ${darkMode ? 'border-gray-800' : 'border-gray-200'}`}>
         <div className="max-w-6xl mx-auto text-center">
-          <p className={`text-lg ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+          <p className={`text-lg ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
             © 2025 TypeSpeed Championship. Built with passion, powered by innovation.
           </p>
       </div>

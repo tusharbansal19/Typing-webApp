@@ -42,25 +42,147 @@ import {
   Activity,
   Coffee,
   Medal,
-  Gift
+  Gift,
+  Percent,
+  AlertCircle
 } from 'lucide-react';
+import React from 'react';
 
-// CircuitBackground with dual color support
-const CircuitBackground = ({ darkMode }) => (
+// Reusable FloatingOrbs and CircuitBackground components (from AboutUs.jsx)
+const FloatingOrbs = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    <div className="absolute top-20 left-20 w-64 h-64 bg-purple-500/20 rounded-full blur-3xl animate-pulse" />
+    <div className="absolute top-40 right-32 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+    <div className="absolute bottom-40 left-1/4 w-56 h-56 bg-cyan-500/20 rounded-full blur-3xl animate-pulse delay-2000" />
+    <div className="absolute bottom-20 right-20 w-40 h-40 bg-pink-500/20 rounded-full blur-3xl animate-pulse delay-3000" />
+  </div>
+);
+
+const CircuitBackground = () => (
+  <div className="absolute inset-0 opacity-30">
+    <svg width="100%" height="100%" viewBox="0 0 1000 1000" className="absolute inset-0">
+      <defs>
+        <pattern id="circuit" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+          <path d="M10,10 L90,10 L90,90 L10,90 Z" fill="none" stroke="currentColor" strokeWidth="0.5" opacity="0.3"/>
+          <circle cx="10" cy="10" r="2" fill="currentColor" opacity="0.5"/>
+          <circle cx="90" cy="10" r="2" fill="currentColor" opacity="0.5"/>
+          <circle cx="90" cy="90" r="2" fill="currentColor" opacity="0.5"/>
+          <circle cx="10" cy="90" r="2" fill="currentColor" opacity="0.5"/>
+          <path d="M30,30 L70,30 L70,70 L30,70 Z" fill="none" stroke="currentColor" strokeWidth="0.3" opacity="0.2"/>
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#circuit)"/>
+    </svg>
+  </div>
+);
+
+// Add glassmorphism utility class
+const glassCard = (darkMode) =>
+  darkMode
+    ? 'bg-[rgba(30,41,59,0.45)] border border-[rgba(255,255,255,0.10)] backdrop-blur-xl shadow-xl'
+    : 'bg-[rgba(255,255,255,0.92)] border border-[rgba(180,180,220,0.18)] backdrop-blur-xl shadow-xl';
+
+// Add a second orb background for more visual depth
+const DualOrbs = () => (
+  <>
+    <div className="absolute top-10 left-10 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl animate-pulse z-0" />
+    <div className="absolute bottom-10 right-10 w-72 h-72 bg-blue-400/20 rounded-full blur-3xl animate-pulse z-0" />
+  </>
+);
+
+// --- Keyboard Layout for Hero Section ---
+const KEYBOARD_ROWS = [
+  ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
+  ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
+  ['Z', 'X', 'C', 'V', 'B', 'N', 'M']
+];
+// Update GLOW_COLORS to match site palette
+const GLOW_COLORS = [
+  'shadow-[0_0_24px_6px_rgba(59,130,246,0.7)] bg-blue-400/80',    // blue-500
+  'shadow-[0_0_24px_6px_rgba(168,139,250,0.7)] bg-purple-400/80', // purple-400
+  'shadow-[0_0_24px_6px_rgba(236,72,153,0.7)] bg-pink-400/80',    // pink-500
+  'shadow-[0_0_24px_6px_rgba(34,211,238,0.7)] bg-cyan-400/80',    // cyan-400
+  'shadow-[0_0_24px_6px_rgba(250,204,21,0.7)] bg-yellow-300/80',  // yellow-300
+];
+
+function KeyboardGrid({ glowingKey, darkMode }) {
+  return (
+    <div className="flex flex-col items-end md:items-center gap-2">
+      {KEYBOARD_ROWS.map((row, rowIdx) => (
+        <div key={rowIdx} className="flex justify-center gap-2">
+          {row.map((key, colIdx) => {
+            const idx = rowIdx * 10 + colIdx;
+            const isGlowing = glowingKey === idx;
+            return (
+              <button
+                key={key}
+                className={`w-10 h-12 md:w-12 md:h-16 rounded-lg font-bold text-lg md:text-2xl border border-white/30 transition-all duration-200
+                  ${isGlowing ? GLOW_COLORS[Math.floor(Math.random() * GLOW_COLORS.length)] :
+                    darkMode ? 'bg-indigo-900/60 text-white' : 'bg-white/80 text-gray-900'}
+                  focus:outline-none select-none`}
+                style={{ boxShadow: isGlowing ? undefined : '0 2px 8px 0 rgba(0,0,0,0.04)' }}
+                tabIndex={-1}
+                aria-label={key}
+              >
+                {key}
+              </button>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// --- Animated Background and Circuit SVG from ContactUs.jsx ---
+const AnimatedBackground = () => (
+  <div className="fixed inset-0 pointer-events-none z-0">
+    <div className="absolute inset-0 bg-gradient-to-br from-purple-900/20 via-transparent to-cyan-900/20" />
+    <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute w-96 h-96 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-full blur-3xl animate-pulse"
+           style={{ top: '10%', left: '10%', animation: 'float 20s ease-in-out infinite alternate' }} />
+      <div className="absolute w-80 h-80 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-full blur-3xl"
+           style={{ bottom: '10%', right: '10%', animation: 'float 25s ease-in-out infinite alternate-reverse' }} />
+    </div>
+  </div>
+);
+
+const CircuitBackgroundContact = () => (
   <div className="absolute inset-0 opacity-30 z-0 pointer-events-none">
     <svg width="100%" height="100%" viewBox="0 0 1000 1000" className="absolute inset-0">
       <defs>
-        <pattern id="circuit-home" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-          <path d="M10,10 L90,10 L90,90 L10,90 Z" fill="none" stroke={darkMode ? '#7dd3fc' : '#60a5fa'} strokeWidth="0.5" opacity="0.3"/>
-          <circle cx="10" cy="10" r="2" fill={darkMode ? '#a78bfa' : '#60a5fa'} opacity="0.5"/>
-          <circle cx="90" cy="10" r="2" fill={darkMode ? '#a78bfa' : '#60a5fa'} opacity="0.5"/>
-          <circle cx="90" cy="90" r="2" fill={darkMode ? '#a78bfa' : '#60a5fa'} opacity="0.5"/>
-          <circle cx="10" cy="90" r="2" fill={darkMode ? '#a78bfa' : '#60a5fa'} opacity="0.5"/>
-          <path d="M30,30 L70,30 L70,70 L30,70 Z" fill="none" stroke={darkMode ? '#818cf8' : '#bae6fd'} strokeWidth="0.3" opacity="0.2"/>
+        <pattern id="circuit-contact" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+          <path d="M10,10 L90,10 L90,90 L10,90 Z" fill="none" stroke="#7dd3fc" strokeWidth="0.5" opacity="0.3"/>
+          <circle cx="10" cy="10" r="2" fill="#a78bfa" opacity="0.5"/>
+          <circle cx="90" cy="10" r="2" fill="#a78bfa" opacity="0.5"/>
+          <circle cx="90" cy="90" r="2" fill="#a78bfa" opacity="0.5"/>
+          <circle cx="10" cy="90" r="2" fill="#a78bfa" opacity="0.5"/>
+          <path d="M30,30 L70,30 L70,70 L30,70 Z" fill="none" stroke="#818cf8" strokeWidth="0.3" opacity="0.2"/>
         </pattern>
       </defs>
-      <rect width="100%" height="100%" fill="url(#circuit-home)"/>
+      <rect width="100%" height="100%" fill="url(#circuit-contact)"/>
     </svg>
+  </div>
+);
+
+// --- Stat Cards for Hero Section ---
+const StatCard = ({ icon: Icon, label, value, color }) => (
+  <div className={`flex items-center gap-3 mb-3 px-4 py-3 rounded-xl shadow-lg backdrop-blur-sm border ${
+    color === 'blue' ? 'bg-blue-100/80 border-blue-300 text-blue-900' :
+    color === 'green' ? 'bg-green-100/80 border-green-300 text-green-900' :
+    color === 'red' ? 'bg-red-100/80 border-red-300 text-red-900' :
+    'bg-white/80 border-gray-200 text-gray-900'
+  }`}>
+    <Icon className={`w-6 h-6 ${
+      color === 'blue' ? 'text-blue-500' :
+      color === 'green' ? 'text-green-500' :
+      color === 'red' ? 'text-red-500' :
+      'text-gray-500'
+    }`} />
+    <div>
+      <div className="text-lg font-bold leading-tight">{value}</div>
+      <div className="text-xs font-medium opacity-80">{label}</div>
+    </div>
   </div>
 );
 
@@ -69,6 +191,12 @@ const Home = ({ darkMode, setDarkMode }) => {
   const [activeTab, setActiveTab] = useState('global');
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [glowingKey, setGlowingKey] = useState(null);
+
+  // Add state for random stats
+  const [heroWpm, setHeroWpm] = useState(0);
+  const [heroAcc, setHeroAcc] = useState(0);
+  const [heroMistakes, setHeroMistakes] = useState(0);
 
   // Carousel data for feature showcase
   const featureSlides = [
@@ -208,92 +336,76 @@ const Home = ({ darkMode, setDarkMode }) => {
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
+  // --- Randomly glow keys in hero section ---
+  useEffect(() => {
+    let timeout;
+    function glowNext() {
+      const totalKeys = 10 + 9 + 7; // 26
+      setGlowingKey(Math.floor(Math.random() * totalKeys));
+      timeout = setTimeout(glowNext, 250 + Math.random() * 400);
+    }
+    glowNext();
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // Add state for random stats
+  useEffect(() => {
+    function randomizeStats() {
+      setHeroWpm(Math.floor(Math.random() * 80) + 60); // 60-140
+      setHeroAcc(Math.floor(Math.random() * 10) + 90); // 90-99
+      setHeroMistakes(Math.floor(Math.random() * 10) + 1); // 1-10
+    }
+    randomizeStats();
+    const interval = setInterval(randomizeStats, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   return (
-    <div className={`min-h-screen transition-all duration-500 relative overflow-hidden ${darkMode ? 'bg-gradient-to-br from-gray-900 via-blue-950 to-gray-900 text-gray-100' : 'bg-gradient-to-br from-sky-100 via-white to-blue-200 text-gray-900'}`}>
-      <CircuitBackground darkMode={darkMode} />
+    <div className={`min-h-screen transition-all duration-500 relative overflow-hidden ${darkMode
+      ? 'bg-gradient-to-br from-blue-950 via-black-900 to-gray-900'
+      : 'bg-gradient-to-br from-blue-100 via-white to-blue-200'}`}>
+      {/* Contact page style backgrounds */}
+      <CircuitBackground />
+      <AnimatedBackground />
 
       {/* Dark/Light Mode Toggle - Assuming it's elsewhere or added here */}
       {/* Example: */}
    
 
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 px-4">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className={`absolute w-96 h-96 rounded-full opacity-20 animate-pulse ${
-            darkMode ? 'bg-gradient-to-r from-blue-600 to-purple-600' : 'bg-gradient-to-r from-blue-400 to-purple-400'
-          }`} style={{ 
-            left: mousePosition.x / 50, 
-            top: mousePosition.y / 50,
-            transform: 'translate(-50%, -50%)'
-          }}></div>
-          <div className={`absolute w-64 h-64 rounded-full opacity-15 animate-bounce ${
-            darkMode ? 'bg-gradient-to-r from-pink-600 to-red-600' : 'bg-gradient-to-r from-pink-400 to-red-400'
-          }`} style={{ 
-            right: mousePosition.x / 80, 
-            bottom: mousePosition.y / 80 
-          }}></div>
-        </div>
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="container mx-auto flex flex-col lg:flex-row items-center gap-12">
-
-            {/* Enhanced Text Section */}
-            <div className="w-full lg:w-1/2">
-              <div className={`backdrop-blur-2xl rounded-3xl p-8 border-2 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02] group ${
-                darkMode 
-                  ? 'bg-gray-800/40 border-purple-500/30 hover:border-purple-400/50 text-gray-100' 
-                  : 'bg-white/60 border-blue-300/40 hover:border-blue-400/60 text-gray-900'
-              }`}>
-                <div className="flex items-center gap-3 mb-4">
-                  <Keyboard className={`w-8 h-8 ${darkMode ? 'text-purple-400' : 'text-blue-600'} animate-pulse`} />
-                  <span className={`text-sm font-bold px-3 py-1 rounded-full ${
-                    darkMode ? 'bg-purple-500/20 text-purple-300' : 'bg-blue-500/20 text-blue-700'
-                  }`}>
-                    ⚡ #1 Typing Platform
-                  </span>
-                </div>
-
-                <h1 className={`text-4xl md:text-6xl lg:text-7xl font-black mb-6 tracking-tight leading-tight ${
-                  darkMode ? 'text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400' 
-                  : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600'
-                }`}>
-                  Master Typing.<br />
-                  <span className="relative">
-                    Dominate Speed.
-                    <Sparkles className="absolute -top-4 -right-4 w-8 h-8 text-yellow-400 animate-spin" />
-                  </span>
+      {/* --- HERO SECTION --- */}
+      <section
+        className="relative min-h-screen flex flex-col md:flex-row items-center justify-center px-4 md:px-8 py-12"
+      >
+      <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left relative z-10">
+         
+          <h1 className={`text-2xl md:text-4xl lg:text-4xl font-black mb-6 tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 animate-fade-in`}
+            style={{ animation: 'fadeIn 1.2s ease' }}>
+            FastFinger.<br />
+            
                 </h1>
-
-                <div className="text-2xl font-bold mb-6 h-16 flex items-center">
+          <div className="text-2xl font-bold mb-6 h-16 flex items-center animate-fade-in" style={{ animation: 'fadeIn 1.8s ease' }}>
                   <MousePointer className={`w-6 h-6 mr-3 ${darkMode ? 'text-cyan-400' : 'text-blue-600'}`} />
-                  <div className={`${
-                    darkMode ? 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400' 
-                    : 'text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600'
-                  }`}>
+            <div className={`text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400`}>
                     <Typewriter
                       words={[
                         'Type at Lightning Speed! ⚡',
                         'Compete Globally! 🌍',
                         'Track Every Keystroke! 📊',
-                        'Become a Typing Legend! 👑'
+          'Become a Typing Legend! 👑',
                       ]}
-                      loop
+        loop={true}
                       cursor
-                      cursorStyle=" |"
+        cursorStyle="|"
                       typeSpeed={60}
                       deleteSpeed={40}
+        delaySpeed={100}
                     />
                   </div>
                 </div>
-
-                <p className={`mb-8 text-lg leading-relaxed ${
-                  darkMode ? 'text-gray-300' : 'text-gray-700'
-                }`}>
+          <p className={`mb-8 text-lg leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'} animate-fade-in`} style={{ animation: 'fadeIn 2.2s ease' }}>
                   🚀 Join the ultimate typing revolution! Battle players worldwide, track your progress with AI-powered analytics, and transform your productivity forever.
                 </p>
-
-                <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 animate-fade-in" style={{ animation: 'fadeIn 2.6s ease' }}>
                   <Link to="/typing">
                     <button className={`group px-8 py-4 rounded-2xl font-bold text-lg shadow-2xl transition-all duration-500 hover:scale-105 hover:shadow-3xl transform hover:-translate-y-1 ${
                       darkMode 
@@ -307,7 +419,6 @@ const Home = ({ darkMode, setDarkMode }) => {
                       </div>
                     </button>
                   </Link>
-
                   <button className={`group px-8 py-4 rounded-2xl font-bold text-lg shadow-2xl transition-all duration-500 hover:scale-105 hover:shadow-3xl transform hover:-translate-y-1 border-2 ${
                     darkMode 
                       ? 'bg-transparent border-cyan-400 text-cyan-400 hover:bg-cyan-400/10 hover:border-cyan-300' 
@@ -320,8 +431,7 @@ const Home = ({ darkMode, setDarkMode }) => {
                     </div>
                   </button>
                 </div>
-
-                <div className="mt-6 flex items-center gap-6">
+          <div className="mt-6 flex items-center gap-6 animate-fade-in" style={{ animation: 'fadeIn 3s ease' }}>
                   <Link to="/dashboard">
                     <button className={`group flex items-center gap-2 text-sm font-semibold transition-all duration-300 hover:scale-105 ${
                       darkMode ? 'text-purple-400 hover:text-purple-300' : 'text-blue-600 hover:text-purple-600'
@@ -343,93 +453,35 @@ const Home = ({ darkMode, setDarkMode }) => {
                   </div>
                 </div>
               </div>
-            </div>
-
-            {/* Enhanced Stats Card */}
-            <div className="w-full lg:w-1/2">
-              <div className={`backdrop-blur-2xl rounded-3xl p-8 border-2 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02] group ${
-                darkMode 
-                  ? 'bg-gray-800/40 border-cyan-500/30 hover:border-cyan-400/50 text-gray-100' 
-                  : 'bg-white/60 border-purple-300/40 hover:border-purple-400/60 text-gray-900'
-              }`}>
-                <div className="text-center">
-                  <div className="text-6xl mb-4 animate-bounce">⌨️</div>
-                  <h3 className={`text-2xl font-bold mb-6 ${darkMode ? 'text-white' : 'text-gray-900'}`}>
-                    Live Performance Dashboard
-                  </h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className={`backdrop-blur-xl rounded-2xl p-4 transition-all duration-300 hover:scale-105 hover:rotate-1 transform ${
-                      darkMode ? 'bg-blue-700/20 hover:bg-blue-700/30 text-blue-300' : 'bg-blue-200/50 hover:bg-blue-300/60 text-blue-800'
-                    }`}>
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <Timer className="w-5 h-5 text-blue-400" />
-                        <div className="text-3xl font-black text-blue-400">127</div>
-                      </div>
-                      <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Words/Min</div>
-                      <div className="text-xs text-green-400 font-semibold">↑ +12 WPM</div>
-                    </div>
-                    
-                    <div className={`backdrop-blur-xl rounded-2xl p-4 transition-all duration-300 hover:scale-105 hover:-rotate-1 transform ${
-                      darkMode ? 'bg-green-700/20 hover:bg-green-700/30 text-green-300' : 'bg-green-200/50 hover:bg-green-300/60 text-green-800'
-                    }`}>
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <Target className="w-5 h-5 text-green-400" />
-                        <div className="text-3xl font-black text-green-400">98.7%</div>
-                      </div>
-                      <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Accuracy</div>
-                      <div className="text-xs text-green-400 font-semibold">↑ +2.1%</div>
-                    </div>
-                    
-                    <div className={`backdrop-blur-xl rounded-2xl p-4 transition-all duration-300 hover:scale-105 hover:rotate-1 transform ${
-                      darkMode ? 'bg-yellow-700/20 hover:bg-yellow-700/30 text-yellow-300' : 'bg-yellow-200/50 hover:bg-yellow-300/60 text-yellow-800'
-                    }`}>
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <Crown className="w-5 h-5 text-yellow-400" />
-                        <div className="text-3xl font-black text-yellow-400">#847</div>
-                      </div>
-                      <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Global Rank</div>
-                      <div className="text-xs text-green-400 font-semibold">↑ +156</div>
-                    </div>
-                    
-                    <div className={`backdrop-blur-xl rounded-2xl p-4 transition-all duration-300 hover:scale-105 hover:-rotate-1 transform ${
-                      darkMode ? 'bg-orange-700/20 hover:bg-orange-700/30 text-orange-300' : 'bg-orange-200/50 hover:bg-orange-300/60 text-orange-800'
-                    }`}>
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <Flame className="w-5 h-5 text-orange-400" />
-                        <div className="text-3xl font-black text-orange-400">23</div>
-                      </div>
-                      <div className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>Day Streak</div>
-                      <div className="text-xs text-green-400 font-semibold">🔥 Hot!</div>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-6 p-4 bg-gradient-to-r from-yellow-400/20 to-orange-400/20 rounded-2xl border border-yellow-400/30">
-                    <div className="flex items-center justify-center gap-2">
-                      <Gift className="w-5 h-5 text-yellow-400 animate-bounce" />
-                      <span className={`text-sm font-semibold ${darkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>
-                        Daily Challenge: +500 XP Available!
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Left: Keyboard Grid */}
+        <div className="w-full md:w-1/2 flex justify-center items-center mb-12 md:mb-0">
+          <div className="relative z-10">
+         {/* Stat Cards */}
+         <div className="w-full flex flex-row items-center justify-center gap-4 mb-6">
+            <StatCard icon={TrendingUp} label="WPM" value={heroWpm} color="blue" />
+            <StatCard icon={Percent} label="Accuracy" value={`${heroAcc}%`} color="green" />
+            <StatCard icon={AlertCircle} label="Mistakes" value={heroMistakes} color="red" />
+          </div>
+            <KeyboardGrid glowingKey={glowingKey} darkMode={darkMode} />
           </div>
         </div>
+        {/* Right: Headline and CTA */}
+        
       </section>
 
       {/* Feature Highlights Carousel */}
-      <section className="py-8 md:py-16 px-3 md:px-4">
+      <section className="relative py-8 md:py-16 px-3 md:px-4">
+        <CircuitBackgroundContact />
         <div className="max-w-6xl mx-auto">
-          <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-6 md:mb-12 ${darkMode ? 'text-blue-300' : 'text-[#0a2540]'}`}>
+          <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-6 md:mb-12 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
             Powerful Features
           </h2>
 
           <div className="relative">
-            <div className={`backdrop-blur-md ${darkMode ? 'bg-gray-800/80 border-gray-700/70 text-gray-100' : 'bg-white/80 border-blue-200/70 text-gray-900'} rounded-2xl md:rounded-3xl p-4 md:p-8 border shadow-xl`}>
+            <div className={`backdrop-blur-md ${darkMode ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/30 border-gray-200/50'} rounded-2xl md:rounded-3xl p-4 md:p-8 border shadow-xl`}>
               <div className="text-center">
                 <div className="text-4xl md:text-6xl mb-4 md:mb-6">{featureSlides[currentSlide].emoji}</div>
-                <h3 className={`text-xl md:text-2xl lg:text-3xl font-bold mb-3 md:mb-4 ${darkMode ? 'text-white' : 'text-black'}`}>
+                <h3 className={`text-xl md:text-2xl lg:text-3xl font-bold mb-3 md:mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                   {featureSlides[currentSlide].title}
                 </h3>
                 <p className="text-sm md:text-base lg:text-lg text-gray-700 dark:text-gray-300 mb-4 md:mb-8 max-w-2xl mx-auto">
@@ -437,9 +489,9 @@ const Home = ({ darkMode, setDarkMode }) => {
                 </p>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 max-w-3xl mx-auto">
                   {featureSlides[currentSlide].features.map((f, i) => (
-                    <div key={i} className={`backdrop-blur-md ${darkMode ? 'bg-gray-700/40 text-gray-100' : 'bg-white/40 text-gray-900'} rounded-lg p-2 md:p-3 text-xs md:text-sm font-medium`}>
+                    <div key={i} className={`backdrop-blur-md ${darkMode ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/30 border-gray-200/50'} rounded-lg p-2 md:p-3 text-xs md:text-sm font-medium`}>
                       <CheckCircle className="w-3 h-3 md:w-4 md:h-4 inline mr-1 text-green-500" />
-                      <span className={`text-sm md:text-base ${darkMode ? 'text-blue-200' : 'text-[#0a2540]'}`}>{f}</span>
+                      <span className={`text-sm md:text-base ${darkMode ? 'text-gray-200' : 'text-[#0a2540]'}`}>{f}</span>
                     </div>
                   ))}
                 </div>
@@ -482,31 +534,33 @@ const Home = ({ darkMode, setDarkMode }) => {
       </section>
 
       {/* How It Works */}
-      <section className="py-8 md:py-16 px-3 md:px-4">
+      <section className="relative py-8 md:py-16 px-3 md:px-4">
+        <FloatingOrbs />
+        <CircuitBackgroundContact />
         <div className="max-w-6xl mx-auto">
-          <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-6 md:mb-12 ${darkMode ? 'text-blue-300' : 'text-[#0a2540]'}`}>
+          <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-6 md:mb-12 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
             How It Works
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
-            <div className={`text-center backdrop-blur-md ${darkMode ? 'bg-gray-800/80 border-gray-700/70 text-gray-100' : 'bg-white/80 border-blue-200/70 text-gray-900'} rounded-2xl p-4 md:p-6 border shadow-xl`}>
+            <div className={`text-center backdrop-blur-md ${darkMode ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/30 border-gray-200/50'} rounded-2xl p-4 md:p-6 border shadow-xl`}>
               <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white text-lg md:text-2xl font-bold shadow-lg">
                 1
               </div>
-              <h3 className={`text-lg md:text-xl font-semibold mb-2 md:mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Sign In or Join as Guest</h3>
+              <h3 className={`text-lg md:text-xl font-semibold mb-2 md:mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Sign In or Join as Guest</h3>
               <p className={`text-sm md:text-base ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Create an account or join as a guest to start your typing journey instantly.</p>
             </div>
-            <div className={`text-center backdrop-blur-md ${darkMode ? 'bg-gray-800/80 border-gray-700/70 text-gray-100' : 'bg-white/80 border-blue-200/70 text-gray-900'} rounded-2xl p-4 md:p-6 border shadow-xl`}>
+            <div className={`text-center backdrop-blur-md ${darkMode ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/30 border-gray-200/50'} rounded-2xl p-4 md:p-6 border shadow-xl`}>
               <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white text-lg md:text-2xl font-bold shadow-lg">
                 2
               </div>
-              <h3 className={`text-lg md:text-xl font-semibold mb-2 md:mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Choose Mode</h3>
+              <h3 className={`text-lg md:text-xl font-semibold mb-2 md:mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Choose Mode</h3>
               <p className={`text-sm md:text-base ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Select from Solo practice, Live contests, Word challenges, or Paragraph tests.</p>
             </div>
-            <div className={`text-center backdrop-blur-md ${darkMode ? 'bg-gray-800/80 border-gray-700/70 text-gray-100' : 'bg-white/80 border-blue-200/70 text-gray-900'} rounded-2xl p-4 md:p-6 border shadow-xl`}>
+            <div className={`text-center backdrop-blur-md ${darkMode ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/30 border-gray-200/50'} rounded-2xl p-4 md:p-6 border shadow-xl`}>
               <div className="w-12 h-12 md:w-16 md:h-16 mx-auto mb-3 md:mb-6 bg-gradient-to-r from-pink-600 to-red-600 rounded-full flex items-center justify-center text-white text-lg md:text-2xl font-bold shadow-lg">
                 3
               </div>
-              <h3 className={`text-lg md:text-xl font-semibold mb-2 md:mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Type Fast & Track Results</h3>
+              <h3 className={`text-lg md:text-xl font-semibold mb-2 md:mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Type Fast & Track Results</h3>
               <p className={`text-sm md:text-base ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>Start typing, compete with others, and watch your skills improve with detailed analytics.</p>
             </div>
           </div>
@@ -514,12 +568,16 @@ const Home = ({ darkMode, setDarkMode }) => {
       </section>
 
       {/* Leaderboard Preview */}
-      <section className="py-8 md:py-16 px-3 md:px-4">
+      <section className="relative py-8 md:py-16 px-3 md:px-4">
+        {/* Both backgrounds for a strong effect */}
+        <FloatingOrbs />
+        <CircuitBackground />
+        <CircuitBackgroundContact />
         <div className="max-w-4xl mx-auto">
-          <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-6 md:mb-12 ${darkMode ? 'text-blue-300' : 'text-[#0a2540]'}`}>
+          <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-6 md:mb-12 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
             🏆 Global Leaderboard
           </h2>
-          <div className={`backdrop-blur-md ${darkMode ? 'bg-gray-800/80 border-gray-700/70 text-gray-100' : 'bg-white/80 border-blue-200/70 text-gray-900'} rounded-2xl md:rounded-3xl p-4 md:p-6 border shadow-xl`}>
+          <div className={`backdrop-blur-md ${darkMode ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/30 border-gray-200/50'} rounded-2xl md:rounded-3xl p-4 md:p-6 border shadow-xl`}>
             <div className="flex justify-center mb-4 md:mb-6">
               <div className={`flex backdrop-blur-md ${darkMode ? 'bg-gray-700/40' : 'bg-white/40'} rounded-lg p-1`}>
                 <button
@@ -561,7 +619,7 @@ const Home = ({ darkMode, setDarkMode }) => {
                           <div className={`text-sm md:text-base ${darkMode ? 'text-gray-200' : 'text-gray-800'}`}>{row.country}</div>
                         </div>
                         <div>
-                          <div className={`font-semibold text-sm md:text-base ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                          <div className={`font-semibold text-sm md:text-base ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                             #{row.rank} {row.name}
                           </div>
                           <div className={`text-xs md:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -599,14 +657,16 @@ const Home = ({ darkMode, setDarkMode }) => {
       </section>
 
       {/* Testimonials Carousel with Horizontal Scroll */}
-      <section className="py-8 md:py-16 px-3 md:px-4">
+      <section className="relative py-8 md:py-16 px-3 md:px-4">
+        <CircuitBackground />
+        <CircuitBackgroundContact />
         <div className="max-w-6xl mx-auto">
-          <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-6 md:mb-12 ${darkMode ? 'text-blue-300' : 'text-[#0a2540]'}`}>
+          <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-6 md:mb-12 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
             What Our Users Say
           </h2>
           <div className="flex overflow-x-auto snap-x snap-mandatory pb-4 space-x-4 md:space-x-6 scroll-smooth no-scrollbar">
             {testimonials.map((testimonial, index) => (
-              <div key={index} className={`flex-shrink-0 w-80 min-w-[75%] sm:min-w-[50%] md:min-w-[30%] lg:min-w-[25%] snap-center backdrop-blur-md ${darkMode ? 'bg-gray-800/80 border-gray-700/70 text-gray-100' : 'bg-white/80 border-blue-200/70 text-gray-900'} rounded-2xl p-4 md:p-6 border shadow-xl hover:bg-white/90 dark:hover:bg-gray-700/90 transition-all duration-300 transform hover:scale-105`}>
+              <div key={index} className={`flex-shrink-0 w-80 min-w-[75%] sm:min-w-[50%] md:min-w-[30%] lg:min-w-[25%] snap-center backdrop-blur-md ${darkMode ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/30 border-gray-200/50'} rounded-2xl p-4 md:p-6 border shadow-xl hover:bg-white/90 dark:hover:bg-gray-700/90 transition-all duration-300 transform hover:scale-105`}>
                 <div className="flex mb-3 md:mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <Star key={i} className="w-3 h-3 md:w-4 md:h-4 text-yellow-400 fill-current" aria-hidden="true" />
@@ -618,7 +678,7 @@ const Home = ({ darkMode, setDarkMode }) => {
                 <div className="flex items-center space-x-3">
                   <div className="text-xl md:text-2xl">{testimonial.avatar}</div>
                   <div>
-                    <div className={`font-semibold text-sm md:text-base ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+                    <div className={`font-semibold text-sm md:text-base ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                       {testimonial.name}
                     </div>
                     <div className={`text-xs md:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
@@ -633,9 +693,11 @@ const Home = ({ darkMode, setDarkMode }) => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-8 md:py-16 px-3 md:px-4">
+      <section className="relative py-8 md:py-16 px-3 md:px-4">
+        <FloatingOrbs />
+        <CircuitBackgroundContact />
         <div className="max-w-6xl mx-auto">
-          <div className={`backdrop-blur-md ${darkMode ? 'bg-gray-800/80 border-gray-700/70 text-gray-100' : 'bg-white/80 border-blue-200/70 text-gray-900'} rounded-2xl md:rounded-3xl p-4 md:p-8 border shadow-xl`}>
+          <div className={`backdrop-blur-md ${darkMode ? 'bg-gray-800/30 border-gray-700/50' : 'bg-white/30 border-gray-200/50'} rounded-2xl md:rounded-3xl p-4 md:p-8 border shadow-xl`}>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8 text-center">
               <div>
                 <div className="text-2xl md:text-3xl lg:text-4xl font-bold text-blue-600 dark:text-blue-400 mb-1 md:mb-2">50K+</div>
@@ -659,9 +721,11 @@ const Home = ({ darkMode, setDarkMode }) => {
       </section>
 
       {/* Call to Action */}
-      <section className="py-8 md:py-16 px-3 md:px-4">
+      <section className="relative py-8 md:py-16 px-3 md:px-4">
+        <CircuitBackground />
+        <CircuitBackgroundContact />
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold mb-6 ${darkMode ? 'text-blue-300' : 'text-[#0a2540]'}`}>
+          <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold mb-6 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
             Ready to Unleash Your Typing Potential?
           </h2>
           <p className={`text-lg md:text-xl mb-8 ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
@@ -697,16 +761,18 @@ const Home = ({ darkMode, setDarkMode }) => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-8 md:py-16 px-3 md:px-4">
+      <section className="relative py-8 md:py-16 px-3 md:px-4">
+        <FloatingOrbs />
+        <CircuitBackgroundContact />
         <div className="max-w-4xl mx-auto">
-          <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-6 md:mb-12 ${darkMode ? 'text-blue-300' : 'text-[#0a2540]'}`}>
+          <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-6 md:mb-12 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
             Frequently Asked Questions
           </h2>
           <div className="space-y-4">
             <details className={`group rounded-2xl p-4 md:p-6 cursor-pointer border shadow-md transition-all duration-300 ${
               darkMode ? 'bg-gray-800/80 border-gray-700/70' : 'bg-white/80 border-blue-200/70'
             }`}>
-              <summary className={`flex justify-between items-center font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              <summary className={`flex justify-between items-center font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                 How does the accuracy detection work?
                 <ChevronDown className="group-open:rotate-180 transition-transform duration-300" />
               </summary>
@@ -717,7 +783,7 @@ const Home = ({ darkMode, setDarkMode }) => {
             <details className={`group rounded-2xl p-4 md:p-6 cursor-pointer border shadow-md transition-all duration-300 ${
               darkMode ? 'bg-gray-800/80 border-gray-700/70' : 'bg-white/80 border-blue-200/70'
             }`}>
-              <summary className={`flex justify-between items-center font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              <summary className={`flex justify-between items-center font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                 Can I compete with my friends?
                 <ChevronDown className="group-open:rotate-180 transition-transform duration-300" />
               </summary>
@@ -728,7 +794,7 @@ const Home = ({ darkMode, setDarkMode }) => {
             <details className={`group rounded-2xl p-4 md:p-6 cursor-pointer border shadow-md transition-all duration-300 ${
               darkMode ? 'bg-gray-800/80 border-gray-700/70' : 'bg-white/80 border-blue-200/70'
             }`}>
-              <summary className={`flex justify-between items-center font-semibold ${darkMode ? 'text-white' : 'text-gray-900'}`}>
+              <summary className={`flex justify-between items-center font-semibold ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
                 What kind of stats does the dashboard track?
                 <ChevronDown className="group-open:rotate-180 transition-transform duration-300" />
               </summary>
@@ -741,10 +807,11 @@ const Home = ({ darkMode, setDarkMode }) => {
       </section>
 
       {/* Footer */}
-      <footer className={`py-10 px-4 ${darkMode ? 'bg-gray-900 text-gray-300' : 'bg-gray-100 text-gray-700'}`}>
+      <footer className={`py-10 px-4 ${darkMode ? 'bg-gradient-to-br from-blue-950 via-black-900 to-gray-900 text-gray-300' : 'bg-gradient-to-br from-blue-100 via-white to-blue-200 text-gray-700'}`}>
+        <CircuitBackgroundContact />
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h4 className={`font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>TypeMaster</h4>
+            <h4 className={`font-bold mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>TypeMaster</h4>
             <p className="text-sm">Master your typing, dominate the leaderboard.</p>
             <div className="flex space-x-4 mt-4">
               <a href="#" aria-label="Github"><Github className={`w-5 h-5 ${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`} /></a>
@@ -753,7 +820,7 @@ const Home = ({ darkMode, setDarkMode }) => {
             </div>
           </div>
           <div>
-            <h4 className={`font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Quick Links</h4>
+            <h4 className={`font-bold mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Quick Links</h4>
             <ul className="space-y-2 text-sm">
               <li><Link to="/typing" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>Start Test</Link></li>
               <li><Link to="/dashboard" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>Dashboard</Link></li>
@@ -762,7 +829,7 @@ const Home = ({ darkMode, setDarkMode }) => {
             </ul>
           </div>
           <div>
-            <h4 className={`font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Support</h4>
+            <h4 className={`font-bold mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Support</h4>
             <ul className="space-y-2 text-sm">
               <li><Link to="/faq" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>FAQ</Link></li>
               <li><Link to="/contact" className={`${darkMode ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>Contact Us</Link></li>
@@ -771,7 +838,7 @@ const Home = ({ darkMode, setDarkMode }) => {
             </ul>
           </div>
           <div>
-            <h4 className={`font-bold mb-4 ${darkMode ? 'text-white' : 'text-gray-900'}`}>Stay Connected</h4>
+            <h4 className={`font-bold mb-4 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>Stay Connected</h4>
             <p className="text-sm mb-4">Subscribe to our newsletter for updates!</p>
             <form className="flex">
               <input 
