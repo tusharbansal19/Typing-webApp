@@ -42,7 +42,7 @@ const Results = ({ isFinished, wpm, accuracy, correctChars, mistakes, testDurati
             return <div className="text-center text-gray-500 dark:text-gray-300 mb-8">Not enough data to display chart.</div>;
           }
           return (
-            <div className="glass-card rounded-xl p-6 shadow-lg mb-8">
+            <div className="glass-card rounded-xl p-6 shadow-lg mb-8 mx-auto md:max-w-[700px]">
               <h3 className="text-xl font-bold mb-4 text-center bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
                 Progress Chart (WPM every 5 seconds)
               </h3>

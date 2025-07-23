@@ -10,7 +10,7 @@ const TextDisplay = ({ currentText, inputText, currentIndex, textRef, activeChar
         pointerEvents: 'none',
       }}
     >
-      <div className="text-xl md:text-2xl leading-relaxed font-mono">
+      <div className="text-xl md:text-2xl leading-relaxed font-monoz">
         {currentText.split('').map((char, index) => (
           <span
             key={index}

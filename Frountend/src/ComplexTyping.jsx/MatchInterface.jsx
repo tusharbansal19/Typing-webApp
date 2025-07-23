@@ -667,6 +667,7 @@ const MatchInterface = ({darkMode}) => {
                         inputText={inputText}
                         currentIndex={currentIndex}
                         activeCharRef={activeCharRef}
+                        darkMode={darkMode}
                         getCharStyle={getCharStyle}
                       />
                       {/* Virtual keyboard or Chart */}
