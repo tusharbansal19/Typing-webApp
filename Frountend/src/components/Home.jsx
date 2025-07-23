@@ -107,7 +107,7 @@ const GLOW_COLORS = [
 
 function KeyboardGrid({ glowingKey, darkMode }) {
   return (
-    <div className="flex flex-col items-end md:items-center gap-2">
+    <div className="flex flex-col items-center gap-2">
       {KEYBOARD_ROWS.map((row, rowIdx) => (
         <div key={rowIdx} className="flex justify-center gap-2">
           {row.map((key, colIdx) => {
@@ -116,7 +116,7 @@ function KeyboardGrid({ glowingKey, darkMode }) {
             return (
               <button
                 key={key}
-                className={`w-10 h-12 md:w-12 md:h-16 rounded-lg font-bold text-lg md:text-2xl border border-white/30 transition-all duration-200
+                className={`w-8 h-10 md:w-12 md:h-16 rounded-lg font-bold text-sm md:text-2xl border border-white/30 transition-all duration-200
                   ${isGlowing ? GLOW_COLORS[Math.floor(Math.random() * GLOW_COLORS.length)] :
                     darkMode ? 'bg-indigo-900/60 text-white' : 'bg-white/80 text-gray-900'}
                   focus:outline-none select-none`}
@@ -374,11 +374,11 @@ const Home = ({ darkMode, setDarkMode }) => {
 
       {/* --- HERO SECTION --- */}
       <section
-        className="relative min-h-screen flex flex-col md:flex-row items-center justify-center px-4 md:px-8 py-12"
+        className="relative md:max-w-[85%]  md:mx-auto mt-16 flex flex-col lg:flex-row items-center justify-center px-2    md:px-4 py-12 gap-y-6"
       >
-      <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left relative z-10">
+      <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left relative gap-y-5 z-10">
          
-          <h1 className={`text-2xl md:text-4xl lg:text-4xl font-black mb-6 tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 animate-fade-in`}
+          <h1 className={`text-4xl text-4xl lg:text-6xl font-black mb-6 tracking-tight leading-tight bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 animate-fade-in`}
             style={{ animation: 'fadeIn 1.2s ease' }}>
             FastFinger.<br />
             
@@ -402,7 +402,7 @@ const Home = ({ darkMode, setDarkMode }) => {
                     />
                   </div>
                 </div>
-          <p className={`mb-8 text-lg leading-relaxed ${darkMode ? 'text-gray-300' : 'text-gray-700'} animate-fade-in`} style={{ animation: 'fadeIn 2.2s ease' }}>
+          <p className={`mb-8 text-lg leading-relaxed md:max-w-[85%] ${darkMode ? 'text-gray-300' : 'text-gray-700'} animate-fade-in`} style={{ animation: 'fadeIn 2.2s ease' }}>
                   🚀 Join the ultimate typing revolution! Battle players worldwide, track your progress with AI-powered analytics, and transform your productivity forever.
                 </p>
           <div className="flex flex-col sm:flex-row gap-4 animate-fade-in" style={{ animation: 'fadeIn 2.6s ease' }}>
@@ -472,7 +472,7 @@ const Home = ({ darkMode, setDarkMode }) => {
       {/* Feature Highlights Carousel */}
       <section className="relative py-8 md:py-16 px-3 md:px-4">
         <CircuitBackgroundContact />
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-4xl mx-auto">
           <h2 className={`text-2xl md:text-3xl lg:text-4xl font-bold text-center mb-6 md:mb-12 ${darkMode ? 'text-gray-100' : 'text-gray-900'}`}>
             Powerful Features
           </h2>

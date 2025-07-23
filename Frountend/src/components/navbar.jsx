@@ -172,13 +172,12 @@ const Navbar = ({ darkMode, setDarkMode }) => {
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-[60] transition-all duration-500 ease-in-out transform ${
-        showNavbar ? 'translate-y-0' : '-translate-y-full'
+        showNavbar ? 'translate-y-0' : '-translate-y-20'
       } ${
         darkMode
-        ? 'bg-gradient-to-r from-blue-950 via-blue-950 to-gray-900'
-        : 'bg-gradient-to-r from-blue-100 via-white to-blue-200'
-    }`
-    }
+          ? 'bg-gradient-to-br from-blue-950 via-black-900 to-gray-900 bg-opacity-80 backdrop-blur-xl border-b border-blue-900/40 shadow-lg'
+          : 'bg-gradient-to-br from-blue-100 via-white to-blue-200 bg-opacity-80 backdrop-blur-xl border-b border-blue-200/40 shadow-lg'
+      }`}
       style={{ willChange: 'transform' }}
     >
       <div className="container mx-auto px-4 py-4 flex justify-between items-center">

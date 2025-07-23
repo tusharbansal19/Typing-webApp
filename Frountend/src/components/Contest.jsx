@@ -86,7 +86,7 @@ const ContestContext = ({darkMode}) => {
           <CarouselComponent darkMode={darkMode} contest={contests} />
         </div>
         {/* Search Dropdown */}
-        <div className="w-full max-w-lg mb-8">
+        <div className="w-full max-w-lg z-[100] mb-8">
           <DropdownMenu recommendedOptions={recommendedOptions} onSelect={handleSelectContest} />
         </div>
         {/* Contest Cards */}

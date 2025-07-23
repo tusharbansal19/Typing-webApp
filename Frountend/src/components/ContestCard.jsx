@@ -19,8 +19,9 @@ const ContestCard = ({hostnavigate, title, date, description, darkMode }) => {
         <h2 className="text-2xl font-semibold text-blue-500 ">{"Costom Player"}</h2>
         <p className="mt-2">{"Join with your friend to make your joirney smart and fast"}</p>
 
-        <button onClick={handleReady} className="bg-blue-500 text-white mt-5 rounded shadow hover:bg-blue-700">
-            {'Room'}
+        <button onClick={handleReady} className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white mt-5 rounded shadow hover:to-blue-700 bold text-lg p-4 
+        ">
+            Room
           </button>
       </>:<>
 

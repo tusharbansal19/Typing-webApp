@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Mail, Phone, MapPin, Send, User, MessageSquare, Shield, Github, Linkedin, Twitter, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 const ContactUsPage = ({darkMode}) => {
-  const [ setDarkMode] = useState(true);
   const [loader, setLoader] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [toastType, setToastType] = useState('success');
@@ -15,6 +14,13 @@ const ContactUsPage = ({darkMode}) => {
     message: ''
   });
   const [errors, setErrors] = useState({});
+
+  // Add refs for each input
+  const nameRef = useRef(null);
+  const emailRef = useRef(null);
+  const phoneRef = useRef(null);
+  const subjectRef = useRef(null);
+  const messageRef = useRef(null);
 
   // Section refs for scroll motion
   const [headerRef, headerInView] = useInView(0.15);
@@ -60,6 +66,16 @@ const ContactUsPage = ({darkMode}) => {
     e.preventDefault();
     
     if (!validateForm()) {
+      // Focus the first invalid input
+      if (!formData.name.trim()) {
+        nameRef.current && nameRef.current.focus();
+      } else if (!formData.email.trim() || !/\S+@\S+\.\S+/.test(formData.email)) {
+        emailRef.current && emailRef.current.focus();
+      } else if (!formData.subject.trim()) {
+        subjectRef.current && subjectRef.current.focus();
+      } else if (!formData.message.trim()) {
+        messageRef.current && messageRef.current.focus();
+      }
       setToastType('error');
       setShowToast(true);
       setTimeout(() => setShowToast(false), 3000);
@@ -142,10 +158,10 @@ const ContactUsPage = ({darkMode}) => {
     </div>
   );
 
-  const FloatingLabel = ({ label, error, children }) => (
+  const FloatingLabel = ({ label, error, children, id }) => (
     <div className="relative group">
-      {children}
-      <label className={`absolute left-4 transition-all duration-300 pointer-events-none ${
+      {React.cloneElement(children, { id })}
+      <label htmlFor={id} className={`absolute left-4 transition-all duration-300 pointer-events-none ${
         children.props.value 
           ? 'top-2 text-xs text-purple-400' 
           : 'top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:top-2 group-focus-within:text-xs group-focus-within:text-purple-400'
@@ -353,91 +369,111 @@ const ContactUsPage = ({darkMode}) => {
               </span>
             </h2>
 
-            {loader ? (
-              <div className="flex justify-center items-center py-20">
-                <div className="flex items-center gap-3">
-                  <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
-                  <span className="text-lg">Sending message...</span>
+            <form onSubmit={handleSubmit} autoComplete="on">
+              {loader ? (
+                <div className="flex justify-center items-center py-20">
+                  <div className="flex items-center gap-3">
+                    <Loader2 className="w-8 h-8 animate-spin text-purple-400" />
+                    <span className="text-lg">Sending message...</span>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-6">
-                <div className="grid md:grid-cols-2 gap-6">
-                  <FloatingLabel label="Your Name" error={errors.name}>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <FloatingLabel label="Your Name" error={errors.name} id="contact-name">
+                      <input
+                        ref={nameRef}
+                        id="contact-name"
+                        type="text"
+                        name="name"
+                        // value={formData.name}
+                        onChange={handleChange}
+                        autoComplete="name"
+                        required
+                        className={`w-full pt-6 pb-2 px-4 rounded-lg backdrop-blur-sm border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                          darkMode ? 'bg-gray-800/50 border-gray-700 text-white' : 'bg-white/50 border-gray-200 text-gray-900'
+                        } ${errors.name ? 'border-red-500' : ''}`}
+                      />
+                    </FloatingLabel>
+                    
+                    <FloatingLabel label="Email Address" error={errors.email} id="contact-email">
+                      <input
+                        ref={emailRef}
+                        id="contact-email"
+                        type="email"
+                        name="email"
+                        // value={formData.email}
+                        onChange={handleChange}
+                        autoComplete="email"
+                        required
+                        className={`w-full pt-6 pb-2 px-4 rounded-lg backdrop-blur-sm border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                          darkMode ? 'bg-gray-800/50 border-gray-700 text-white' : 'bg-white/50 border-gray-200 text-gray-900'
+                        } ${errors.email ? 'border-red-500' : ''}`}
+                      />
+                    </FloatingLabel>
+                  </div>
+
+                  <FloatingLabel label="Phone Number (Optional)" error={errors.phone} id="contact-phone">
                     <input
+                      ref={phoneRef}
+                      id="contact-phone"
+                      type="tel"
+                      name="phone"
+                      // value={formData.p}
+                      onChange={handleChange}
+                      autoComplete="tel"
+                      className={`w-full pt-6 pb-2 px-4 rounded-lg backdrop-blur-sm border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                        darkMode ? 'bg-gray-800/50 border-gray-700 text-white' : 'bg-white/50 border-gray-200 text-gray-900'
+                      }`}
+                    />
+                  </FloatingLabel>
+
+                  <FloatingLabel label="Subject" error={errors.subject} id="contact-subject">
+                    <input
+                      ref={subjectRef}
+                      id="contact-subject"
                       type="text"
-                      name="name"
-                      value={formData.name}
+                      name="subject"
+                      value={formData.subject}
                       onChange={handleChange}
+                      autoComplete="off"
+                      required
                       className={`w-full pt-6 pb-2 px-4 rounded-lg backdrop-blur-sm border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
                         darkMode ? 'bg-gray-800/50 border-gray-700 text-white' : 'bg-white/50 border-gray-200 text-gray-900'
-                      } ${errors.name ? 'border-red-500' : ''}`}
+                      } ${errors.subject ? 'border-red-500' : ''}`}
                     />
                   </FloatingLabel>
-                  
-                  <FloatingLabel label="Email Address" error={errors.email}>
-                    <input
-                      type="email"
-                      name="email"
-                      value={formData.email}
+
+                  <FloatingLabel label="Your Message" error={errors.message} id="contact-message">
+                    <textarea
+                      ref={messageRef}
+                      id="contact-message"
+                      name="message"
+                      value={formData.message}
                       onChange={handleChange}
-                      className={`w-full pt-6 pb-2 px-4 rounded-lg backdrop-blur-sm border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
+                      rows="5"
+                      autoComplete="off"
+                      required
+                      className={`w-full pt-6 pb-2 px-4 rounded-lg backdrop-blur-sm border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none ${
                         darkMode ? 'bg-gray-800/50 border-gray-700 text-white' : 'bg-white/50 border-gray-200 text-gray-900'
-                      } ${errors.email ? 'border-red-500' : ''}`}
+                      } ${errors.message ? 'border-red-500' : ''}`}
                     />
                   </FloatingLabel>
+
+                  <div className="flex justify-center">
+                    <button
+                      type="submit"
+                      className="group px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white shadow-lg hover:shadow-xl pulse-glow"
+                    >
+                      <span className="flex items-center gap-2">
+                        <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        Send Message
+                      </span>
+                    </button>
+                  </div>
                 </div>
-
-                <FloatingLabel label="Phone Number (Optional)" error={errors.phone}>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className={`w-full pt-6 pb-2 px-4 rounded-lg backdrop-blur-sm border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                      darkMode ? 'bg-gray-800/50 border-gray-700 text-white' : 'bg-white/50 border-gray-200 text-gray-900'
-                    }`}
-                  />
-                </FloatingLabel>
-
-                <FloatingLabel label="Subject" error={errors.subject}>
-                  <input
-                    type="text"
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    className={`w-full pt-6 pb-2 px-4 rounded-lg backdrop-blur-sm border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 ${
-                      darkMode ? 'bg-gray-800/50 border-gray-700 text-white' : 'bg-white/50 border-gray-200 text-gray-900'
-                    } ${errors.subject ? 'border-red-500' : ''}`}
-                  />
-                </FloatingLabel>
-
-                <FloatingLabel label="Your Message" error={errors.message}>
-                  <textarea
-                    name="message"
-                    value={formData.message}
-                    onChange={handleChange}
-                    rows="5"
-                    className={`w-full pt-6 pb-2 px-4 rounded-lg backdrop-blur-sm border transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none ${
-                      darkMode ? 'bg-gray-800/50 border-gray-700 text-white' : 'bg-white/50 border-gray-200 text-gray-900'
-                    } ${errors.message ? 'border-red-500' : ''}`}
-                  />
-                </FloatingLabel>
-
-                <div className="flex justify-center">
-                  <button
-                    onClick={handleSubmit}
-                    type="button"
-                    className="group px-8 py-4 rounded-full font-semibold text-lg transition-all duration-300 transform hover:scale-105 bg-gradient-to-r from-purple-500 to-cyan-500 hover:from-purple-600 hover:to-cyan-600 text-white shadow-lg hover:shadow-xl pulse-glow"
-                  >
-                    <span className="flex items-center gap-2">
-                      <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                      Send Message
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )}
+              )}
+            </form>
           </div>
         </div>
 
@@ -461,6 +497,7 @@ const ContactUsPage = ({darkMode}) => {
             />
           </div>
         </div>
+        {/* <SimpleForm/> */}
 
         {/* Social Media & CTA Section */}
         <div ref={socialRef} className={`text-center space-y-8 transition-all duration-1000 ${socialInView ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
@@ -499,5 +536,9 @@ const ContactUsPage = ({darkMode}) => {
     </div>
   );
 };
+
+
+
+
 
 export default ContactUsPage;
