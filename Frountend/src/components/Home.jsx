@@ -116,7 +116,7 @@ function KeyboardGrid({ glowingKey, darkMode }) {
             return (
               <button
                 key={key}
-                className={`w-8 h-10 md:w-12 md:h-16 rounded-lg font-bold text-sm md:text-2xl border border-white/30 transition-all duration-200
+                className={`w-6 h-7 md:w-12 md:h-16 rounded-lg font-bold text-sm md:text-2xl border border-white/30 transition-all duration-200
                   ${isGlowing ? GLOW_COLORS[Math.floor(Math.random() * GLOW_COLORS.length)] :
                     darkMode ? 'bg-indigo-900/60 text-white' : 'bg-white/80 text-gray-900'}
                   focus:outline-none select-none`}
