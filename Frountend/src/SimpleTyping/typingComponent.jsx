@@ -100,7 +100,7 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect }) => {
 };
 
 // Stats card component
-const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
+const StatsCard = ({ darkMode, icon: Icon, label, value, color = "blue" }) => {
   const colorClasses = {
     blue: "text-blue-900 bg-blue-200/90 dark:bg-blue-900/40",
     green: "text-green-900 bg-green-200/90 dark:bg-green-900/40",
@@ -113,8 +113,8 @@ const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
     <div className={`glass-card p-4 rounded-xl ${colorClasses[color]} transition-all duration-300 hover:scale-105`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-black dark:text-gray-100 drop-shadow-md">{label}</p>
-          <p className="text-2xl font-extrabold text-black dark:text-white drop-shadow-md">{value}</p>
+          <p className= {`text-sm font-semibold text-black drop-shadow-md ${darkMode ? 'text-white' : 'text-gray-500'}`  }>{label}</p>
+          <p className={`text-2xl font-extrabold text-black  drop-shadow-md  ${darkMode ? 'text-white' : 'text-black'}`}>{value}</p>
         </div>
         <Icon className={`w-8 h-8 ${colorClasses[color].split(' ')[0]} drop-shadow-md`} />
       </div>
@@ -473,7 +473,7 @@ const TypingInterface = ({darkMode}) => {
     if (index === currentIndex) {
       return 'bg-blue-500 text-white animate-pulse';
     }
-    return 'text-gray-700 dark:text-gray-300';
+    return darkMode ? 'text-white ' :  'text-black';
   };
 
   return (
@@ -508,11 +508,11 @@ const TypingInterface = ({darkMode}) => {
         {/* Header */}
         <div className="text-center mb-8">
           {!inputText&&
-          <h1 className={`text-4xl md:text-6xl font-extrabold mb-4 bg-gradient-to-r from-blue-700 via-fuchsia-500 to-indigo-700 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-2xl ${!darkMode ? 'text-black' : ''}`}>
+          <h1 className={`text-4xl md:text-6xl font-extrabold mb-4  bg-clip-text text-transparent drop-shadow-2xl ${darkMode ? 'bg-gradient-to-r from-blue-300 via-fuchsia-500 to-blue-200' : ' bg-gradient-to-r from-blue-700 via-fuchsia-500 to-indigo-700'}`}>
             Typing Speed Test
           </h1>
           }
-          <p className={`text-lg font-semibold text-black dark:text-gray-100 drop-shadow-md ${!darkMode ? 'text-black' : ''}`}>
+          <p className={`text-lg font-semibold  drop-shadow-md ${darkMode ? 'text-white' : 'text-black'}`}>
             Test your typing speed and accuracy
           </p>
         </div>
@@ -551,16 +551,16 @@ const TypingInterface = ({darkMode}) => {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
-          <StatsCard icon={Target} label="WPM" value={wpm} color="green" />
-          <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
-          <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
+          <StatsCard darkMode={darkMode} icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
+          <StatsCard darkMode={darkMode} icon={Target} label="WPM" value={wpm} color="green" />
+          <StatsCard darkMode={darkMode} icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
+          <StatsCard darkMode={darkMode} icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
         </div>
 
         {/* Start prompt */}
         {!isStarted && (
           <div className="text-center mb-8">
-            <p className="text-2xl text-gray-600 dark:text-gray-300 animate-pulse">
+            <p className={`text-2xl  animate-pulse ${darkMode ? 'text-white' : 'text-blue-500'}`}>
               Press any key to start typing...
             </p>
           </div>
@@ -593,8 +593,8 @@ const TypingInterface = ({darkMode}) => {
         {/* Virtual keyboard or Chart */}
         <div className="mb-8">
           {isFinished ? (<>
-            <div className="glass-card rounded-xl p-6 shadow-lg">
-              <h3 className="text-xl font-bold mb-4 text-center bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
+            <div className="glass-card rounded-xl p-6 shadow-lg md:max-w-[700px] mx-auto">
+              <h3 className="text-xl font-bold mb-4 text-center  bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
                 Progress Chart (WPM every 5 seconds)
               </h3>
               {(() => {
@@ -623,7 +623,7 @@ const TypingInterface = ({darkMode}) => {
                         {
                           label: 'WPM',
                           data: wpmPoints,
-                          borderColor: '#3b82f6',
+                          borderColor: darkMode ? '#3b82f6' : '#3b82f6',
                           backgroundColor: 'rgba(99,102,241,0.2)',
                           pointBackgroundColor: '#a21caf',
                           tension: 0.3,
@@ -639,13 +639,13 @@ const TypingInterface = ({darkMode}) => {
                       },
                       scales: {
                         x: {
-                          title: { display: true, text: 'Time (s)', color: '#111' },
-                          ticks: { color: '#111' },
+                            title: { display: true, text: 'Time (s)', color: darkMode ? '#111' : '#111' },
+                          ticks: { color: darkMode ? '#111' : '#111' },
                           grid: { color: 'rgba(0,0,0,0.07)' },
                         },
                         y: {
-                          title: { display: true, text: 'WPM', color: '#111' },
-                          ticks: { color: '#111' },
+                          title: { display: true, text: 'WPM', color:  darkMode ? '#111' : '#111' },
+                          ticks: { color: darkMode ? '#111' : '#111' },
                           grid: { color: 'rgba(0,0,0,0.07)' },
                           beginAtZero: true,
                         },
