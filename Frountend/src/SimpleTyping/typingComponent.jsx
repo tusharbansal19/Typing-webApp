@@ -157,6 +157,63 @@ const TypingInterface = ({darkMode}) => {
   const startTimeRef = useRef(null);
   const [progressData, setProgressData] = useState([]); // Array of {time, wpm}
   const [intervalStep, setIntervalStep] = useState(0); // Track elapsed time in 5s steps
+  const hiddenInputRef = useRef(null);
+
+  // Focus the hidden input on mount and when the main area is clicked/tapped
+  useEffect(() => {
+    if (hiddenInputRef.current) {
+      hiddenInputRef.current.focus();
+    }
+  }, []);
+
+  // Helper to focus input on tap/click
+  const focusInput = () => {
+    if (hiddenInputRef.current) {
+      hiddenInputRef.current.focus();
+    }
+  };
+
+  // Handle input from the hidden input (for mobile)
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    if (isFinished) return;
+    // Only process the new character(s)
+    let newChar = value.slice(inputText.length);
+    if (!isStarted && newChar) {
+      setIsStarted(true);
+      setIsActive(true);
+      startTimeRef.current = Date.now();
+    }
+    // Simulate key presses for each new character
+    for (let i = 0; i < newChar.length; i++) {
+      const key = newChar[i];
+      // Only allow typing up to the text length
+      if (currentIndex < currentText.length) {
+        const expectedChar = currentText[currentIndex];
+        const isCorrect = key === expectedChar;
+        setInputText(prev => prev + key);
+        setCurrentIndex(prev => prev + 1);
+        if (isCorrect) {
+          correctCharsRef.current++;
+          setIsCorrectKey(true);
+          setIsIncorrectKey(false);
+        } else {
+          mistakesRef.current++;
+          setIsCorrectKey(false);
+          setIsIncorrectKey(true);
+        }
+        if (currentIndex + 1 === currentText.length) {
+          setIsActive(false);
+          setIsFinished(true);
+        }
+        setTimeout(() => {
+          setPressedKey('');
+          setIsCorrectKey(false);
+          setIsIncorrectKey(false);
+        }, 150);
+      }
+    }
+  };
 
   // Initialize text
   useEffect(() => {
@@ -420,11 +477,33 @@ const TypingInterface = ({darkMode}) => {
   };
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
-      darkMode
-        ? 'bg-gradient-to-br from-blue-950 via-black-900 to-gray-900'
-        : 'bg-gradient-to-br from-blue-100 via-white to-blue-200'
-    }`}>
+    <div
+      className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}
+      onClick={focusInput}
+      onTouchStart={focusInput}
+      style={{ position: 'relative' }}
+    >
+      {/* Visually hidden input for mobile typing */}
+      <input
+        ref={hiddenInputRef}
+        type="text"
+        inputMode="text"
+        autoComplete="off"
+        autoCorrect="off"
+        spellCheck="false"
+        value={inputText}
+        onChange={handleInputChange}
+        style={{
+          position: 'absolute',
+          opacity: 0,
+          pointerEvents: 'none',
+          width: 1,
+          height: 1,
+          zIndex: -1,
+        }}
+        tabIndex={-1}
+        aria-hidden="true"
+      />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
