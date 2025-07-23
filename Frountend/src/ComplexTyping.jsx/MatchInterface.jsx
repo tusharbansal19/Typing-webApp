@@ -596,6 +596,7 @@ const MatchInterface = ({darkMode}) => {
       ? 'bg-gradient-to-br from-blue-950 via-black-900 to-gray-900'
       : 'bg-gradient-to-br from-blue-100 via-white to-blue-200'
   }`}>
+ 
       <div className="w-full mx-auto px-4 py-8">
         {/* Loader until socket is ready */}
         {!socketReady ? (
@@ -625,19 +626,22 @@ const MatchInterface = ({darkMode}) => {
             ) : (
               <div className="flex flex-col lg:flex-row lg:items-start w-full">
                 {/* Main content */}
-                <div className="flex-1 w-full lg:w-3/4 lg:ml-6">
-                  {cooldown || !isTypingActive ? (
-                    <div className="flex flex-col items-center justify-center min-h-[300px] relative">
+                <div className="flex-1 w-full lg:ml-6">
+                  {cooldown || !isTypingActive ? (<>
+                <div className="block lg:hidden mt-4">
+                        <ShowMember darkMode={darkMode} />
+                      </div>
+
+                    <div className="fixed flex flex-col items-center justify-center min-h-[300px] relative">
                       <h2 className="text-3xl font-bold text-center mt-12">Get Ready...</h2>
                       {cooldown && (
-                        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
                           <span className="text-7xl font-extrabold text-yellow-400 drop-shadow-lg animate-pulse">{cooldownValue > 0 ? cooldownValue : ''}</span>
                         </div>
                       )}
-                      <div className="block lg:hidden mt-4">
-                        <ShowMember darkMode={darkMode} />
-                      </div>
+                     
                     </div>
+                      </>
                   ) : (
                     <>
                       {/* Header */}
@@ -685,6 +689,7 @@ const MatchInterface = ({darkMode}) => {
                   )}
                 </div>
                 {/* Sidebar on large screens */}
+
                   <div className="hidden lg:block lg:w-1/4 lg:ml-6">
                   {cooldown || !isTypingActive ? (
                     <ShowMember darkMode={darkMode} />
