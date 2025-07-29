@@ -358,8 +358,10 @@ const TypingInterface = ({darkMode}) => {
   const mistakesRef = useRef(0);
   const correctCharsRef = useRef(0);
   const startTimeRef = useRef(null);
+  const targetTimeRef = useRef(null);
   const [progressData, setProgressData] = useState([]); // Array of {time, wpm}
   const [intervalStep, setIntervalStep] = useState(0); // Track elapsed time in 5s steps
+  const [resetTrigger, setResetTrigger] = useState(0); // Trigger for reset
   const hiddenInputRef = useRef(null);
 
   // Get current theme object
@@ -451,41 +453,52 @@ const TypingInterface = ({darkMode}) => {
     setCorrectChars(correctCharsRef.current);
   }, [timeLeft, testDuration]);
 
-  // Timer logic with cross-browser compatibility
+  // Timer cleanup effect
   useEffect(() => {
-    // Clear any existing timer first
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-
-    // Only start timer if we have time left and the test has started
-    if (timeLeft > 0 && isStarted) {
-      const startTime = Date.now();
-      const targetTime = startTime + (timeLeft * 1000);
-      
-      timerRef.current = setInterval(() => {
-        const currentTime = Date.now();
-        const remainingTime = Math.max(0, Math.ceil((targetTime - currentTime) / 1000));
-        
-        setTimeLeft(remainingTime);
-        
-        if (remainingTime <= 0) {
-          setIsActive(false);
-          setIsFinished(true);
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
-      }, 100); // Check more frequently for better accuracy
-    }
-
     return () => {
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
       }
     };
-  }, [timeLeft, isStarted]);
+  }, []);
+
+  // Initialize timer when test starts
+  useEffect(() => {
+    if (isStarted && timeLeft > 0 && !timerRef.current) {
+      const startTime = Date.now();
+      targetTimeRef.current = startTime + (timeLeft * 1000);
+      
+      console.log('Timer started:', { startTime, targetTime: targetTimeRef.current, timeLeft });
+      
+      timerRef.current = setInterval(() => {
+        const currentTime = Date.now();
+        const remainingTime = Math.max(0, Math.ceil((targetTimeRef.current - currentTime) / 1000));
+        
+        setTimeLeft(remainingTime);
+        
+        if (remainingTime <= 0) {
+          console.log('Timer finished');
+          setIsActive(false);
+          setIsFinished(true);
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      }, 100);
+    }
+  }, [isStarted, timeLeft, resetTrigger]);
+
+  // Handle timer cleanup on reset
+  useEffect(() => {
+    if (resetTrigger > 0) {
+      // Clear any existing timer when reset is triggered
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      targetTimeRef.current = null;
+    }
+  }, [resetTrigger]);
 
   // Update stats regularly
   useEffect(() => {
@@ -584,8 +597,6 @@ const TypingInterface = ({darkMode}) => {
         setIsStarted(true);
         setIsActive(true);
         startTimeRef.current = Date.now();
-        // Force timer to start immediately
-        setTimeLeft(prev => prev);
       }
       
       // Handle special keys
@@ -684,7 +695,9 @@ const TypingInterface = ({darkMode}) => {
 
   // Reset test
   const resetTest = () => {
+    console.log('Reset triggered');
     clearInterval(timerRef.current);
+    timerRef.current = null;
     setCurrentText(TEXT_SAMPLES[Math.floor(Math.random() * TEXT_SAMPLES.length)]);
     setInputText('');
     setCurrentIndex(0);
@@ -699,9 +712,11 @@ const TypingInterface = ({darkMode}) => {
     mistakesRef.current = 0;
     correctCharsRef.current = 0;
     startTimeRef.current = null;
+    targetTimeRef.current = null;
     setPressedKey('');
     setIsCorrectKey(false);
     setIsIncorrectKey(false);
+    setResetTrigger(prev => prev + 1); // Trigger timer reset
   };
 
   // Format time display
@@ -783,8 +798,15 @@ const TypingInterface = ({darkMode}) => {
             <select
               value={testDuration}
               onChange={(e) => {
-                setTestDuration(Number(e.target.value));
-                setTimeLeft(Number(e.target.value));
+                const newDuration = Number(e.target.value);
+                setTestDuration(newDuration);
+                setTimeLeft(newDuration);
+                // Clear timer if test is active
+                if (timerRef.current) {
+                  clearInterval(timerRef.current);
+                  timerRef.current = null;
+                }
+                targetTimeRef.current = null;
               }}
               className={`px-3 py-2 rounded-lg border ${theme.cardBorder} ${theme.card} ${theme.text}`}
               disabled={isActive}
