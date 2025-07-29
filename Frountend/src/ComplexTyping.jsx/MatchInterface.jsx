@@ -389,25 +389,41 @@ const MatchInterface = ({darkMode}) => {
     correctCharsStateRef.current = correctCharsRef.current;
   }, [timeLeft, testDuration]);
 
-  // Timer logic
+  // Timer logic with cross-browser compatibility
   useEffect(() => {
-    if (isActive && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft(prev => {
-          if (prev <= 1) {
-            setIsActive(false);
-            setIsFinished(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-    } else {
+    // Clear any existing timer first
+    if (timerRef.current) {
       clearInterval(timerRef.current);
+      timerRef.current = null;
     }
 
-    return () => clearInterval(timerRef.current);
-  }, [isActive, timeLeft]);
+    // Only start timer if we have time left and the test has started
+    if (timeLeft > 0 && isStarted) {
+      const startTime = Date.now();
+      const targetTime = startTime + (timeLeft * 1000);
+      
+      timerRef.current = setInterval(() => {
+        const currentTime = Date.now();
+        const remainingTime = Math.max(0, Math.ceil((targetTime - currentTime) / 1000));
+        
+        setTimeLeft(remainingTime);
+        
+        if (remainingTime <= 0) {
+          setIsActive(false);
+          setIsFinished(true);
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+      }, 100); // Check more frequently for better accuracy
+    }
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [timeLeft, isStarted]);
 
   // Update stats regularly
   useEffect(() => {
@@ -471,7 +487,7 @@ const MatchInterface = ({darkMode}) => {
 
   // Track WPM every 5 seconds and at start
   useEffect(() => {
-    if (!isActive) return;
+    if (!isStarted) return;
     // Add a data point at time 0 when test starts
     if (progressData.length === 0) {
       setProgressData([{ time: 0, wpm: 0 }]);
@@ -489,15 +505,42 @@ const MatchInterface = ({darkMode}) => {
       });
     }, 5000);
     return () => clearInterval(interval);
-  }, [isActive]);
+  }, [isStarted]);
 
   // Reset progress data and interval step on new test
   useEffect(() => {
-    if (!isActive && !isStarted) {
+    if (!isStarted) {
       setProgressData([]);
       setIntervalStep(0);
     }
-  }, [isActive, isStarted]);
+  }, [isStarted]);
+
+  // Handle visibility changes and focus events for cross-browser compatibility
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      // Ensure timer continues when tab becomes visible again
+      if (!document.hidden && isStarted && timeLeft > 0 && !isFinished) {
+        // Force a re-render of the timer
+        setTimeLeft(prev => prev);
+      }
+    };
+
+    const handleFocus = () => {
+      // Ensure timer continues when window regains focus
+      if (isStarted && timeLeft > 0 && !isFinished) {
+        // Force a re-render of the timer
+        setTimeLeft(prev => prev);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [isStarted, timeLeft, isFinished]);
 
   // Push a final WPM data point and fill missing intervals when the test ends
   useEffect(() => {
@@ -534,6 +577,8 @@ const MatchInterface = ({darkMode}) => {
         setIsStarted(true);
         setIsActive(true);
         startTimeRef.current = Date.now();
+        // Force timer to start immediately
+        setTimeLeft(prev => prev);
       }
       
       // Handle special keys
@@ -578,8 +623,8 @@ const MatchInterface = ({darkMode}) => {
           mistakesRef.current += skippedCount;
           // Check if test is complete
           if (nextIndex >= currentText.length) {
-            setIsActive(false);
             setIsFinished(true);
+            // Don't stop the timer - let it continue until time is up
           }
         }
         setIsCorrectKey(false);
@@ -613,8 +658,8 @@ const MatchInterface = ({darkMode}) => {
         
         // Check if test is complete
         if (currentIndex + 1 === currentText.length) {
-          setIsActive(false);
           setIsFinished(true);
+          // Don't stop the timer - let it continue until time is up
         }
       }
       
@@ -700,9 +745,9 @@ const MatchInterface = ({darkMode}) => {
         
         if (response.ok) {
           const data = await response.json();
-          setIsViewer(data.isViewer);
-          setIsParticipant(data.isParticipant);
-          setAllowNewPlayers(data.allowNewPlayers);
+          setIsViewer(data.isViewer || false);
+          setIsParticipant(data.isParticipant || false);
+          setAllowNewPlayers(data.allowNewPlayers !== false);
           setViewers(data.viewers || []);
           setIsRoomClosed(data.isRoomClosed || false);
           setAdminPresent(data.adminPresent || false);
@@ -717,6 +762,13 @@ const MatchInterface = ({darkMode}) => {
         }
       } catch (error) {
         console.error('Error checking room state:', error);
+        // Set default values on error
+        setIsViewer(false);
+        setIsParticipant(false);
+        setAllowNewPlayers(true);
+        setViewers([]);
+        setIsRoomClosed(false);
+        setAdminPresent(false);
       }
     };
 
@@ -796,6 +848,11 @@ const MatchInterface = ({darkMode}) => {
         }
       } catch (error) {
         console.error('Error handling reload:', error);
+        // Set default states on error
+        setIsTypingActive(false);
+        setIsActive(false);
+        setIsStarted(false);
+        setIsFinished(false);
       } finally {
         setIsReloading(false);
       }

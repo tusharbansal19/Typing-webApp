@@ -102,7 +102,7 @@ const Hostpage = ({ darkMode }) => {
         setIsJoining(false);
         setJoinCode(joinCode);
         // Reset created group state
-        setCreatedRoom('');
+        setCreatedRoom(null);
         console.log("createdRoom of handleJoinGroup", createdRoom);
       }
     } catch (err) {
@@ -115,25 +115,33 @@ const Hostpage = ({ darkMode }) => {
   
   // Add participant to match if not host, then navigate
   const handleEnterBattle = async () => {
-    const isHost = user?.email;
     const roomId = createdRoom || joinedRoom;
-    if (!roomId) return;
-    if (isHost) {
-      try {
-        setLoading(true);
-        await axios.post('/match/add-participant', {
-          roomId,
-          name: user?.name,
-          email: user?.email,
-        });
-      
-      } catch (err) {
-        console.log("err of handleEnterBattle", err);
-        // Optionally handle error, but proceed if already exists
-      } finally {
-        setLoading(false);
-        navigate(`/match/${roomId}`);
+    if (!roomId) {
+      console.error('No room ID available for navigation');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await axios.post('/match/add-participant', {
+        roomId,
+        name: user?.name,
+        email: user?.email,
+      });
+    
+    } catch (err) {
+      console.log("err of handleEnterBattle", err);
+      // If it's a 403 (already exists) or 200 (success), proceed anyway
+      if (err.response?.status === 403 && err.response?.data?.message?.includes('already exists')) {
+        console.log('User already exists in room, proceeding...');
+      } else if (err.response?.status === 403 && err.response?.data?.message?.includes('not allowed')) {
+        console.log('New players not allowed, proceeding...');
+      } else {
+        console.error('Error adding participant:', err);
       }
+    } finally {
+      setLoading(false);
+      navigate(`/match/${roomId}`);
     }
   };
 

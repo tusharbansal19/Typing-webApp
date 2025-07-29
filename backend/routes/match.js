@@ -147,16 +147,18 @@ router.post('/create', auth, async (req, res) => {
 // Add participant to a match by roomId, name, and email
 router.post('/add-participant', auth, async (req, res) => {
   let { roomId, name, email } = req.body;
-  if (!req.user || !req.user.id) {
-    return res.status(400).json({ message: 'User authentication missing' });
-  }
-  if (!roomId || typeof roomId !== 'string') {
-    return res.status(400).json({ message: 'Room ID required and must be a string' });
-  }
-  if (!name || !email) {
-    return res.status(400).json({ message: 'Name and email are required' });
-  }
+  
   try {
+    if (!req.user || !req.user.id) {
+      return res.status(400).json({ message: 'User authentication missing' });
+    }
+    if (!roomId || typeof roomId !== 'string') {
+      return res.status(400).json({ message: 'Room ID required and must be a string' });
+    }
+    if (!name || !email) {
+      return res.status(400).json({ message: 'Name and email are required' });
+    }
+
     // Check if match exists in Redis
     const matchState = await redis.hgetall(`match:${roomId}`);
     if (!matchState) {
@@ -173,12 +175,26 @@ router.post('/add-participant', auth, async (req, res) => {
 
     // Check if room is closed
     if (matchState.isClosed === 'true') {
+      // Look up the user in the database to get ObjectId
+      const dbUser = await User.findOne({ email });
+      if (!dbUser) {
+        return res.status(404).json({ message: 'User not found in database' });
+      }
+
       // If room is closed, add user as viewer instead of participant
       let viewers = [];
       try {
         viewers = JSON.parse(matchState.viewers || '[]');
       } catch (e) {
         viewers = [];
+      }
+
+      // Get participants for response
+      let participants = [];
+      try {
+        participants = JSON.parse(matchState.participants || '[]');
+      } catch (e) {
+        participants = [];
       }
 
       // Check if user is already a viewer
@@ -211,6 +227,14 @@ router.post('/add-participant', auth, async (req, res) => {
       viewers.push(newViewer);
 
       await redis.hset(`match:${roomId}`, 'viewers', JSON.stringify(viewers));
+      
+      // Get participants for response
+      // let participants = [];
+      try {
+        participants = JSON.parse(matchState.participants || '[]');
+      } catch (e) {
+        // participants = [];
+      }
       
       const host = participants[0];
       return res.status(200).json({ 
