@@ -20,42 +20,97 @@ router.post('/create', auth, async (req, res) => {
     if (!req.user || !req.user.id || !req.user.name || !req.user.email) {
       return res.status(400).json({ message: 'User authentication or user info missing' });
     }
+    
+    // Extract room configuration with defaults
+    const roomConfig = req.body.roomConfig || {};
+    const {
+      playerLimit = 4,
+      timer = 60,
+      difficulty = 'normal',
+      mode = 'multiplayer',
+      isPrivate = false,
+      allowSpectators = true
+    } = roomConfig;
+
+    // Validate configuration
+    if (![2, 4, 6, 8, 10, 12].includes(playerLimit)) {
+      return res.status(400).json({ message: 'Invalid player limit' });
+    }
+    if (![30, 60, 120, 180, 300, 600].includes(timer)) {
+      return res.status(400).json({ message: 'Invalid timer value' });
+    }
+    if (!['easy', 'normal', 'hard'].includes(difficulty)) {
+      return res.status(400).json({ message: 'Invalid difficulty level' });
+    }
+    if (!['multiplayer', 'tournament'].includes(mode)) {
+      return res.status(400).json({ message: 'Invalid game mode' });
+    }
+
     // Look up the user in the database to get ObjectId
     const dbUser = await User.findOne({ email: req.user.email });
     if (!dbUser) {
       return res.status(404).json({ message: 'User not found in database' });
     }
-    // Select a random text sample for the match
-    const randomText = TEXT_SAMPLES[Math.floor(Math.random() * TEXT_SAMPLES.length)];
-    // Create the match in MongoDB (let MongoDB generate the _id)
+
+    // Select text based on difficulty
+    let selectedText;
+    if (difficulty === 'easy') {
+      selectedText = TEXT_SAMPLES[0]; // Shorter, simpler text
+    } else if (difficulty === 'hard') {
+      selectedText = TEXT_SAMPLES[1]; // Longer, more complex text
+    } else {
+      selectedText = TEXT_SAMPLES[Math.floor(Math.random() * TEXT_SAMPLES.length)];
+    }
+
+    // Create the match in MongoDB
     const participantObj = {
       user: dbUser._id,
       username: req.user.name,
       email: req.user.email,
       wpm: 0,
       accuracy: 0,
-      status: 'notStarted',
       errors: 0,
       totalTyped: 0,
+      status: 'notStarted',
+      isReady: false,
+      isHost: true
     };
+
     const matchDoc = await Match.create({
       participants: [participantObj],
-      mode: 'multiplayer',
-      timeLimit: 60,
-      wordList: randomText,
+      admin: dbUser._id, // Set creator as admin
+      mode: mode,
+      timeLimit: timer,
+      playerLimit: playerLimit,
+      difficulty: difficulty,
+      isPrivate: isPrivate,
+      allowSpectators: allowSpectators,
+      allowNewPlayers: true, // Default to allowing new players
+      isClosed: false, // Room is open by default
+      wordList: selectedText,
       startedAt: null,
       endedAt: null,
       isStarted: false,
       winnerId: null,
+      createdAt: new Date(),
+      updatedAt: new Date()
     });
+
     const roomId = matchDoc._id.toString();
-    participantObj.isReady = false;
-    ////console.log("participantObj",participantObj);
-    // Save match state in Redis using the same ObjectId
+
+    // Save match state in Redis
     try {
       await redis.hmset(`match:${roomId}`, {
-        mode: 'multiplayer',
-        timeLimit: 60,
+        mode: mode,
+        timeLimit: timer,
+        playerLimit: playerLimit,
+        difficulty: difficulty,
+        isPrivate: isPrivate.toString(),
+        allowSpectators: allowSpectators.toString(),
+        allowNewPlayers: 'true',
+        isClosed: 'false', // Room is open by default
+        admin: dbUser._id.toString(),
+        viewers: JSON.stringify([]),
         isStarted: false,
         endedAt: null,
         winnerId: null,
@@ -63,13 +118,27 @@ router.post('/create', auth, async (req, res) => {
         winner: null,
         started: false,
         participants: JSON.stringify([participantObj]),
-        wordList: randomText,
+        wordList: selectedText,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       });
-      ////console.log(`[REDIS] Created match:${roomId} with participants:`, [participantObj]);
     } catch (redisErr) {
       return res.status(500).json({ message: 'Failed to save match in Redis', error: redisErr.message });
     }
-    return res.status(201).json({ roomId, hostName: req.user.name, hostEmail: req.user.email });
+
+    return res.status(201).json({ 
+      roomId, 
+      hostName: req.user.name, 
+      hostEmail: req.user.email,
+      roomConfig: {
+        playerLimit,
+        timer,
+        difficulty,
+        mode,
+        isPrivate,
+        allowSpectators
+      }
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -84,7 +153,6 @@ router.post('/add-participant', auth, async (req, res) => {
   if (!roomId || typeof roomId !== 'string') {
     return res.status(400).json({ message: 'Room ID required and must be a string' });
   }
-  // roomId = roomId.toLowerCase();
   if (!name || !email) {
     return res.status(400).json({ message: 'Name and email are required' });
   }
@@ -97,11 +165,74 @@ router.post('/add-participant', auth, async (req, res) => {
     if (matchState.started === 'true') {
       return res.status(403).json({ message: 'Match already started' });
     }
-    // Look up the user in the database to get ObjectId
-    const dbUser = await User.findOne({ email });
-    if (!dbUser) {
-      return res.status(404).json({ message: 'User not found in database' });
+
+    // Check if new players are allowed
+    if (matchState.allowNewPlayers !== 'true') {
+      return res.status(403).json({ message: 'New players are not allowed to join this match' });
     }
+
+    // Check if room is closed
+    if (matchState.isClosed === 'true') {
+      // If room is closed, add user as viewer instead of participant
+      let viewers = [];
+      try {
+        viewers = JSON.parse(matchState.viewers || '[]');
+      } catch (e) {
+        viewers = [];
+      }
+
+      // Check if user is already a viewer
+      if (viewers.find(v => v.email === email)) {
+        return res.status(200).json({ 
+          message: 'User already exists as viewer', 
+          participants: participants,
+          viewers: viewers,
+          isViewer: true,
+          hostName: participants[0]?.username, 
+          hostEmail: participants[0]?.email,
+          roomConfig: {
+            playerLimit: parseInt(matchState.playerLimit) || 4,
+            timer: parseInt(matchState.timeLimit) || 60,
+            difficulty: matchState.difficulty || 'normal',
+            mode: matchState.mode || 'multiplayer',
+            isPrivate: matchState.isPrivate === 'true',
+            allowSpectators: matchState.allowSpectators === 'true'
+          }
+        });
+      }
+
+      // Add new viewer
+      const newViewer = {
+        user: dbUser._id,
+        username: name,
+        email: email,
+        joinedAt: new Date()
+      };
+      viewers.push(newViewer);
+
+      await redis.hset(`match:${roomId}`, 'viewers', JSON.stringify(viewers));
+      
+      const host = participants[0];
+      return res.status(200).json({ 
+        message: 'Added as viewer (room is closed)', 
+        participants: participants,
+        viewers: viewers,
+        isViewer: true,
+        hostName: host?.username, 
+        hostEmail: host?.email,
+        roomConfig: {
+          playerLimit: parseInt(matchState.playerLimit) || 4,
+          timer: parseInt(matchState.timeLimit) || 60,
+          difficulty: matchState.difficulty || 'normal',
+          mode: matchState.mode || 'multiplayer',
+          isPrivate: matchState.isPrivate === 'true',
+          allowSpectators: matchState.allowSpectators === 'true'
+        }
+      });
+    }
+
+    // Check player limit
+    const playerLimit = parseInt(matchState.playerLimit) || 4;
     let participants;
     try {
       participants = JSON.parse(matchState.participants);
@@ -109,12 +240,37 @@ router.post('/add-participant', auth, async (req, res) => {
     } catch (e) {
       participants = [];
     }
-    ////console.log("participants of add-participant",roomId," ; ", participants);
+
+    // Check if room is full
+    if (participants.length >= playerLimit) {
+      return res.status(403).json({ message: 'Room is full' });
+    }
+
+    // Look up the user in the database to get ObjectId
+    const dbUser = await User.findOne({ email });
+    if (!dbUser) {
+      return res.status(404).json({ message: 'User not found in database' });
+    }
+
     // If user already exists (by user ObjectId or email), do not add again
     if (participants.find(p => String(p.user) === String(dbUser._id) || p.email === email)) {
       const host = participants[0];
-      return res.status(200).json({ message: 'Participant already exists', participants, hostName: host?.username, hostEmail: host?.email });
+      return res.status(200).json({ 
+        message: 'Participant already exists', 
+        participants, 
+        hostName: host?.username, 
+        hostEmail: host?.email,
+        roomConfig: {
+          playerLimit: parseInt(matchState.playerLimit) || 4,
+          timer: parseInt(matchState.timeLimit) || 60,
+          difficulty: matchState.difficulty || 'normal',
+          mode: matchState.mode || 'multiplayer',
+          isPrivate: matchState.isPrivate === 'true',
+          allowSpectators: matchState.allowSpectators === 'true'
+        }
+      });
     }
+
     // Add new participant
     const newParticipant = {
       user: dbUser._id,
@@ -125,18 +281,29 @@ router.post('/add-participant', auth, async (req, res) => {
       accuracy: 0,
       errors: 0,
       totalTyped: 0,
+      status: 'notStarted',
+      isHost: false,
+      joinedAt: new Date()
     };
     participants.push(newParticipant);
-    // ////console.log("participants of add-participant", participants);
+
     await redis.hset(`match:${roomId}`, 'participants', JSON.stringify(participants));
-    ////console.log(`[REDIS] Updated match:${roomId} participants    -> : `, participants);
-    try {
-      ////console.log("participants of add-participant", roomId, " ; ", participants);
-    } catch (redisErr) {
-      return res.status(500).json({ message: 'Failed to update participants in Redis', error: redisErr.message });
-    }
+    
     const host = participants[0];
-    return res.status(200).json({ message: 'Participant added', participants, hostName: host?.username, hostEmail: host?.email });
+    return res.status(200).json({ 
+      message: 'Participant added', 
+      participants, 
+      hostName: host?.username, 
+      hostEmail: host?.email,
+      roomConfig: {
+        playerLimit: parseInt(matchState.playerLimit) || 4,
+        timer: parseInt(matchState.timeLimit) || 60,
+        difficulty: matchState.difficulty || 'normal',
+        mode: matchState.mode || 'multiplayer',
+        isPrivate: matchState.isPrivate === 'true',
+        allowSpectators: matchState.allowSpectators === 'true'
+      }
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }
@@ -151,7 +318,6 @@ router.post('/join', auth, async (req, res) => {
   if (!roomId || typeof roomId !== 'string') {
     return res.status(400).json({ message: 'Room ID required and must be a string' });
   }
-  // roomId = roomId.toLowerCase();
   try {
     const matchState = await redis.hgetall(`match:${roomId}`);
     if (!matchState) {
@@ -160,8 +326,6 @@ router.post('/join', auth, async (req, res) => {
     if (matchState.isStarted) {
       return res.status(403).json({ message: 'Match already started' });
     }
-    ////console.log("matchState of join", matchState);
-    ////console.log("matchState of join", matchState.participants);
     if (!matchState.participants) {
       return res.status(500).json({ message: 'Participants missing in match state' });
     }
@@ -173,7 +337,248 @@ router.post('/join', auth, async (req, res) => {
       return res.status(500).json({ message: 'Participants data corrupted' });
     }
     const host = participants[0];
-    return res.status(200).json({ message: 'Match info', participants, hostName: host?.username, hostEmail: host?.email });
+    return res.status(200).json({ 
+      message: 'Match info', 
+      participants, 
+      hostName: host?.username, 
+      hostEmail: host?.email,
+      roomConfig: {
+        playerLimit: parseInt(matchState.playerLimit) || 4,
+        timer: parseInt(matchState.timeLimit) || 60,
+        difficulty: matchState.difficulty || 'normal',
+        mode: matchState.mode || 'multiplayer',
+        isPrivate: matchState.isPrivate === 'true',
+        allowSpectators: matchState.allowSpectators === 'true'
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+// Remove participant (admin only)
+router.post('/remove-participant', auth, async (req, res) => {
+  try {
+    const { roomId, participantEmail } = req.body;
+    
+    if (!roomId || !participantEmail) {
+      return res.status(400).json({ message: 'Room ID and participant email are required' });
+    }
+
+    // Get match state from Redis
+    const matchState = await redis.hgetall(`match:${roomId}`);
+    if (!matchState) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+
+    // Check if user is admin
+    if (matchState.admin !== req.user.id) {
+      return res.status(403).json({ message: 'Only admin can remove participants' });
+    }
+
+    // Parse participants
+    let participants = [];
+    try {
+      participants = JSON.parse(matchState.participants);
+    } catch (e) {
+      return res.status(500).json({ message: 'Invalid participants data' });
+    }
+
+    // Remove participant
+    const filteredParticipants = participants.filter(p => p.email !== participantEmail);
+    
+    if (filteredParticipants.length === participants.length) {
+      return res.status(404).json({ message: 'Participant not found' });
+    }
+
+    // Update Redis
+    await redis.hset(`match:${roomId}`, 'participants', JSON.stringify(filteredParticipants));
+
+    return res.status(200).json({ 
+      message: 'Participant removed successfully',
+      participants: filteredParticipants
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+// Toggle room closure (admin only)
+router.post('/toggle-room-closure', auth, async (req, res) => {
+  try {
+    const { roomId } = req.body;
+    
+    if (!roomId) {
+      return res.status(400).json({ message: 'Room ID is required' });
+    }
+
+    // Get match state from Redis
+    const matchState = await redis.hgetall(`match:${roomId}`);
+    if (!matchState) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+
+    // Check if user is admin
+    if (matchState.admin !== req.user.id) {
+      return res.status(403).json({ message: 'Only admin can toggle room closure' });
+    }
+
+    // Toggle isClosed
+    const currentIsClosed = matchState.isClosed === 'true';
+    const newIsClosed = !currentIsClosed;
+
+    // Update Redis
+    await redis.hset(`match:${roomId}`, 'isClosed', newIsClosed.toString());
+
+    return res.status(200).json({ 
+      message: `Room ${newIsClosed ? 'closed' : 'opened'} successfully`,
+      isClosed: newIsClosed
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+// Toggle new player access (admin only)
+router.post('/toggle-new-players', auth, async (req, res) => {
+  try {
+    const { roomId } = req.body;
+    
+    if (!roomId) {
+      return res.status(400).json({ message: 'Room ID is required' });
+    }
+
+    // Get match state from Redis
+    const matchState = await redis.hgetall(`match:${roomId}`);
+    if (!matchState) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+
+    // Check if user is admin
+    if (matchState.admin !== req.user.id) {
+      return res.status(403).json({ message: 'Only admin can toggle new player access' });
+    }
+
+    // Toggle allowNewPlayers
+    const currentAllowNewPlayers = matchState.allowNewPlayers === 'true';
+    const newAllowNewPlayers = !currentAllowNewPlayers;
+
+    // Update Redis
+    await redis.hset(`match:${roomId}`, 'allowNewPlayers', newAllowNewPlayers.toString());
+
+    return res.status(200).json({ 
+      message: `New player access ${newAllowNewPlayers ? 'enabled' : 'disabled'}`,
+      allowNewPlayers: newAllowNewPlayers
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+// Add viewer to match
+router.post('/add-viewer', auth, async (req, res) => {
+  try {
+    const { roomId, name, email } = req.body;
+    
+    if (!roomId || !name || !email) {
+      return res.status(400).json({ message: 'Room ID, name, and email are required' });
+    }
+
+    // Get match state from Redis
+    const matchState = await redis.hgetall(`match:${roomId}`);
+    if (!matchState) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+
+    // Check if match allows spectators
+    if (matchState.allowSpectators !== 'true') {
+      return res.status(403).json({ message: 'Spectators not allowed in this match' });
+    }
+
+    // Parse viewers
+    let viewers = [];
+    try {
+      viewers = JSON.parse(matchState.viewers || '[]');
+    } catch (e) {
+      viewers = [];
+    }
+
+    // Check if user is already a viewer
+    if (viewers.find(v => v.email === email)) {
+      return res.status(200).json({ 
+        message: 'Viewer already exists',
+        viewers: viewers
+      });
+    }
+
+    // Add new viewer
+    const newViewer = {
+      user: req.user.id,
+      username: name,
+      email: email,
+      joinedAt: new Date()
+    };
+    viewers.push(newViewer);
+
+    // Update Redis
+    await redis.hset(`match:${roomId}`, 'viewers', JSON.stringify(viewers));
+
+    return res.status(200).json({ 
+      message: 'Viewer added successfully',
+      viewers: viewers
+    });
+  } catch (err) {
+    return res.status(500).json({ message: err.message });
+  }
+});
+
+// Get match info with admin and viewer details
+router.get('/info/:roomId', auth, async (req, res) => {
+  try {
+    const { roomId } = req.params;
+    
+    // Get match state from Redis
+    const matchState = await redis.hgetall(`match:${roomId}`);
+    if (!matchState) {
+      return res.status(404).json({ message: 'Match not found' });
+    }
+
+    let participants = [];
+    let viewers = [];
+    
+    try {
+      participants = JSON.parse(matchState.participants || '[]');
+      viewers = JSON.parse(matchState.viewers || '[]');
+    } catch (e) {
+      participants = [];
+      viewers = [];
+    }
+
+    const isAdmin = matchState.admin === req.user.id;
+    const isParticipant = participants.some(p => p.email === req.user.email);
+    const isViewer = viewers.some(v => v.email === req.user.email);
+    
+    // Check if admin is present in participants
+    const adminParticipant = participants.find(p => p.isHost);
+    const adminPresent = adminParticipant && participants.some(p => p.email === adminParticipant.email);
+
+    return res.status(200).json({
+      roomId,
+      isAdmin,
+      isParticipant,
+      isViewer,
+      participants,
+      viewers,
+      allowNewPlayers: matchState.allowNewPlayers === 'true',
+      allowSpectators: matchState.allowSpectators === 'true',
+      isRoomClosed: matchState.isClosed === 'true',
+      adminPresent,
+      isStarted: matchState.isStarted === 'true',
+      mode: matchState.mode,
+      timeLimit: parseInt(matchState.timeLimit) || 60,
+      playerLimit: parseInt(matchState.playerLimit) || 4,
+      difficulty: matchState.difficulty || 'normal'
+    });
   } catch (err) {
     return res.status(500).json({ message: err.message });
   }

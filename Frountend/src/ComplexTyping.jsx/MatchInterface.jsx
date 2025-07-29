@@ -112,6 +112,17 @@ const MatchInterface = ({darkMode}) => {
   const [showMatchStartedPopup, setShowMatchStartedPopup] = useState(false);
   const [countdown, setCountdown] = useState(5);
   
+  // Admin and viewer state
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isViewer, setIsViewer] = useState(false);
+  const [isParticipant, setIsParticipant] = useState(false);
+  const [allowNewPlayers, setAllowNewPlayers] = useState(true);
+  const [isRoomClosed, setIsRoomClosed] = useState(false);
+  const [adminPresent, setAdminPresent] = useState(false);
+  const [viewers, setViewers] = useState([]);
+  const [showAdminControls, setShowAdminControls] = useState(false);
+  const [isReloading, setIsReloading] = useState(false);
+  
   const handleMatchAlreadyStarted = ({message}) => {
     console.log('Match already started:', message);
     setShowMatchStartedPopup(true);
@@ -203,7 +214,7 @@ const MatchInterface = ({darkMode}) => {
       // Simple setTimeout for matchFinish event
       const totalTime = (timeLimit || 60) + 3;
       matchFinishTimeoutRef.current = setTimeout(() => {
-        if (socket) {
+        if (socket && !isViewer) {
           const userStats = {
             name: userName || 'Anonymous',
             email: userEmail || 'anonymous@example.com',
@@ -269,10 +280,84 @@ const MatchInterface = ({darkMode}) => {
     };
   }, [socket]);
 
+  // Listen for 'matchStateSync' event - handles reload scenarios
+  React.useEffect(() => {
+    if (!socket) return;
+    const handleMatchStateSync = (matchState) => {
+      console.log('Received match state sync:', matchState);
+      
+      if (matchState.isStarted) {
+        // Sync with current match state
+        if (matchState.mode) dispatch(setMode(matchState.mode));
+        if (matchState.timeLimit) dispatch(setTimeLimit(matchState.timeLimit));
+        if (matchState.wordList) {
+          dispatch(setWordList(matchState.wordList));
+          setCurrentText(matchState.wordList);
+        }
+        dispatch(setStarted(true));
+        
+        // Check if match is finished
+        if (matchState.results && matchState.results.length > 0) {
+          setLeaderboardData({ ranked: matchState.results });
+          setIsFinished(true);
+          setIsActive(false);
+          setIsTypingActive(false);
+        } else {
+          // Match is ongoing
+          if (matchState.isParticipant && !matchState.isViewer && matchState.adminPresent) {
+            setIsTypingActive(true);
+            setIsActive(true);
+            setIsStarted(true);
+            
+            // Calculate remaining time
+            if (matchState.startTime) {
+              const startTime = new Date(matchState.startTime).getTime();
+              const now = Date.now();
+              const elapsed = Math.floor((now - startTime) / 1000);
+              const remaining = Math.max(0, (matchState.timeLimit || 60) - elapsed);
+              
+              if (remaining > 0) {
+                setTimeLeft(remaining);
+                setTestDuration(matchState.timeLimit || 60);
+              } else {
+                setIsFinished(true);
+                setIsActive(false);
+                setIsTypingActive(false);
+              }
+            }
+          } else {
+            setIsTypingActive(false);
+            setIsActive(false);
+            setIsStarted(false);
+          }
+        }
+      }
+    };
+    
+    socket.on('matchStateSync', handleMatchStateSync);
+    return () => {
+      socket.off('matchStateSync', handleMatchStateSync);
+    };
+  }, [socket, dispatch]);
+
   // Initialize text
   useEffect(() => {
     resetTest();
   }, []);
+
+  // Handle page unload warning during active match
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (isActive && !isFinished) {
+        e.preventDefault();
+        e.returnValue = 'You are in the middle of a typing match. Are you sure you want to leave?';
+        return 'You are in the middle of a typing match. Are you sure you want to leave?';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [isActive, isFinished]);
 
   // Auto-scroll to active character
   useEffect(() => {
@@ -331,7 +416,7 @@ const MatchInterface = ({darkMode}) => {
 
   // Emit current user's stats to other participants with debouncing
   useEffect(() => {
-    if (socket && isTypingActive && isActive && userEmail && roomName) {
+    if (socket && isTypingActive && isActive && userEmail && roomName && !isViewer) {
       let lastEmittedWpm = 0;
       let lastEmittedAccuracy = 0;
       let emitTimeout = null;
@@ -382,7 +467,7 @@ const MatchInterface = ({darkMode}) => {
         }
       };
     }
-  }, [socket, isTypingActive, isActive, userEmail, wpm, accuracy, roomName]);
+  }, [socket, isTypingActive, isActive, userEmail, wpm, accuracy, roomName, isViewer]);
 
   // Track WPM every 5 seconds and at start
   useEffect(() => {
@@ -590,6 +675,347 @@ const MatchInterface = ({darkMode}) => {
     return 'text-gray-700 dark:text-gray-300';
   };
 
+  // Check user role and permissions
+  useEffect(() => {
+    if (!socket || !urlRoomName || !userEmail) return;
+
+    // Check if current user is admin (host) based on participants data
+    const currentUser = participants.find(p => p.email === userEmail);
+    
+    if (currentUser) {
+      const isHostUser = currentUser.isHost || false;
+      setIsAdmin(isHostUser);
+    } else {
+      setIsAdmin(false);
+    }
+
+    // Also check allowNewPlayers from room state
+    const checkRoomState = async () => {
+      try {
+        const response = await fetch(`/api/match/info/${urlRoomName}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setIsViewer(data.isViewer);
+          setIsParticipant(data.isParticipant);
+          setAllowNewPlayers(data.allowNewPlayers);
+          setViewers(data.viewers || []);
+          setIsRoomClosed(data.isRoomClosed || false);
+          setAdminPresent(data.adminPresent || false);
+          
+          // If user is only a viewer, disable typing functionality
+          if (data.isViewer && !data.isParticipant) {
+            setIsTypingActive(false);
+            setIsActive(false);
+            setIsStarted(false);
+            setIsFinished(false);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking room state:', error);
+      }
+    };
+
+    checkRoomState();
+  }, [socket, urlRoomName, userEmail, participants]);
+
+  // Handle page reload - recover match state
+  useEffect(() => {
+    if (!socket || !urlRoomName || !userEmail || !socketReady) return;
+
+    const handleReload = async () => {
+      setIsReloading(true);
+      try {
+        // Check if there's an ongoing match
+        const response = await fetch(`/api/match/info/${urlRoomName}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          
+          // If match is already started, sync with current state
+          if (data.isStarted) {
+            console.log('Match already in progress, syncing state...');
+            
+            // Set match state from server
+            if (data.mode) dispatch(setMode(data.mode));
+            if (data.timeLimit) dispatch(setTimeLimit(data.timeLimit));
+            if (data.wordList) {
+              dispatch(setWordList(data.wordList));
+              setCurrentText(data.wordList);
+            }
+            dispatch(setStarted(true));
+            
+            // Check if match is finished
+            if (data.results && data.results.length > 0) {
+              // Match is finished, show results
+              setLeaderboardData({ ranked: data.results });
+              setIsFinished(true);
+              setIsActive(false);
+              setIsTypingActive(false);
+            } else {
+              // Match is ongoing, check if user should be typing
+              if (data.isParticipant && !data.isViewer && data.adminPresent) {
+                // User should be typing
+                setIsTypingActive(true);
+                setIsActive(true);
+                setIsStarted(true);
+                
+                // Calculate remaining time
+                if (data.startTime) {
+                  const startTime = new Date(data.startTime).getTime();
+                  const now = Date.now();
+                  const elapsed = Math.floor((now - startTime) / 1000);
+                  const remaining = Math.max(0, (data.timeLimit || 60) - elapsed);
+                  
+                  if (remaining > 0) {
+                    setTimeLeft(remaining);
+                    setTestDuration(data.timeLimit || 60);
+                  } else {
+                    // Time is up
+                    setIsFinished(true);
+                    setIsActive(false);
+                    setIsTypingActive(false);
+                  }
+                }
+              } else {
+                // User is viewer or admin not present
+                setIsTypingActive(false);
+                setIsActive(false);
+                setIsStarted(false);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error handling reload:', error);
+      } finally {
+        setIsReloading(false);
+      }
+    };
+
+    // Only handle reload if socket is ready and we have room info
+    if (socketReady) {
+      handleReload();
+    }
+  }, [socket, urlRoomName, userEmail, socketReady, dispatch]);
+
+  // Handle viewer mode - disable typing for viewers
+  useEffect(() => {
+    if (isViewer && !isParticipant) {
+      // Disable all typing functionality for viewers
+      setIsTypingActive(false);
+      setIsActive(false);
+      setIsStarted(false);
+      setIsFinished(false);
+    }
+  }, [isViewer, isParticipant]);
+
+  // Handle admin presence - only allow typing when admin is present
+  useEffect(() => {
+    if (!adminPresent && isParticipant) {
+      // Disable typing if admin is not present
+      setIsTypingActive(false);
+      setIsActive(false);
+      setIsStarted(false);
+      setIsFinished(false);
+    }
+  }, [adminPresent, isParticipant]);
+
+  // Admin controls component
+  const AdminControls = () => {
+    const [isRemovingPlayer, setIsRemovingPlayer] = useState(false);
+    const [isTogglingAccess, setIsTogglingAccess] = useState(false);
+    const [isTogglingRoomClosure, setIsTogglingRoomClosure] = useState(false);
+
+    const handleRemovePlayer = async (participantEmail) => {
+      if (participantEmail === userEmail) return; // Can't remove yourself
+      
+      setIsRemovingPlayer(true);
+      try {
+        // Use socket event instead of API call
+        socket.emit('adminRemovePlayer', {
+          roomName: urlRoomName,
+          participantEmail: participantEmail,
+          adminEmail: userEmail
+        });
+      } catch (error) {
+        console.error('Error removing player:', error);
+      } finally {
+        setIsRemovingPlayer(false);
+      }
+    };
+
+    const handleToggleNewPlayers = async () => {
+      setIsTogglingAccess(true);
+      try {
+        // Use socket event instead of API call
+        socket.emit('adminToggleNewPlayers', {
+          roomName: urlRoomName,
+          adminEmail: userEmail
+        });
+      } catch (error) {
+        console.error('Error toggling new players:', error);
+      } finally {
+        setIsTogglingAccess(false);
+      }
+    };
+
+    const handleToggleRoomClosure = async () => {
+      setIsTogglingRoomClosure(true);
+      try {
+        // Use socket event instead of API call
+        socket.emit('adminToggleRoomClosure', {
+          roomName: urlRoomName,
+          adminEmail: userEmail
+        });
+      } catch (error) {
+        console.error('Error toggling room closure:', error);
+      } finally {
+        setIsTogglingRoomClosure(false);
+      }
+    };
+
+    // Listen for admin action responses
+    useEffect(() => {
+      if (!socket) return;
+
+      const handlePlayerRemoved = ({ message, participants }) => {
+        console.log('Player removed:', message);
+        // Redux will handle participant updates
+      };
+
+      const handleNewPlayersToggled = ({ message, allowNewPlayers }) => {
+        console.log('New players toggled:', message);
+        setAllowNewPlayers(allowNewPlayers);
+      };
+
+      const handleRoomClosureToggled = ({ message, isRoomClosed }) => {
+        console.log('Room closure toggled:', message);
+        setIsRoomClosed(isRoomClosed);
+      };
+
+      const handleAdminError = ({ message }) => {
+        console.error('Admin action error:', message);
+        // Could show a toast notification here
+      };
+
+      socket.on('playerRemoved', handlePlayerRemoved);
+      socket.on('newPlayersToggled', handleNewPlayersToggled);
+      socket.on('roomClosureToggled', handleRoomClosureToggled);
+      socket.on('adminError', handleAdminError);
+
+      return () => {
+        socket.off('playerRemoved', handlePlayerRemoved);
+        socket.off('newPlayersToggled', handleNewPlayersToggled);
+        socket.off('roomClosureToggled', handleRoomClosureToggled);
+        socket.off('adminError', handleAdminError);
+      };
+    }, [socket]);
+
+    return (
+      <div className={`fixed top-16 right-4 z-40 ${darkMode ? 'bg-gray-800' : 'bg-white'} rounded-lg shadow-lg border p-4`}>
+        <div className="mb-4">
+          <h3 className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Admin Controls</h3>
+        </div>
+        
+        <div className="space-y-3">
+          {/* Toggle new players */}
+          <div className="flex items-center justify-between">
+            <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Allow New Players
+            </span>
+            <button
+              onClick={handleToggleNewPlayers}
+              disabled={isTogglingAccess}
+              className={`px-3 py-1 rounded text-xs font-medium ${
+                allowNewPlayers
+                  ? 'bg-green-500 text-white'
+                  : 'bg-red-500 text-white'
+              }`}
+            >
+              {isTogglingAccess ? '...' : (allowNewPlayers ? 'ON' : 'OFF')}
+            </button>
+          </div>
+          
+          {/* Toggle Room Closure */}
+          <div className="flex items-center justify-between">
+            <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Room Closure
+            </span>
+            <button
+              onClick={handleToggleRoomClosure}
+              disabled={isTogglingRoomClosure}
+              className={`px-3 py-1 rounded text-xs font-medium ${
+                isRoomClosed
+                  ? 'bg-red-500 text-white'
+                  : 'bg-green-500 text-white'
+              }`}
+            >
+              {isTogglingRoomClosure ? '...' : (isRoomClosed ? 'CLOSED' : 'OPEN')}
+            </button>
+          </div>
+
+          {/* Remove players */}
+          <div>
+            <span className={`text-sm font-medium ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+              Remove Players:
+            </span>
+            <div className="mt-2 space-y-1">
+              {participants.map((participant) => (
+                participant.email !== userEmail && (
+                  <div key={participant.email} className="flex items-center justify-between">
+                    <span className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      {participant.username}
+                    </span>
+                    <button
+                      onClick={() => handleRemovePlayer(participant.email)}
+                      disabled={isRemovingPlayer}
+                      className="px-2 py-1 bg-red-500 text-white text-xs rounded hover:bg-red-600"
+                    >
+                      {isRemovingPlayer ? '...' : 'Remove'}
+                    </button>
+                  </div>
+                )
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Viewer mode component
+  const ViewerMode = () => {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px]">
+        <div className={`text-center ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+          <h2 className="text-3xl font-bold mb-4">Spectator Mode</h2>
+          <p className="text-lg mb-6">You are watching this match as a spectator.</p>
+          
+          {/* Show viewers list */}
+          <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+            <h3 className="font-semibold mb-2">Spectators ({viewers.length})</h3>
+            <div className="space-y-1">
+              {viewers.map((viewer, index) => (
+                <div key={index} className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  👁️ {viewer.username}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className={`min-h-screen w-full transition-colors duration-300 ${
       darkMode
@@ -598,112 +1024,155 @@ const MatchInterface = ({darkMode}) => {
   }`}>
  
       <div className="w-full mx-auto px-4 py-8">
-        {/* Loader until socket is ready */}
-        {!socketReady ? (
+        {/* Loader until socket is ready or during reload */}
+        {!socketReady || isReloading ? (
           <div className="flex flex-col items-center justify-center min-h-[300px]">
             <div className="loader mb-4"></div>
-            <p className="text-xl font-semibold text-gray-700 dark:text-gray-200">Connecting to match room...</p>
+            <p className="text-xl font-semibold text-gray-700 dark:text-gray-200">
+              {isReloading ? 'Recovering match state...' : 'Connecting to match room...'}
+            </p>
           </div>
         ) : (
           <>
-            {/* Responsive layout: main + sidebar */}
-            {/* Leaderboard */}
-            {isFinished && leaderboardData ? (
-              <div className='w-full min-h-screem'>
-                <ResultLeaderboard ranked={leaderboardData.ranked} />
-                <div className="w-full flex flex-col items-center justify-center">
-                  <Results
-                    isFinished={isFinished}
-                    wpm={wpm}
-                    accuracy={accuracy}
-                    correctChars={correctChars}
-                    mistakes={mistakes}
-                    testDuration={testDuration}
-                    progressData={progressData}
-                  />
+            {/* Admin Controls */}
+            {isAdmin && (
+              <div className="fixed top-4 right-4 z-40">
+                <button
+                  onClick={() => setShowAdminControls(!showAdminControls)}
+                  className={`p-3 rounded-lg shadow-lg border ${
+                    darkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-gray-800 border-gray-200'
+                  }`}
+                >
+                  <span className="text-sm font-medium">⚙️ Admin</span>
+                </button>
+                {showAdminControls && <AdminControls />}
+              </div>
+            )}
+
+            {/* Reload Recovery Indicator */}
+            {isReloading && (
+              <div className="fixed top-4 left-4 z-40">
+                <div className={`px-4 py-2 rounded-lg shadow-lg border ${
+                  darkMode ? 'bg-blue-900 text-blue-200 border-blue-600' : 'bg-blue-100 text-blue-800 border-blue-300'
+                }`}>
+                  <span className="text-sm font-medium">🔄 Recovering match state...</span>
+                </div>
+              </div>
+            )}
+
+            {/* Viewer Mode */}
+            {isViewer && !isParticipant ? (
+              <ViewerMode />
+            ) : !adminPresent && isParticipant ? (
+              <div className="flex flex-col items-center justify-center min-h-[400px]">
+                <div className={`text-center ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                  <h2 className="text-3xl font-bold mb-4">⏸️ Waiting for Admin</h2>
+                  <p className="text-lg mb-6">Typing is disabled because the admin is not present in the room.</p>
+                  <p className="text-sm text-gray-500">Only the admin can start the match.</p>
                 </div>
               </div>
             ) : (
-              <div className="flex flex-col lg:flex-row lg:items-start w-full">
-                {/* Main content */}
-                <div className="flex-1 w-full lg:ml-6">
-                  {cooldown || !isTypingActive ? (<>
-                <div className="block lg:hidden mt-4">
-                        <ShowMember darkMode={darkMode} />
-                      </div>
-
-                    <div className="fixed flex flex-col items-center justify-center min-h-[300px] relative">
-                      <h2 className="text-3xl font-bold text-center mt-12">Get Ready...</h2>
-                      {cooldown && (
-                        <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                          <span className="text-7xl font-extrabold text-yellow-400 drop-shadow-lg animate-pulse">{cooldownValue > 0 ? cooldownValue : ''}</span>
-                        </div>
-                      )}
-                     
+              <>
+                {/* Responsive layout: main + sidebar */}
+                {/* Leaderboard */}
+                {isFinished && leaderboardData ? (
+                  <div className='w-full min-h-screem'>
+                    <ResultLeaderboard ranked={leaderboardData.ranked} />
+                    <div className="w-full flex flex-col items-center justify-center">
+                      <Results
+                        isFinished={isFinished}
+                        wpm={wpm}
+                        accuracy={accuracy}
+                        correctChars={correctChars}
+                        mistakes={mistakes}
+                        testDuration={testDuration}
+                        progressData={progressData}
+                      />
                     </div>
-                      </>
-                  ) : (
-                    <>
-                      {/* Header */}
-                      <Header />
-                      {/* Stats */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                        <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
-                        <StatsCard icon={TrendingUp} label="WPM" value={wpm} color="green" />
-                        <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
-                        <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
-                      </div>
-                      {/* Start prompt */}
-                      {!isStarted && (
-                        <div className="text-center mb-8">
-                          <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                            Press any key to start typing!
-                          </p>
+                  </div>
+                ) : (
+                  <div className="flex flex-col lg:flex-row lg:items-start w-full">
+                    {/* Main content */}
+                    <div className="flex-1 w-full lg:ml-6">
+                      {cooldown || !isTypingActive ? (<>
+                    <div className="block lg:hidden mt-4">
+                            <ShowMember darkMode={darkMode} />
+                          </div>
+
+                        <div className="fixed flex flex-col items-center justify-center min-h-[300px] relative">
+                          <h2 className="text-3xl font-bold text-center mt-12">Get Ready...</h2>
+                          {cooldown && (
+                            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                              <span className="text-7xl font-extrabold text-yellow-400 drop-shadow-lg animate-pulse">{cooldownValue > 0 ? cooldownValue : ''}</span>
+                            </div>
+                          )}
+                         
                         </div>
+                          </>
+                      ) : (
+                        <>
+                          {/* Header */}
+                          <Header />
+                          {/* Stats */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                            <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
+                            <StatsCard icon={TrendingUp} label="WPM" value={wpm} color="green" />
+                            <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
+                            <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
+                          </div>
+                          {/* Start prompt */}
+                          {!isStarted && (
+                            <div className="text-center mb-8">
+                              <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
+                                Press any key to start typing!
+                              </p>
+                            </div>
+                          )}
+                          {/* Text display */}
+                          <TextDisplay
+                            currentText={currentText}
+                            inputText={inputText}
+                            currentIndex={currentIndex}
+                            activeCharRef={activeCharRef}
+                            darkMode={darkMode}
+                            getCharStyle={getCharStyle}
+                          />
+                          {/* Virtual keyboard or Chart */}
+                          <TypingChartOrKeyboard
+                            pressedKey={pressedKey}
+                            isCorrectKey={isCorrectKey}
+                            isIncorrectKey={isIncorrectKey}
+                          />
+                          
+                          {/* Mobile Real-time Leaderboard */}
+                          <div className="block lg:hidden mt-6">
+                            <RealTimeLeaderboard 
+                              darkMode={darkMode} 
+                              isTypingActive={isTypingActive} 
+                              currentUserWpm={wpm}
+                              currentUserAccuracy={accuracy}
+                            />
+                          </div>
+                        </>
                       )}
-                      {/* Text display */}
-                      <TextDisplay
-                        currentText={currentText}
-                        inputText={inputText}
-                        currentIndex={currentIndex}
-                        activeCharRef={activeCharRef}
-                        darkMode={darkMode}
-                        getCharStyle={getCharStyle}
-                      />
-                      {/* Virtual keyboard or Chart */}
-                      <TypingChartOrKeyboard
-                        pressedKey={pressedKey}
-                        isCorrectKey={isCorrectKey}
-                        isIncorrectKey={isIncorrectKey}
-                      />
-                      
-                      {/* Mobile Real-time Leaderboard */}
-                      <div className="block lg:hidden mt-6">
+                    </div>
+                    {/* Sidebar on large screens */}
+
+                      <div className="hidden lg:block lg:w-1/4 lg:ml-6">
+                      {cooldown || !isTypingActive ? (
+                        <ShowMember darkMode={darkMode} />
+                      ) : (
                         <RealTimeLeaderboard 
                           darkMode={darkMode} 
                           isTypingActive={isTypingActive} 
                           currentUserWpm={wpm}
                           currentUserAccuracy={accuracy}
                         />
-                      </div>
-                    </>
-                  )}
-                </div>
-                {/* Sidebar on large screens */}
-
-                  <div className="hidden lg:block lg:w-1/4 lg:ml-6">
-                  {cooldown || !isTypingActive ? (
-                    <ShowMember darkMode={darkMode} />
-                  ) : (
-                    <RealTimeLeaderboard 
-                      darkMode={darkMode} 
-                      isTypingActive={isTypingActive} 
-                      currentUserWpm={wpm}
-                      currentUserAccuracy={accuracy}
-                    />
-                  )}
-                </div>
-              </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}

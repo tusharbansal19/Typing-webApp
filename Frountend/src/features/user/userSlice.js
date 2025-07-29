@@ -11,7 +11,7 @@ const initialState = {
   personalBest: { wpm: 0, accuracy: 0 },
   loading: false,
   error: null,
-  isAuthLoading: true, // for initial auth check
+  isAuthLoading: false, // for initial auth check
   profileData: null,
   profileLoading: false,
   profileError: null,

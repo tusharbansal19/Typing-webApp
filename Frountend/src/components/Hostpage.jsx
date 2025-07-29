@@ -22,6 +22,18 @@ const Hostpage = ({ darkMode }) => {
   const [isJoining, setIsJoining] = useState(false);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
+  
+  // Room creation modal state
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [roomConfig, setRoomConfig] = useState({
+    playerLimit: 4,
+    timer: 60,
+    difficulty: 'normal',
+    mode: 'multiplayer',
+    isPrivate: false,
+    allowSpectators: true
+  });
+  
   const navigate = useNavigate();
   
 
@@ -44,11 +56,13 @@ const Hostpage = ({ darkMode }) => {
       const response = await axios.post('/match/create', {
         name: user?.name,
         email: user?.email,
+        roomConfig: roomConfig
       });
       setCreatedRoom(response.data.roomId);
       setHostName(response.data.hostName);
       setHostEmail(response.data.hostEmail);
       setIsCreating(false);
+      setShowCreateModal(false);
       // Reset joined group state
       setJoinedRoom(null);
       setJoinCode(response.data.roomId);
@@ -74,18 +88,23 @@ const Hostpage = ({ darkMode }) => {
         name: user?.name,
         email: user?.email,
       });
-      setRoomCode(joinCode);
-      setHostName(response.data.hostName);
-      setHostEmail(response.data.hostEmail);
-      setJoinedRoom(joinCode);
-      setJoinSuccess(true);
-      setIsJoining(false);
-      setJoinCode(joinCode);
-      // Reset created group state
-      setCreatedRoom('');
-      console.log("createdRoom of handleJoinGroup", createdRoom);
-      // Emit joinRoom after successful join
-     
+      
+      // Check if user was added as viewer due to closed room
+      if (response.data.isViewer) {
+        setJoinError('Room is closed by admin. You have been added as a spectator.');
+        setJoinSuccess(false);
+      } else {
+        setRoomCode(joinCode);
+        setHostName(response.data.hostName);
+        setHostEmail(response.data.hostEmail);
+        setJoinedRoom(joinCode);
+        setJoinSuccess(true);
+        setIsJoining(false);
+        setJoinCode(joinCode);
+        // Reset created group state
+        setCreatedRoom('');
+        console.log("createdRoom of handleJoinGroup", createdRoom);
+      }
     } catch (err) {
       setJoinError(err.response?.data?.message || 'Failed to join room');
     } finally {
@@ -116,6 +135,235 @@ const Hostpage = ({ darkMode }) => {
         navigate(`/match/${roomId}`);
       }
     }
+  };
+
+  // Room creation modal component
+  const RoomCreationModal = () => {
+    if (!showCreateModal) return null;
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        {/* Backdrop */}
+        <div 
+          className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+          onClick={() => setShowCreateModal(false)}
+        ></div>
+        
+        {/* Modal */}
+        <div className={`relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl ${
+          darkMode 
+            ? 'bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700' 
+            : 'bg-gradient-to-br from-white to-gray-50 border border-gray-200'
+        }`}>
+          {/* Header */}
+          <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <h2 className={`text-2xl font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>
+                Create Battle Room
+              </h2>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className={`p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
+                  darkMode ? 'text-gray-400' : 'text-gray-600'
+                }`}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <p className={`mt-2 ${darkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+              Configure your battle room settings
+            </p>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-6">
+            {/* Player Limit */}
+            <div>
+              <label className={`block text-sm font-medium mb-3 ${darkMode ? 'text-white' : 'text-gray-700'}`}>
+                Player Limit
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {[2, 4, 6, 8, 10, 12].map((limit) => (
+                  <button
+                    key={limit}
+                    onClick={() => setRoomConfig(prev => ({ ...prev, playerLimit: limit }))}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      roomConfig.playerLimit === limit
+                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                    }`}
+                  >
+                    <div className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{limit}</div>
+                    <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>Players</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Timer */}
+            <div>
+              <label className={`block text-sm font-medium mb-3 ${darkMode ? 'text-white' : 'text-gray-700'}`}>
+                Time Limit (seconds)
+              </label>
+              <div className="grid grid-cols-4 gap-3">
+                {[30, 60, 120, 180, 300, 600].map((time) => (
+                  <button
+                    key={time}
+                    onClick={() => setRoomConfig(prev => ({ ...prev, timer: time }))}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      roomConfig.timer === time
+                        ? 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                    }`}
+                  >
+                    <div className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{time}</div>
+                    <div className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>sec</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Difficulty */}
+            <div>
+              <label className={`block text-sm font-medium mb-3 ${darkMode ? 'text-white' : 'text-gray-700'}`}>
+                Difficulty Level
+              </label>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { value: 'easy', label: 'Easy', color: 'green' },
+                  { value: 'normal', label: 'Normal', color: 'blue' },
+                  { value: 'hard', label: 'Hard', color: 'red' }
+                ].map(({ value, label, color }) => (
+                  <button
+                    key={value}
+                    onClick={() => setRoomConfig(prev => ({ ...prev, difficulty: value }))}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      roomConfig.difficulty === value
+                        ? `border-${color}-500 bg-${color}-50 dark:bg-${color}-900/20 text-${color}-700 dark:text-${color}-300`
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                    }`}
+                  >
+                    <div className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Mode */}
+            <div>
+              <label className={`block text-sm font-medium mb-3 ${darkMode ? 'text-white' : 'text-gray-700'}`}>
+                Game Mode
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { value: 'multiplayer', label: 'Multiplayer', icon: '👥' },
+                  { value: 'tournament', label: 'Tournament', icon: '🏆' }
+                ].map(({ value, label, icon }) => (
+                  <button
+                    key={value}
+                    onClick={() => setRoomConfig(prev => ({ ...prev, mode: value }))}
+                    className={`p-3 rounded-lg border-2 transition-all duration-200 ${
+                      roomConfig.mode === value
+                        ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300'
+                        : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                    }`}
+                  >
+                    <div className="text-2xl mb-1">{icon}</div>
+                    <div className={`font-semibold ${darkMode ? 'text-white' : 'text-gray-800'}`}>{label}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Privacy Settings */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-700'}`}>
+                    Private Room
+                  </label>
+                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Only invited players can join
+                  </p>
+                </div>
+                <button
+                  onClick={() => setRoomConfig(prev => ({ ...prev, isPrivate: !prev.isPrivate }))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    roomConfig.isPrivate 
+                      ? 'bg-blue-600' 
+                      : 'bg-gray-200 dark:bg-gray-700'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    roomConfig.isPrivate ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className={`block text-sm font-medium ${darkMode ? 'text-white' : 'text-gray-700'}`}>
+                    Allow Spectators
+                  </label>
+                  <p className={`text-xs ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Others can watch without playing
+                  </p>
+                </div>
+                <button
+                  onClick={() => setRoomConfig(prev => ({ ...prev, allowSpectators: !prev.allowSpectators }))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    roomConfig.allowSpectators 
+                      ? 'bg-green-600' 
+                      : 'bg-gray-200 dark:bg-gray-700'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    roomConfig.allowSpectators ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="p-6 border-t border-gray-200 dark:border-gray-700 flex gap-3">
+            <button
+              onClick={() => setShowCreateModal(false)}
+              className={`flex-1 py-3 px-4 rounded-lg border-2 transition-colors ${
+                darkMode 
+                  ? 'border-gray-600 text-gray-300 hover:border-gray-500 hover:text-gray-200' 
+                  : 'border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-700'
+              }`}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleCreateGroup}
+              disabled={loading}
+              className={`flex-1 py-3 px-4 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 disabled:opacity-50 ${
+                darkMode
+                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+                  : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white'
+              }`}
+            >
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Creating...
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2">
+                  <FaRocket />
+                  Create Room
+                </div>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -223,42 +471,21 @@ const Hostpage = ({ darkMode }) => {
 
             <div className="space-y-2 md:space-y-4">
           <button
-            onClick={() => setIsCreating(!isCreating)}
-                disabled={loading}
-                className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed ${
-                  isCreating
-                    ? darkMode
-                      ? 'bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white'
-                      : 'bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-600 hover:to-pink-600 text-white'
-                    : darkMode
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
-                      : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white'
-                }`}
-              >
-                <div className="flex items-center justify-center gap-2">
-                  {isCreating ? <FaCheck /> : <FaRocket />}
-                  {isCreating ? 'Cancel Creation' : 'Create Battle Room'}
-                </div>
+            onClick={() => setShowCreateModal(true)}
+            disabled={loading}
+            className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed ${
+              darkMode
+                ? 'bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white'
+                : 'bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white'
+            }`}
+          >
+            <div className="flex items-center justify-center gap-2">
+              <FaRocket />
+              Create Battle Room
+            </div>
           </button>
 
-          {isCreating && (
-            <button
-                  onClick={handleCreateGroup}
-                  disabled={loading}
-                  className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:opacity-50 ${
-                    darkMode
-                      ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white'
-                      : 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white'
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    {loading ? <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> : <HiLightningBolt />}
-                    {loading ? 'Creating Room...' : 'Confirm & Create'}
-                  </div>
-            </button>
-          )}
-
-{createdRoom && (
+          {createdRoom && (
   <div className={`mt-4 p-3 sm:p-4 md:p-6 rounded-xl sm:rounded-2xl border-2 border-dashed transition-all duration-500 ${
     darkMode ? 'bg-emerald-900/20 border-emerald-400/50' : 'bg-emerald-50 border-emerald-400'
   }`}>
@@ -475,6 +702,7 @@ const Hostpage = ({ darkMode }) => {
           </div>
         </footer>
       </div>
+      {showCreateModal && <RoomCreationModal />}
     </main>
   );
 };

@@ -71,18 +71,109 @@ function initSocket(server) {
       // Fetch or create match state from Redis
       let roomState = await redis.hgetall(`match:${roomName}`);
       if(roomState.isStarted){
-        return socket.to(socket.id).emit('matchAlreadyStarted', { message: 'Match already started' });
+        // If match is started, check if room allows spectators
+        if (roomState.allowSpectators === 'true') {
+          // Allow joining as spectator even if match is started
+          let participants = [];
+          let viewers = [];
+          try { 
+            participants = JSON.parse(roomState.participants || '[]'); 
+            viewers = JSON.parse(roomState.viewers || '[]');
+          } catch { 
+            participants = []; 
+            viewers = [];
+          }
+          
+          // Check if user is already a participant or viewer
+          const isParticipant = participants.find(p => p.email === email);
+          const isViewer = viewers.find(v => v.email === email);
+          
+          if (!isParticipant && !isViewer) {
+            // Add as viewer if not already present
+            const newViewer = {
+              user: email, // Using email as user ID for simplicity
+              email: email,
+              username: email.split('@')[0], // Simple username from email
+              joinedAt: new Date()
+            };
+            viewers.push(newViewer);
+            await redis.hset(`match:${roomName}`, 'viewers', JSON.stringify(viewers));
+          }
+          
+          // Map participants to include isHost property
+          const mappedParticipants = participants.map(p => ({
+            _id: p._id || p.user,
+            email: p.email,
+            username: p.username,
+            isHost: p.isHost || false,
+            ready: p.ready || false
+          }));
+          
+          io.to(roomName).emit('all participants', { participants: mappedParticipants, roomName });
+          return;
+        } else {
+          return socket.to(socket.id).emit('matchAlreadyStarted', { message: 'Match already started and spectators not allowed' });
+        }
       }
+
+      // Check if new players are allowed
+      if (roomState.allowNewPlayers === 'false') {
+        return socket.to(socket.id).emit('adminError', { message: 'New players are not allowed to join this match' });
+      }
+
+      // Check if room is closed
+      if (roomState.isClosed === 'true') {
+        return socket.to(socket.id).emit('roomClosed', { message: 'This room is closed by the admin. No new participants allowed.' });
+      }
+
       //////console.log("roomState :: ",roomName,"room is :: ", roomState);
       let participants = [];
       try { participants = JSON.parse(roomState.participants); } catch { participants = []; }
-      // Ensure each participant has _id, email, username
+      // Ensure each participant has _id, email, username, and isHost
       participants = participants.map(p => ({
-        _id: p._id ,
+        _id: p._id || p.user,
         email: p.email,
-        username: p.username ,
+        username: p.username,
+        isHost: p.isHost || false,
+        ready: p.ready || false
       }));
       io.to(roomName).emit('all participants', { participants , roomName});
+      
+      // Send match state sync to the joining user if match is started
+      if (roomState.isStarted === 'true') {
+        const matchStateSync = {
+          isStarted: true,
+          mode: roomState.mode,
+          timeLimit: parseInt(roomState.timeLimit) || 60,
+          wordList: roomState.wordList,
+          startTime: roomState.startTime,
+          isParticipant: participants.find(p => p.email === email) ? true : false,
+          isViewer: false, // Will be updated based on actual viewer status
+          adminPresent: participants.some(p => p.isHost),
+          results: []
+        };
+        
+        // Check if user is a viewer
+        let viewers = [];
+        try { viewers = JSON.parse(roomState.viewers || '[]'); } catch { viewers = []; }
+        const isViewer = viewers.find(v => v.email === email);
+        if (isViewer) {
+          matchStateSync.isViewer = true;
+          matchStateSync.isParticipant = false;
+        }
+        
+        // Get results if match is finished
+        if (roomState.results) {
+          try {
+            matchStateSync.results = JSON.parse(roomState.results);
+          } catch {
+            matchStateSync.results = [];
+          }
+        }
+        
+        socket.emit('matchStateSync', matchStateSync);
+      }
+      
       // Emit userJoined event for new user
       const newUser = participants.find(p => p.email === email);
       if (newUser) {
@@ -133,7 +224,17 @@ function initSocket(server) {
           // For now, skip if not tracked
           // Optionally, you could track socket id in participant for more robust removal
           // For now, just emit all participants with roomName
-          io.to(key.replace('match:', '')).emit('all participants', { participants, roomName: key.replace('match:', '') });
+          
+          // Map participants to include isHost property
+          const mappedParticipants = participants.map(p => ({
+            _id: p._id || p.user,
+            email: p.email,
+            username: p.username,
+            isHost: p.isHost || false,
+            ready: p.ready || false
+          }));
+          
+          io.to(key.replace('match:', '')).emit('all participants', { participants: mappedParticipants, roomName: key.replace('match:', '') });
         }
       }
       //////console.log('User disconnected:', socket.id);
@@ -173,10 +274,20 @@ function initSocket(server) {
       // Remove the participant with the given email
       const removedUser = participants.find(p => p.email === email);
       const newParticipants = participants.filter(p => p.email !== email);
+      
+      // Map participants to include isHost property
+      const mappedParticipants = newParticipants.map(p => ({
+        _id: p._id || p.user,
+        email: p.email,
+        username: p.username,
+        isHost: p.isHost || false,
+        ready: p.ready || false
+      }));
+      
       await redis.hset(`match:${roomName}`, 'participants', JSON.stringify(newParticipants));
-      io.to(roomName).emit('all participants', { participants: newParticipants, roomName });
+      io.to(roomName).emit('all participants', { participants: mappedParticipants, roomName });
       if (removedUser) {
-        io.to(roomName).emit('userLeft', { user: removedUser, participants: newParticipants, roomName });
+        io.to(roomName).emit('userLeft', { user: removedUser, participants: mappedParticipants, roomName });
       }
     });
 
@@ -191,7 +302,17 @@ function initSocket(server) {
         p.email === email ? { ...p, ready: !p.ready } : p
       );
       await redis.hset(`match:${roomName}`, 'participants', JSON.stringify(participants));
-      io.to(roomName).emit('statusUpdated', { participants, roomName });
+      
+      // Map participants to include isHost property
+      const mappedParticipants = participants.map(p => ({
+        _id: p._id || p.user,
+        email: p.email,
+        username: p.username,
+        isHost: p.isHost || false,
+        ready: p.ready || false
+      }));
+      
+      io.to(roomName).emit('statusUpdated', { participants: mappedParticipants, roomName });
 
       // Check if all participants are ready
       //////console.log("RoomState :: ",roomState);
@@ -205,7 +326,7 @@ function initSocket(server) {
         await redis.hset(`match:${roomName}`, 'isStarted', true);
         io.to(roomName).emit('matchStart', {
           roomName,
-          participants,
+          participants: mappedParticipants,
           mode,
           timeLimit,
           wordList,
@@ -226,10 +347,20 @@ function initSocket(server) {
       // Store participant stats in Redis
       let roomState = await redis.hgetall(`match:${roomName}`);
       let participantStats = [];
+      let participants = [];
       try { 
         participantStats = JSON.parse(roomState.participantStats || '[]'); 
+        participants = JSON.parse(roomState.participants || '[]');
       } catch { 
         participantStats = []; 
+        participants = [];
+      }
+
+      // Check if the user is actually a participant (not a viewer)
+      const isParticipant = participants.find(p => p.email === email);
+      if (!isParticipant) {
+        //console.log(`[SOCKET] participantUpdate ignored for viewer: ${email}`);
+        return; // Ignore stats from viewers
       }
 
       // Update or add participant stats
@@ -284,10 +415,20 @@ function initSocket(server) {
       // Store the result in Redis
       let roomState = await redis.hgetall(`match:${roomName}`);
       let results = [];
+      let participants = [];
       try { 
         results = JSON.parse(roomState.results || '[]'); 
+        participants = JSON.parse(roomState.participants || '[]');
       } catch { 
         results = []; 
+        participants = [];
+      }
+
+      // Check if the user is actually a participant (not a viewer)
+      const isParticipant = participants.find(p => p.email === email);
+      if (!isParticipant) {
+        console.log(`[SOCKET] matchFinish ignored for viewer: ${email}`);
+        return; // Ignore match finish from viewers
       }
 
       // Add the user's result
@@ -304,14 +445,6 @@ function initSocket(server) {
 
       results.push(userResult);
       await redis.hset(`match:${roomName}`, 'results', JSON.stringify(results));
-
-      // Get all participants to check if everyone has finished
-      let participants = [];
-      try { 
-        participants = JSON.parse(roomState.participants || '[]'); 
-      } catch { 
-        participants = []; 
-      }
 
               // If all participants have finished, emit matchResult with all participants
       if (results.length >= participants.length) {
@@ -422,6 +555,197 @@ function initSocket(server) {
             //console.error(`[SOCKET] Error clearing Redis for room ${roomName}:`, err);
           }
         }, 5000);
+      }
+    });
+
+    // ADMIN REMOVE PLAYER - Handle admin removing a player from the match
+    socket.on('adminRemovePlayer', async (data) => {
+      const { roomName, participantEmail, adminEmail } = data;
+      
+      if (!roomName || !participantEmail) {
+        socket.emit('adminError', { message: 'Room name and participant email are required' });
+        return;
+      }
+
+      try {
+        // Get match state from Redis
+        const roomState = await redis.hgetall(`match:${roomName}`);
+        if (!roomState) {
+          socket.emit('adminError', { message: 'Match not found' });
+          return;
+        }
+
+        // Check if user is admin by finding admin user and comparing email
+        let participants = [];
+        try {
+          participants = JSON.parse(roomState.participants || '[]');
+        } catch (e) {
+          socket.emit('adminError', { message: 'Invalid participants data' });
+          return;
+        }
+
+        const adminParticipant = participants.find(p => p.email === adminEmail);
+        if (!adminParticipant || !adminParticipant.isHost) {
+          socket.emit('adminError', { message: 'Only host can remove participants' });
+          return;
+        }
+
+        // Remove participant
+        const filteredParticipants = participants.filter(p => p.email !== participantEmail);
+        
+        if (filteredParticipants.length === participants.length) {
+          socket.emit('adminError', { message: 'Participant not found' });
+          return;
+        }
+
+        // Update Redis
+        await redis.hset(`match:${roomName}`, 'participants', JSON.stringify(filteredParticipants));
+
+        // Map participants to include isHost property
+        const mappedParticipants = filteredParticipants.map(p => ({
+          _id: p._id || p.user,
+          email: p.email,
+          username: p.username,
+          isHost: p.isHost || false,
+          ready: p.ready || false
+        }));
+
+        // Emit success event
+        socket.emit('playerRemoved', { 
+          message: 'Participant removed successfully',
+          participants: mappedParticipants
+        });
+
+        // Broadcast to all participants
+        io.to(roomName).emit('all participants', { 
+          participants: mappedParticipants, 
+          roomName 
+        });
+
+        // Emit userLeft event for the removed player
+        const removedUser = participants.find(p => p.email === participantEmail);
+        if (removedUser) {
+          io.to(roomName).emit('userLeft', { 
+            user: removedUser, 
+            participants: mappedParticipants, 
+            roomName 
+          });
+        }
+
+      } catch (err) {
+        socket.emit('adminError', { message: err.message });
+      }
+    });
+
+    // ADMIN TOGGLE ROOM CLOSURE - Handle admin toggling room closure
+    socket.on('adminToggleRoomClosure', async (data) => {
+      const { roomName, adminEmail } = data;
+      
+      if (!roomName) {
+        socket.emit('adminError', { message: 'Room name is required' });
+        return;
+      }
+
+      try {
+        // Get match state from Redis
+        const roomState = await redis.hgetall(`match:${roomName}`);
+        if (!roomState) {
+          socket.emit('adminError', { message: 'Match not found' });
+          return;
+        }
+
+        // Check if user is admin by finding admin user and comparing email
+        let participants = [];
+        try {
+          participants = JSON.parse(roomState.participants || '[]');
+        } catch (e) {
+          socket.emit('adminError', { message: 'Invalid participants data' });
+          return;
+        }
+
+        const adminParticipant = participants.find(p => p.email === adminEmail);
+        if (!adminParticipant || !adminParticipant.isHost) {
+          socket.emit('adminError', { message: 'Only host can toggle room closure' });
+          return;
+        }
+
+        // Toggle isClosed
+        const currentIsClosed = roomState.isClosed === 'true';
+        const newIsClosed = !currentIsClosed;
+
+        // Update Redis
+        await redis.hset(`match:${roomName}`, 'isClosed', newIsClosed.toString());
+
+        // Emit success event
+        socket.emit('roomClosureToggled', { 
+          message: `Room ${newIsClosed ? 'closed' : 'opened'} successfully`,
+          isClosed: newIsClosed
+        });
+
+        // Broadcast to all participants
+        io.to(roomName).emit('roomClosureToggled', { 
+          message: `Room ${newIsClosed ? 'closed' : 'opened'} by admin`,
+          isClosed: newIsClosed
+        });
+
+      } catch (err) {
+        socket.emit('adminError', { message: err.message });
+      }
+    });
+
+    // ADMIN TOGGLE NEW PLAYERS - Handle admin toggling new player access
+    socket.on('adminToggleNewPlayers', async (data) => {
+      const { roomName, adminEmail } = data;
+      
+      if (!roomName) {
+        socket.emit('adminError', { message: 'Room name is required' });
+        return;
+      }
+
+      try {
+        // Get match state from Redis
+        const roomState = await redis.hgetall(`match:${roomName}`);
+        if (!roomState) {
+          socket.emit('adminError', { message: 'Match not found' });
+          return;
+        }
+
+        // Check if user is admin by finding admin user and comparing email
+        let participants = [];
+        try {
+          participants = JSON.parse(roomState.participants || '[]');
+        } catch (e) {
+          socket.emit('adminError', { message: 'Invalid participants data' });
+          return;
+        }
+
+        const adminParticipant = participants.find(p => p.email === adminEmail);
+        if (!adminParticipant || !adminParticipant.isHost) {
+          socket.emit('adminError', { message: 'Only host can toggle new player access' });
+          return;
+        }
+
+        // Toggle allowNewPlayers
+        const currentAllowNewPlayers = roomState.allowNewPlayers === 'true';
+        const newAllowNewPlayers = !currentAllowNewPlayers;
+
+        // Update Redis
+        await redis.hset(`match:${roomName}`, 'allowNewPlayers', newAllowNewPlayers.toString());
+
+        // Emit success event
+        socket.emit('newPlayersToggled', { 
+          message: `New player access ${newAllowNewPlayers ? 'enabled' : 'disabled'}`,
+          allowNewPlayers: newAllowNewPlayers
+        });
+
+        // Broadcast to all participants
+        io.to(roomName).emit('newPlayersToggled', { 
+          message: `New player access ${newAllowNewPlayers ? 'enabled' : 'disabled'}`,
+          allowNewPlayers: newAllowNewPlayers
+        });
+
+      } catch (err) {
+        socket.emit('adminError', { message: err.message });
       }
     });
   });

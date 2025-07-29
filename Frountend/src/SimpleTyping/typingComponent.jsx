@@ -1,17 +1,99 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { RotateCcw, Play, Pause, Trophy, Target, Clock, AlertCircle, Keyboard } from 'lucide-react';
-import { Line } from 'react-chartjs-2';
+import { RotateCcw, Play, Pause, Trophy, Target, Clock, AlertCircle, Keyboard, Palette, X } from 'lucide-react';
+import { Line, Bar, Pie } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
+  ArcElement,
   Title,
   Tooltip,
   Legend,
 } from 'chart.js';
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend);
+
+// Theme definitions
+const THEMES = {
+  light: {
+    name: 'Light',
+    bg: 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100',
+    text: 'text-black',
+    card: 'bg-white/92',
+    cardBorder: 'border-white/50',
+    glassCard: 'bg-white/92',
+    glassCardDark: 'bg-white/92',
+    title: 'bg-gradient-to-r from-blue-700 via-fuchsia-500 to-indigo-700',
+    subtitle: 'text-black',
+    statsText: 'text-black',
+    statsValue: 'text-black',
+    chartText: '#111',
+    chartGrid: 'rgba(0,0,0,0.07)',
+    correctText: 'bg-green-200 text-green-800',
+    incorrectText: 'bg-red-200 text-red-800',
+    incompleteText: 'text-black',
+    currentChar: 'bg-blue-500 text-white animate-pulse'
+  },
+  dark: {
+    name: 'Dark',
+    bg: ' bg-gradient-to-br from-blue-950 via-black-900 to-gray-900 ',
+    text: 'text-white',
+    card: 'bg-blue-800/90',
+    cardBorder: 'border-gray-500/30',
+    glassCard: 'rgba(10, 37, 80, 0.45)',
+    glassCardDark: 'rgba(6, 58, 141, 0.45)',
+    title: 'bg-gradient-to-r from-blue-300 via-fuchsia-500 to-blue-200',
+    subtitle: 'text-white',
+    statsText: 'text-white',
+    statsValue: 'text-white',
+    chartText: '#111',
+    chartGrid: 'rgba(233, 242, 234, 0.07)',
+    correctText: 'bg-green-200 text-green-800',
+    incorrectText: 'bg-red-200 text-red-800',
+    incompleteText: 'text-white',
+    currentChar: 'bg-blue-500 text-white animate-pulse'
+  },
+  hacker: {
+    name: 'Hacker',
+    bg: 'bg-black',
+    text: 'text-green-400',
+    card: 'bg-black/80',
+    cardBorder: 'border-green-500/50',
+    glassCard: 'rgba(0,0,0,0.8)',
+    glassCardDark: 'rgba(0,0,0,0.8)',
+    title: 'bg-gradient-to-r from-green-400 via-cyan-400 to-green-300',
+    subtitle: 'text-green-400',
+    statsText: 'text-green-400',
+    statsValue: 'text-green-300',
+    chartText: '#10b981',
+    chartGrid: 'rgba(16,185,129,0.1)',
+    correctText: 'bg-green-800 text-green-200',
+    incorrectText: 'bg-red-800 text-red-200',
+    incompleteText: 'text-green-400',
+    currentChar: 'bg-green-500/30 text-green-400 animate-pulse'
+  },
+  neon: {
+    name: 'Neon',
+    bg: 'bg-gradient-to-br from-purple-900 via-pink-900 to-cyan-900',
+    text: 'text-pink-300',
+    card: 'bg-purple-900/80',
+    cardBorder: 'border-pink-500/50',
+    glassCard: 'rgba(147,51,234,0.8)',
+    glassCardDark: 'rgba(147,51,234,0.8)',
+    title: 'bg-gradient-to-r from-pink-400 via-purple-400 to-cyan-400',
+    subtitle: 'text-pink-300',
+    statsText: 'text-pink-300',
+    statsValue: 'text-pink-200',
+    chartText: '#ec4899',
+    chartGrid: 'rgba(236,72,153,0.1)',
+    correctText: 'bg-pink-800 text-pink-200',
+    incorrectText: 'bg-red-800 text-red-200',
+    incompleteText: 'text-pink-300',
+    currentChar: 'bg-pink-500/30 text-pink-300 animate-pulse'
+  }
+};
 
 // Text samples for typing test
 const TEXT_SAMPLES = [  
@@ -27,20 +109,31 @@ const KEYBOARD_LAYOUT = [
 ];
 
 // Key component for virtual keyboard
-const KeyboardKey = ({ keyChar, isPressed, isCorrect, isIncorrect }) => {
+const KeyboardKey = ({ keyChar, isPressed, isCorrect, isIncorrect, theme }) => {
   const getKeyStyle = () => {
     if (isPressed) {
-      if (isCorrect) return 'bg-green-500/90 text-white shadow-[0_0_12px_4px_rgba(34,197,94,0.3)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)] transform scale-95';
-      if (isIncorrect) return 'bg-red-500/90 text-white shadow-[0_0_12px_4px_rgba(239,68,68,0.3)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)] transform scale-95';
-      return 'bg-yellow-400/90 text-black shadow-[0_0_12px_4px_rgba(253,224,71,0.3)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)] transform scale-95';
+      if (isCorrect) return 'bg-green-500/90 text-white shadow-[0_0_12px_4px_rgba(34,197,94,0.3)] transform scale-95';
+      if (isIncorrect) return 'bg-red-500/90 text-white shadow-[0_0_12px_4px_rgba(239,68,68,0.3)] transform scale-95';
+      return 'bg-yellow-400/90 text-black shadow-[0_0_12px_4px_rgba(253,224,71,0.3)] transform scale-95';
     }
-    return 'bg-white/90 dark:bg-gray-700/60 hover:bg-white/100 dark:hover:bg-gray-600/80 backdrop-blur-md border border-white/50 dark:border-gray-500/30';
+    
+    // Theme-specific key styles
+    switch (theme) {
+      case 'hacker':
+        return 'bg-black/90 hover:bg-green-900/100 backdrop-blur-md border border-green-500/50 text-green-400';
+      case 'neon':
+        return 'bg-purple-900/90 hover:bg-pink-900/100 backdrop-blur-md border border-pink-500/50 text-pink-300';
+      case 'dark':
+        return 'bg-gray-700/60 hover:bg-gray-600/80 backdrop-blur-md border border-gray-500/30 text-white';
+      default: // light
+        return 'bg-white/90 hover:bg-white/100 backdrop-blur-md border border-white/50 text-black';
+    }
   };
 
   return (
     <div
       className={`
-        flex items-center justify-center w-10 h-10 m-1 rounded-lg font-semibold
+        flex items-center justify-center w-5 sm:w-10 h-5 sm:h-10 m-1 rounded-lg font-semibold
         transition-all duration-150 ease-in-out cursor-pointer
         ${getKeyStyle()}
       `}
@@ -51,18 +144,43 @@ const KeyboardKey = ({ keyChar, isPressed, isCorrect, isIncorrect }) => {
 };
 
 // Virtual keyboard component
-const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect }) => {
+const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect, theme }) => {
+  const getSpacebarStyle = () => {
+    if (pressedKey === ' ') {
+      if (isCorrect) return 'bg-green-400/80 text-white shadow-[0_0_8px_2px_rgba(34,197,94,0.7)]';
+      if (isIncorrect) return 'bg-red-400/80 text-white shadow-[0_0_8px_2px_rgba(239,68,68,0.7)]';
+      return 'bg-yellow-300/80 text-black shadow-[0_0_8px_2px_rgba(253,224,71,0.7)]';
+    }
+    
+    // Theme-specific spacebar styles
+    switch (theme) {
+      case 'hacker':
+        return 'bg-black/60 hover:bg-green-900/80 backdrop-blur-md border border-green-500/30 text-green-400';
+      case 'neon':
+        return 'bg-purple-900/60 hover:bg-pink-900/80 backdrop-blur-md border border-pink-500/30 text-pink-300';
+      case 'dark':
+        return 'bg-gray-700/60 hover:bg-gray-600/80 backdrop-blur-md border border-gray-500/30 text-white';
+      default: // light
+        return 'bg-white/60 hover:bg-white/80 backdrop-blur-md border border-white/30 text-black';
+    }
+  };
+
   return (
-    <div className="glass-card rounded-xl p-6 shadow-lg mb-8">
+    <div className="glass-card rounded-xl p-6 shadow-lg mb-8" data-theme={theme}>
       <div className="flex items-center justify-center mb-4">
-        <Keyboard className="w-6 h-6 mr-2 text-blue-600 dark:text-blue-200 drop-shadow-lg" />
-        <h3 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-500 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
+        <Keyboard className={`w-6 h-6 mr-2 ${theme === 'hacker' ? 'text-green-400' : theme === 'neon' ? 'text-pink-400' : theme === 'dark' ? 'text-blue-200' : 'text-blue-600'} drop-shadow-lg`} />
+        <h3 className={`text-lg font-bold bg-clip-text text-transparent drop-shadow-lg ${
+          theme === 'hacker' ? 'bg-gradient-to-r from-green-400 to-cyan-400' :
+          theme === 'neon' ? 'bg-gradient-to-r from-pink-400 to-cyan-400' :
+          theme === 'dark' ? 'bg-gradient-to-r from-blue-200 to-purple-300' :
+          'bg-gradient-to-r from-blue-600 to-purple-500'
+        }`}>
           Virtual Keyboard
         </h3>
       </div>
-      <div className="flex flex-col items-center space-y-2">
+      <div className="flex flex-col  items-center space-y-2">
         {KEYBOARD_LAYOUT.map((row, rowIndex) => (
-          <div key={rowIndex} className="flex justify-center">
+          <div key={rowIndex} className="flex justify-center ">
             {row.map((key) => (
               <KeyboardKey
                 key={key}
@@ -70,6 +188,7 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect }) => {
                 isPressed={pressedKey === key}
                 isCorrect={isCorrect}
                 isIncorrect={isIncorrect}
+                theme={theme}
               />
             ))}
           </div>
@@ -81,14 +200,7 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect }) => {
             className={`
               flex items-center justify-center w-40 h-10 rounded-lg font-semibold
               transition-all duration-150 ease-in-out
-              ${pressedKey === ' ' 
-                ? isCorrect 
-                  ? 'bg-green-400/80 text-white shadow-[0_0_8px_2px_rgba(34,197,94,0.7)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)]'
-                  : isIncorrect 
-                    ? 'bg-red-400/80 text-white shadow-[0_0_8px_2px_rgba(239,68,68,0.7)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)]'
-                    : 'bg-yellow-300/80 text-black shadow-[0_0_8px_2px_rgba(253,224,71,0.7)] dark:shadow-[0_0_12px_4px_rgba(255,255,255,0.7)]'
-                : 'bg-white/60 dark:bg-gray-700/60 hover:bg-white/80 dark:hover:bg-gray-600/80 backdrop-blur-md border border-white/30 dark:border-gray-500/30'
-              }
+              ${getSpacebarStyle()}
             `}
           >
             SPACE
@@ -100,30 +212,121 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect }) => {
 };
 
 // Stats card component
-const StatsCard = ({ darkMode, icon: Icon, label, value, color = "blue" }) => {
-  const colorClasses = {
-    blue: "text-blue-900 bg-blue-200/90 dark:bg-blue-900/40",
-    green: "text-green-900 bg-green-200/90 dark:bg-green-900/40",
-    red: "text-red-900 bg-red-200/90 dark:bg-red-900/40",
-    yellow: "text-yellow-900 bg-yellow-200/90 dark:bg-yellow-900/40",
-    purple: "text-purple-900 bg-purple-200/90 dark:bg-purple-900/40"
+const StatsCard = ({ theme, icon: Icon, label, value, color = "blue" }) => {
+  const getThemeStyles = () => {
+    switch (theme) {
+      case 'hacker':
+        return {
+          card: 'bg-black/80 border border-green-500/30',
+          text: 'text-green-400',
+          value: 'text-green-300',
+          icon: 'text-green-400'
+        };
+      case 'neon':
+        return {
+          card: 'bg-purple-900/80 border border-pink-500/30',
+          text: 'text-pink-300',
+          value: 'text-pink-200',
+          icon: 'text-pink-400'
+        };
+      case 'dark':
+        return {
+          card: 'bg-gray-800/90 border border-gray-500/30',
+          text: 'text-white',
+          value: 'text-white',
+          icon: 'text-blue-200'
+        };
+      default: // light
+        return {
+          card: 'bg-white/92 border border-white/50',
+          text: 'text-gray-500',
+          value: 'text-black',
+          icon: 'text-blue-600'
+        };
+    }
   };
 
+  const styles = getThemeStyles();
+
   return (
-    <div className={`glass-card p-4 rounded-xl ${colorClasses[color]} transition-all duration-300 hover:scale-105`}>
+    <div className={`glass-card p-4 rounded-xl ${styles.card} transition-all duration-300 hover:scale-105`} data-theme={theme}>
       <div className="flex items-center justify-between">
         <div>
-          <p className= {`text-sm font-semibold text-black drop-shadow-md ${darkMode ? 'text-white' : 'text-gray-500'}`  }>{label}</p>
-          <p className={`text-2xl font-extrabold text-black  drop-shadow-md  ${darkMode ? 'text-white' : 'text-black'}`}>{value}</p>
+          <p className={`text-sm font-semibold drop-shadow-md ${styles.text}`}>{label}</p>
+          <p className={`text-2xl font-extrabold drop-shadow-md ${styles.value}`}>{value}</p>
         </div>
-        <Icon className={`w-8 h-8 ${colorClasses[color].split(' ')[0]} drop-shadow-md`} />
+        <Icon className={`w-8 h-8 drop-shadow-md ${styles.icon}`} />
       </div>
     </div>
   );
 };
 
+// Theme drawer component
+const ThemeDrawer = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
+  const themes = Object.keys(THEMES);
+
+  return (
+    <>
+      {/* Theme button container */}
+      <div className="fixed top-32 left-4 z-50">
+        {/* Main theme button */}
+        <button
+          onClick={() => onClose(!isOpen)}
+          className="w-12 h-12 rounded-full glass-card shadow-lg hover:scale-110 transition-all duration-300 flex items-center justify-center"
+          data-theme={currentTheme}
+        >
+          <Palette className="w-6 h-6 text-blue-600" />
+        </button>
+
+        {/* Dropdown menu */}
+        {isOpen && (
+          <div className="absolute top-14 left-0 mt-2 w-32 glass-card bg-white text-black rounded-lg shadow-xl border border-gray-200 dark:border-gray-700" data-theme={currentTheme}>
+            <div className="py-2">
+              {themes.map((themeKey) => {
+                const theme = THEMES[themeKey];
+                const isActive = currentTheme === themeKey;
+                
+                return (
+                  <button
+                    key={themeKey}
+                    onClick={() => {
+                      onThemeChange(themeKey);
+                      onClose(false);
+                    }}
+                    className={`w-full px-3 py-2 text-left text-sm font-medium transition-colors  text-black duration-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${
+                      isActive 
+                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
+                        : 'text-gray-700 dark:text-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{theme.name}</span>
+                      {isActive && (
+                        <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Overlay to close dropdown when clicking outside */}
+      {isOpen && (
+        <div className="fixed inset-0 z-40" onClick={() => onClose(false)} />
+      )}
+    </>
+  );
+};
+
 // Main typing interface component
 const TypingInterface = ({darkMode}) => {
+  // Theme state
+  const [currentTheme, setCurrentTheme] = useState(darkMode ? 'dark' : 'light');
+  const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
+
   // Core state
   const [currentText, setCurrentText] = useState('');
   const [inputText, setInputText] = useState('');
@@ -158,6 +361,9 @@ const TypingInterface = ({darkMode}) => {
   const [progressData, setProgressData] = useState([]); // Array of {time, wpm}
   const [intervalStep, setIntervalStep] = useState(0); // Track elapsed time in 5s steps
   const hiddenInputRef = useRef(null);
+
+  // Get current theme object
+  const theme = THEMES[currentTheme];
 
   // Focus the hidden input on mount and when the main area is clicked/tapped
   useEffect(() => {
@@ -464,25 +670,33 @@ const TypingInterface = ({darkMode}) => {
   const getCharStyle = (index) => {
     if (index < inputText.length) {
       if (inputText[index] === '$') {
-        return 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200';
+        return theme.incorrectText;
       }
       return inputText[index] === currentText[index] 
-        ? 'bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200' 
-        : 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200';
+        ? theme.correctText
+        : theme.incorrectText;
     }
     if (index === currentIndex) {
-      return 'bg-blue-500 text-white animate-pulse';
+      return theme.currentChar;
     }
-    return darkMode ? 'text-white ' :  'text-black';
+    return theme.incompleteText;
   };
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-300 ${darkMode ? 'dark bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' : 'bg-gradient-to-br from-blue-100 via-pink-50 to-indigo-100'}`}
+      className={`min-h-screen transition-colors duration-300 ${theme.bg}`}
       onClick={focusInput}
       onTouchStart={focusInput}
       style={{ position: 'relative' }}
     >
+      {/* Theme Drawer */}
+      <ThemeDrawer
+        isOpen={isThemeDrawerOpen}
+        onClose={setIsThemeDrawerOpen}
+        currentTheme={currentTheme}
+        onThemeChange={setCurrentTheme}
+      />
+
       {/* Visually hidden input for mobile typing */}
       <input
         ref={hiddenInputRef}
@@ -508,11 +722,11 @@ const TypingInterface = ({darkMode}) => {
         {/* Header */}
         <div className="text-center mb-8">
           {!inputText&&
-          <h1 className={`text-4xl md:text-6xl font-extrabold mb-4  bg-clip-text text-transparent drop-shadow-2xl ${darkMode ? 'bg-gradient-to-r from-blue-300 via-fuchsia-500 to-blue-200' : ' bg-gradient-to-r from-blue-700 via-fuchsia-500 to-indigo-700'}`}>
+          <h1 className={`text-4xl md:text-6xl font-extrabold mb-4 bg-clip-text text-transparent drop-shadow-2xl ${theme.title}`}>
             Typing Speed Test
           </h1>
           }
-          <p className={`text-lg font-semibold  drop-shadow-md ${darkMode ? 'text-white' : 'text-black'}`}>
+          <p className={`text-lg font-semibold drop-shadow-md ${theme.subtitle}`}>
             Test your typing speed and accuracy
           </p>
         </div>
@@ -520,14 +734,14 @@ const TypingInterface = ({darkMode}) => {
         {/* Controls */}
         <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
           <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+            <Clock className={`w-5 h-5 ${theme.text}`} />
             <select
               value={testDuration}
               onChange={(e) => {
                 setTestDuration(Number(e.target.value));
                 setTimeLeft(Number(e.target.value));
               }}
-              className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200"
+              className={`px-3 py-2 rounded-lg border ${theme.cardBorder} ${theme.card} ${theme.text}`}
               disabled={isActive}
             >
             <option value={10}>10 seconds</option>
@@ -551,16 +765,16 @@ const TypingInterface = ({darkMode}) => {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatsCard darkMode={darkMode} icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
-          <StatsCard darkMode={darkMode} icon={Target} label="WPM" value={wpm} color="green" />
-          <StatsCard darkMode={darkMode} icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
-          <StatsCard darkMode={darkMode} icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
+          <StatsCard theme={currentTheme} icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
+          <StatsCard theme={currentTheme} icon={Target} label="WPM" value={wpm} color="green" />
+          <StatsCard theme={currentTheme} icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
+          <StatsCard theme={currentTheme} icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
         </div>
 
         {/* Start prompt */}
         {!isStarted && (
           <div className="text-center mb-8">
-            <p className={`text-2xl  animate-pulse ${darkMode ? 'text-white' : 'text-blue-500'}`}>
+            <p className={`text-2xl animate-pulse ${theme.text}`}>
               Press any key to start typing...
             </p>
           </div>
@@ -571,12 +785,13 @@ const TypingInterface = ({darkMode}) => {
           <div
             ref={textRef}
             className="glass-card rounded-xl p-6 shadow-lg max-h-64"
+            data-theme={currentTheme}
             style={{
               overflow: 'hidden',
               pointerEvents: 'none',
             }}
           >
-            <div className="text-xl md:text-2xl leading-relaxed font-mono">
+            <div className="text-xl md:text-2xl leading-relaxed font-mono text-center">
               {currentText.split('').map((char, index) => (
                 <span
                   key={index}
@@ -593,8 +808,9 @@ const TypingInterface = ({darkMode}) => {
         {/* Virtual keyboard or Chart */}
         <div className="mb-8">
           {isFinished ? (<>
-            <div className="glass-card rounded-xl p-6 shadow-lg md:max-w-[700px] mx-auto">
-              <h3 className="text-xl font-bold mb-4 text-center  bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-200 dark:to-purple-300 bg-clip-text text-transparent drop-shadow-lg">
+            {/* Progress Chart */}
+            <div className="glass-card rounded-xl p-6 shadow-lg md:max-w-[700px] mx-auto mb-6" data-theme={currentTheme}>
+              <h3 className={`text-xl font-bold mb-4 text-center bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
                 Progress Chart (WPM every 5 seconds)
               </h3>
               {(() => {
@@ -613,7 +829,7 @@ const TypingInterface = ({darkMode}) => {
                 });
                 // If no data, show message
                 if (wpmPoints.length <= 1) {
-                  return <div className="text-center text-gray-500 dark:text-gray-300">Not enough data to display chart.</div>;
+                  return <div className={`text-center ${theme.text}`}>Not enough data to display chart.</div>;
                 }
                 return (
                   <Line
@@ -623,9 +839,9 @@ const TypingInterface = ({darkMode}) => {
                         {
                           label: 'WPM',
                           data: wpmPoints,
-                          borderColor: darkMode ? '#3b82f6' : '#3b82f6',
-                          backgroundColor: 'rgba(99,102,241,0.2)',
-                          pointBackgroundColor: '#a21caf',
+                          borderColor: theme.chartText,
+                          backgroundColor: theme.chartGrid,
+                          pointBackgroundColor: theme.chartText,
                           tension: 0.3,
                           borderWidth: 3,
                         },
@@ -639,14 +855,14 @@ const TypingInterface = ({darkMode}) => {
                       },
                       scales: {
                         x: {
-                            title: { display: true, text: 'Time (s)', color: darkMode ? '#111' : '#111' },
-                          ticks: { color: darkMode ? '#111' : '#111' },
-                          grid: { color: 'rgba(0,0,0,0.07)' },
+                            title: { display: true, text: 'Time (s)', color: theme.chartText },
+                          ticks: { color: theme.chartText },
+                          grid: { color: theme.chartGrid },
                         },
                         y: {
-                          title: { display: true, text: 'WPM', color:  darkMode ? '#111' : '#111' },
-                          ticks: { color: darkMode ? '#111' : '#111' },
-                          grid: { color: 'rgba(0,0,0,0.07)' },
+                          title: { display: true, text: 'WPM', color: theme.chartText },
+                          ticks: { color: theme.chartText },
+                          grid: { color: theme.chartGrid },
                           beginAtZero: true,
                         },
                       },
@@ -656,37 +872,126 @@ const TypingInterface = ({darkMode}) => {
                 );
               })()}
             </div>
+
+            {/* Performance Charts */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              {/* Bar Chart - Performance Metrics */}
+              <div className="glass-card rounded-xl p-6 shadow-lg" data-theme={currentTheme}>
+                <h3 className={`text-lg font-bold mb-4 text-center bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
+                  Performance Metrics
+                </h3>
+                <Bar
+                  data={{
+                    labels: ['WPM', 'Accuracy', 'Correct', 'Mistakes'],
+                    datasets: [
+                      {
+                        label: 'Score',
+                        data: [wpm, accuracy, correctChars, mistakes],
+                        backgroundColor: [
+                          theme.chartText,
+                          theme.chartText,
+                          theme.chartText,
+                          theme.chartText,
+                        ],
+                        borderColor: theme.chartText,
+                        borderWidth: 2,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      legend: { display: false },
+                      title: { display: false },
+                    },
+                    scales: {
+                      x: {
+                        ticks: { color: theme.chartText },
+                        grid: { color: theme.chartGrid },
+                      },
+                      y: {
+                        ticks: { color: theme.chartText },
+                        grid: { color: theme.chartGrid },
+                        beginAtZero: true,
+                      },
+                    },
+                  }}
+                  height={200}
+                />
+              </div>
+
+              {/* Pie Chart - Accuracy Breakdown */}
+              <div className="glass-card rounded-xl p-6 shadow-lg" data-theme={currentTheme}>
+                <h3 className={`text-lg font-bold mb-4 text-center bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
+                  Accuracy Breakdown
+                </h3>
+                <Pie
+                  data={{
+                    labels: ['Correct', 'Incorrect'],
+                    datasets: [
+                      {
+                        data: [correctChars, mistakes],
+                        backgroundColor: [
+                          theme.chartText,
+                          '#ef4444', // Red for mistakes
+                        ],
+                        borderColor: theme.chartText,
+                        borderWidth: 2,
+                      },
+                    ],
+                  }}
+                  options={{
+                    responsive: true,
+                    plugins: {
+                      legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                          color: theme.chartText,
+                          font: {
+                            size: 12,
+                          },
+                        },
+                      },
+                      title: { display: false },
+                    },
+                  }}
+                  height={200}
+                />
+              </div>
+            </div>
           </>) : (
             <VirtualKeyboard
               pressedKey={pressedKey}
               isCorrect={isCorrectKey}
               isIncorrect={isIncorrectKey}
+              theme={currentTheme}
             />
           )}
         </div>
 
         {/* Results */}
         {isFinished && (
-          <div className="glass-card rounded-xl p-6 shadow-lg">
-            <h2 className="text-2xl font-extrabold text-center mb-6 bg-gradient-to-r from-green-600 to-blue-700 dark:from-green-200 dark:to-blue-300 bg-clip-text text-transparent drop-shadow-lg">
+          <div className="glass-card rounded-xl p-6 shadow-lg" data-theme={currentTheme}>
+            <h2 className={`text-2xl font-extrabold text-center mb-6 bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
               Test Complete! 🎉
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div className="text-center">
-                <div className="text-3xl font-extrabold text-green-900 dark:text-green-200 drop-shadow-lg">{wpm}</div>
-                <div className="text-sm text-black dark:text-gray-100">WPM</div>
+                <div className={`text-3xl font-extrabold drop-shadow-lg ${theme.statsValue}`}>{wpm}</div>
+                <div className={`text-sm ${theme.text}`}>WPM</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-extrabold text-blue-900 dark:text-blue-200 drop-shadow-lg">{accuracy}%</div>
-                <div className="text-sm text-black dark:text-gray-100">Accuracy</div>
+                <div className={`text-3xl font-extrabold drop-shadow-lg ${theme.statsValue}`}>{accuracy}%</div>
+                <div className={`text-sm ${theme.text}`}>Accuracy</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-extrabold text-purple-900 dark:text-purple-200 drop-shadow-lg">{correctChars}</div>
-                <div className="text-sm text-black dark:text-gray-100">Correct</div>
+                <div className={`text-3xl font-extrabold drop-shadow-lg ${theme.statsValue}`}>{correctChars}</div>
+                <div className={`text-sm ${theme.text}`}>Correct</div>
               </div>
               <div className="text-center">
-                <div className="text-3xl font-extrabold text-red-900 dark:text-red-200 drop-shadow-lg">{mistakes}</div>
-                <div className="text-sm text-black dark:text-gray-100">Mistakes</div>
+                <div className={`text-3xl font-extrabold drop-shadow-lg ${theme.statsValue}`}>{mistakes}</div>
+                <div className={`text-sm ${theme.text}`}>Mistakes</div>
               </div>
             </div>
           </div>
@@ -707,8 +1012,39 @@ export default TypingInterface;
     border-radius: 18px;
     border: 1.5px solid rgba(180,180,220,0.18);
   }
-  .dark .glass-card {
+  
+  /* Theme-specific glass card styles */
+  .glass-card[data-theme="hacker"] {
+    background: rgba(0,0,0,0.8);
+    border: 1.5px solid rgba(16,185,129,0.3);
+    box-shadow: 0 8px 32px 0 rgba(16,185,129,0.15), 0 2px 8px 0 rgba(0,0,0,0.1);
+  }
+  
+  .glass-card[data-theme="neon"] {
+    background: rgba(147,51,234,0.8);
+    border: 1.5px solid rgba(236,72,153,0.3);
+    box-shadow: 0 8px 32px 0 rgba(236,72,153,0.15), 0 2px 8px 0 rgba(0,0,0,0.1);
+  }
+  
+  .glass-card[data-theme="dark"] {
     background: rgba(30,41,59,0.45);
     border: 1px solid rgba(255,255,255,0.10);
+    box-shadow: 0 8px 32px 0 rgba(59,130,246,0.15), 0 2px 8px 0 rgba(0,0,0,0.1);
+  }
+
+  /* Dropdown animation */
+  .glass-card[data-theme] {
+    animation: dropdownFadeIn 0.2s ease-out;
+  }
+
+  @keyframes dropdownFadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 `}</style>
