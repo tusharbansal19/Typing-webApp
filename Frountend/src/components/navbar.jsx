@@ -187,7 +187,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
           onClick={() => navigator("/")}
         >
           <img 
-            src="./public/Images/Screenshot 2024-11-02 175013.png" 
+            src="Images/Screenshot 2024-11-02 175013.png" 
             className="max-h-[3.5rem] transition-all duration-500 ease-in-out group-hover:rounded-2xl group-hover:shadow-lg group-hover:shadow-blue-500/30" 
             alt="Logo" 
           />
