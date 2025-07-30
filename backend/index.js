@@ -22,6 +22,7 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
+      "https://typing-webapp-frountend.onrender.com",
       'https://typing-webapp-frountend.onrender.com',
       'http://localhost:5173',
     ];
