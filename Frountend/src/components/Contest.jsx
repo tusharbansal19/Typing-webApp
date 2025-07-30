@@ -41,12 +41,13 @@ const ContestContext = ({darkMode}) => {
     { id: 2, title: 'Coding Marathon', date: '2024-12-01', description: 'Show your coding skills',img:"https://th.bing.com/th/id/OIP.6KiJM0-6hQCngXw2pgz9wQHaKe?rs=1&pid=ImgDetMain" },
     { id: 3, title: 'Quiz Bowl', date: '2024-12-01', description: 'Show your coding skills',img:"https://th.bing.com/th/id/OIP.6KiJM0-6hQCngXw2pgz9wQHaKe?rs=1&pid=ImgDetMain" },
     { id: 4, title: 'Hackathon', date: '2024-12-01', description: 'Show your coding skills',img:"https://th.bing.com/th/id/OIP.6KiJM0-6hQCngXw2pgz9wQHaKe?rs=1&pid=ImgDetMain" },
+    { id: 5, title: 'AI Bot Challenge', date: '2024-12-15', description: 'Compete against AI bots with different difficulty levels', img:"https://th.bing.com/th/id/OIP.6KiJM0-6hQCngXw2pgz9wQHaKe?rs=1&pid=ImgDetMain" },
     
     // Add more contests as needed
   ]);
   const [selectedContest, setSelectedContest] = useState(contests);
 
-  const recommendedOptions = ['Design Contest', 'Coding Marathon', 'Quiz Bowl', 'Hackathon'];
+  const recommendedOptions = ['Design Contest', 'Coding Marathon', 'Quiz Bowl', 'Hackathon', 'AI Bot Challenge'];
 
   const handleSelectContest = (contestTitle) => {
     if(contestTitle === '')

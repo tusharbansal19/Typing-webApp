@@ -21,6 +21,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { checkAuth } from './features/user/userSlice';
 import TypingInterface from './SimpleTyping/typingComponent';
 import MatchInterface from './ComplexTyping.jsx/MatchInterface';
+import BotTypingInterface from './components/BotTyping';
 import { MatchProvider } from './Context/MatchContext';
 import MainLayout from './components/MainLayout';
 
@@ -53,6 +54,7 @@ function App() {
           <Route path='/'  element={<MainLayout darkMode={darkMode}  setDarkMode={setDarkMode} />}>
             <Route path="/" element={<Home darkMode={darkMode}/>} />
             <Route path="/typing" element={<TypingInterface darkMode={darkMode} setDarkMode={setDarkMode} />} />
+            <Route path="/bot" element={<ComppProtect><BotTypingInterface darkMode={darkMode} setDarkMode={setDarkMode} /></ComppProtect>} />
             <Route path="/host" element={<ComppProtect><HostPage darkMode={darkMode} setDarkMode={setDarkMode} /></ComppProtect>} />
             <Route path="/match/:roomName" element={<ComppProtect><MatchProvider><SocketProvider><MatchInterface darkMode={darkMode} setDarkMode={setDarkMode} /></SocketProvider></MatchProvider></ComppProtect>} />
             <Route path="/contact" element={<ContactUsPage darkMode={darkMode} />} />

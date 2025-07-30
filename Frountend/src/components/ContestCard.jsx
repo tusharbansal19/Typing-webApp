@@ -6,6 +6,9 @@ const ContestCard = ({hostnavigate, title, date, description, darkMode }) => {
   const handleReady = () => {
     navigator('/host');
   };
+  const handleBotChallenge = () => {
+    navigator('/bot');
+  };
   return (
     <div
       className={`p-4 rounded-lg shadow-lg transition-all duration-300 min-h-[200px] hover:shadow-2xl backdrop-blur-sm border ${
@@ -14,24 +17,30 @@ const ContestCard = ({hostnavigate, title, date, description, darkMode }) => {
           : 'bg-white/30 border-gray-200/50 text-gray-800'
       }`}
     >
-      {hostnavigate== 1?<>
-      
-        <h2 className="text-2xl font-semibold text-blue-500 ">{"Costom Player"}</h2>
-        <p className="mt-2">{"Join with your friend to make your joirney smart and fast"}</p>
-
-        <button onClick={handleReady} className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white mt-5 rounded shadow hover:to-blue-700 bold text-lg p-4 
-        ">
+      {hostnavigate == 1 ? (
+        <>
+          <h2 className="text-2xl font-semibold text-blue-500 ">{"Costom Player"}</h2>
+          <p className="mt-2">{"Join with your friend to make your joirney smart and fast"}</p>
+          <button onClick={handleReady} className="bg-gradient-to-r from-purple-500 to-cyan-500 text-white mt-5 rounded shadow hover:to-blue-700 bold text-lg p-4">
             Room
           </button>
-      </>:<>
-
-      
-
-      <h2 className="text-2xl font-semibold text-blue-500 ">{title}</h2>
-      <p className="text-gray-500">{date}</p>
-      <p className="mt-2">{description}</p>
-      </>
-      }
+        </>
+      ) : title === 'AI Bot Challenge' ? (
+        <>
+          <h2 className="text-2xl font-semibold text-blue-500 ">{title}</h2>
+          <p className="text-gray-500">{date}</p>
+          <p className="mt-2">{description}</p>
+          <button onClick={handleBotChallenge} className="bg-gradient-to-r from-green-500 to-emerald-500 text-white mt-5 rounded shadow hover:from-green-600 hover:to-emerald-600 bold text-lg p-4">
+            🤖 Start Bot Challenge
+          </button>
+        </>
+      ) : (
+        <>
+          <h2 className="text-2xl font-semibold text-blue-500 ">{title}</h2>
+          <p className="text-gray-500">{date}</p>
+          <p className="mt-2">{description}</p>
+        </>
+      )}
     </div>
   );
 };

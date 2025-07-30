@@ -32,6 +32,7 @@ const Navbar = ({ darkMode, setDarkMode }) => {
   const menuItems = [
     { label: "Home", path: "/" },
     { label: "Typing", path: "/typing" },
+    { label: "Bot Challenge", path: "/bot" },
     { label: "Contest", path: "/contest" },
     { label: "Learn", path: "/learn" },
     { label: "Contact", path: "/contact" },
