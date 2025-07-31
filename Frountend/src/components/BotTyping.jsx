@@ -107,7 +107,8 @@ const BOT_DIFFICULTIES = {
     wpmRange: [30, 50],
     accuracyRange: [85, 95],
     description: 'Perfect for beginners',
-    delayRange: [200, 400] // milliseconds between characters
+    delayRange: [200, 400], // milliseconds between characters
+    startDelay: 2000 // Start typing after 2 seconds
   },
   medium: {
     name: 'Medium Bot',
@@ -118,7 +119,8 @@ const BOT_DIFFICULTIES = {
     wpmRange: [50, 80],
     accuracyRange: [90, 98],
     description: 'Challenging but fair',
-    delayRange: [150, 300]
+    delayRange: [150, 300],
+    startDelay: 1500
   },
   hard: {
     name: 'Hard Bot',
@@ -129,7 +131,8 @@ const BOT_DIFFICULTIES = {
     wpmRange: [80, 120],
     accuracyRange: [95, 99],
     description: 'For experienced typists',
-    delayRange: [100, 200]
+    delayRange: [100, 200],
+    startDelay: 1000
   },
   expert: {
     name: 'Expert Bot',
@@ -140,7 +143,8 @@ const BOT_DIFFICULTIES = {
     wpmRange: [120, 180],
     accuracyRange: [98, 100],
     description: 'Ultimate challenge',
-    delayRange: [50, 150]
+    delayRange: [50, 150],
+    startDelay: 500
   }
 };
 
@@ -162,6 +166,9 @@ class BotAI {
     this.typingSpeed = this.getTypingSpeed();
     this.accuracy = this.getAccuracy();
     this.delay = this.getDelay();
+    this.startDelay = BOT_DIFFICULTIES[difficulty].startDelay;
+    this.hasStarted = false;
+    this.hasStarted = false;
   }
 
   getTypingSpeed() {
@@ -184,10 +191,16 @@ class BotAI {
     this.isActive = true;
     this.currentIndex = 0;
     this.mistakes = 0;
+    this.hasStarted = false;
+    
+    // Start typing after the specified delay
+    setTimeout(() => {
+      this.hasStarted = true;
+    }, this.startDelay);
   }
 
   getNextChar(text) {
-    if (!this.isActive || this.currentIndex >= text.length) {
+    if (!this.isActive || this.currentIndex >= text.length || !this.hasStarted) {
       return null;
     }
 
@@ -217,7 +230,7 @@ class BotAI {
   }
 
   getWPM(text) {
-    if (!this.startTime) return 0;
+    if (!this.startTime || !this.hasStarted) return 0;
     const elapsedMinutes = (Date.now() - this.startTime) / 60000;
     const wordsTyped = this.currentIndex / 5;
     return elapsedMinutes > 0 ? Math.round(wordsTyped / elapsedMinutes) : 0;
@@ -946,16 +959,24 @@ const BotTypingInterface = ({darkMode}) => {
     }
   }, [selectedDifficulty]);
 
-  // Auto-scroll to active character
+  // Auto-scroll to active character with improved positioning
   useEffect(() => {
-    if (activeCharRef.current) {
-      activeCharRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'start'
-      });
+    if (activeCharRef.current && isStarted) {
+      const container = textRef.current;
+      const activeElement = activeCharRef.current;
+      
+      if (container && activeElement) {
+        const containerRect = container.getBoundingClientRect();
+        const elementRect = activeElement.getBoundingClientRect();
+        
+        const elementCenter = elementRect.left + elementRect.width / 2;
+        const containerCenter = containerRect.left + containerRect.width / 2;
+        const offset = elementCenter - containerCenter;
+        
+        container.scrollLeft += offset;
+      }
     }
-  }, [currentIndex]);
+  }, [currentIndex, isStarted]);
 
   // Calculate WPM and accuracy
   const calculateStats = useCallback(() => {
@@ -1337,12 +1358,7 @@ const BotTypingInterface = ({darkMode}) => {
   }
 
   return (
-    <div
-      className={`min-h-screen transition-colors duration-300 ${theme.bg}`}
-      onClick={focusInput}
-      onTouchStart={focusInput}
-      style={{ position: 'relative' }}
-    >
+    <div className={`min-h-screen transition-colors duration-300 ${theme.bg}`}>
       {/* Theme Drawer */}
       <ThemeDrawer
         isOpen={isThemeDrawerOpen}
@@ -1350,19 +1366,6 @@ const BotTypingInterface = ({darkMode}) => {
         currentTheme={currentTheme}
         onThemeChange={setCurrentTheme}
       />
-
-      {/* Vertical Dashboard */}
-      {selectedDifficulty && bots.length > 0 && (
-        <VerticalDashboard 
-          darkMode={darkMode}
-          bots={bots}
-          selectedDifficulty={selectedDifficulty}
-          theme={currentTheme}
-          isStarted={isStarted}
-          isFinished={isFinished}
-          currentText={currentText}
-        />
-      )}
 
       {/* Visually hidden input for mobile typing */}
       <input
@@ -1385,78 +1388,316 @@ const BotTypingInterface = ({darkMode}) => {
         tabIndex={-1}
         aria-hidden="true"
       />
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className={`text-3xl font-bold bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
-            {BOT_DIFFICULTIES[selectedDifficulty]?.name} Challenge
-          </h1>
-          <div className="flex items-center justify-center mt-2">
-            <span className="text-2xl mr-2">{BOT_DIFFICULTIES[selectedDifficulty]?.avatar}</span>
-            <span className={`font-semibold ${BOT_DIFFICULTIES[selectedDifficulty]?.color}`}>
-              {selectedDifficulty.toUpperCase()}
-            </span>
+
+      <div className="flex">
+        {/* Main Content Area */}
+        <div className="flex-1 lg:mr-80">
+          <div className="container mx-auto px-4 py-8">
+            {/* Header */}
+            <div className="text-center mb-8">
+              <h1 className={`text-3xl font-bold bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
+                {BOT_DIFFICULTIES[selectedDifficulty]?.name} Challenge
+              </h1>
+              <div className="flex items-center justify-center mt-2">
+                <span className="text-2xl mr-2">{BOT_DIFFICULTIES[selectedDifficulty]?.avatar}</span>
+                <span className={`font-semibold ${BOT_DIFFICULTIES[selectedDifficulty]?.color}`}>
+                  {selectedDifficulty.toUpperCase()}
+                </span>
+              </div>
+            </div>
+
+            {/* Controls */}
+            <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
+              <div className="flex items-center gap-2">
+                <Clock className={`w-5 h-5 ${theme.text}`} />
+                <select
+                  value={testDuration}
+                  onChange={(e) => {
+                    const newDuration = Number(e.target.value);
+                    setTestDuration(newDuration);
+                    setTimeLeft(newDuration);
+                    if (timerRef.current) {
+                      clearInterval(timerRef.current);
+                      timerRef.current = null;
+                    }
+                    targetTimeRef.current = null;
+                  }}
+                  className={`px-3 py-2 rounded-lg border ${theme.cardBorder} ${theme.card} ${theme.text}`}
+                  disabled={isActive}
+                >
+                  <option value={10}>10 seconds</option>
+                  <option value={30}>30 seconds</option>
+                  <option value={60}>1 minute</option>
+                  <option value={120}>2 minutes</option>
+                  <option value={300}>5 minutes</option>
+                </select>
+              </div>
+              
+              <button
+                onClick={resetTest}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              >
+                <RotateCcw className="w-4 h-4" />
+                Reset
+              </button>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <StatsCard theme={currentTheme} icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
+              <StatsCard theme={currentTheme} icon={Target} label="WPM" value={wpm} color="green" />
+              <StatsCard theme={currentTheme} icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
+              <StatsCard theme={currentTheme} icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
+            </div>
+
+            {/* Start prompt */}
+            {!isStarted && (
+              <div className="text-center mb-8">
+                <p className={`text-2xl animate-pulse ${theme.text}`}>
+                  Press any key to start typing...
+                </p>
+              </div>
+            )}
+
+            {/* Text display */}
+            <div className="mb-8">
+              <div
+                ref={textRef}
+                className="glass-card rounded-xl p-6 shadow-lg max-h-64 overflow-x-auto"
+                data-theme={currentTheme}
+                style={{
+                  pointerEvents: 'none',
+                }}
+              >
+                <div className="text-xl md:text-2xl leading-relaxed font-mono text-center whitespace-nowrap">
+                  {currentText.split('').map((char, index) => (
+                    <span
+                      key={index}
+                      ref={index === currentIndex ? activeCharRef : null}
+                      className={`${getCharStyle(index)} px-0.5 rounded transition-colors duration-150`}
+                    >
+                      {char}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Virtual keyboard or Chart */}
+            <div className="mb-8">
+              {isFinished ? (<>
+                {/* Progress Chart */}
+                <div className="glass-card rounded-xl p-6 shadow-lg md:max-w-[700px] mx-auto mb-6" data-theme={currentTheme}>
+                  <h3 className={`text-xl font-bold mb-4 text-center bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
+                    Progress Chart (WPM every 5 seconds)
+                  </h3>
+                  {(() => {
+                    // Build x-axis: 0, 5, 10, ..., testDuration
+                    const interval = 5;
+                    const times = [];
+                    for (let t = 0; t <= testDuration; t += interval) times.push(t);
+                    // Map progressData to a dict for fast lookup
+                    const wpmMap = {};
+                    progressData.forEach(d => { wpmMap[d.time] = d.wpm; });
+                    // Build y-axis: for each time, use the closest previous WPM value
+                    let lastWpm = 0;
+                    const wpmPoints = times.map(t => {
+                      if (wpmMap.hasOwnProperty(t)) lastWpm = wpmMap[t];
+                      return lastWpm;
+                    });
+                    // If no data, show message
+                    if (wpmPoints.length <= 1) {
+                      return <div className={`text-center ${theme.text}`}>Not enough data to display chart.</div>;
+                    }
+                    return (
+                      <Line
+                        data={{
+                          labels: times.map(t => `${t}s`),
+                          datasets: [
+                            {
+                              label: 'WPM',
+                              data: wpmPoints,
+                              borderColor: theme.chartText,
+                              backgroundColor: theme.chartGrid,
+                              pointBackgroundColor: theme.chartText,
+                              tension: 0.3,
+                              borderWidth: 3,
+                            },
+                          ],
+                        }}
+                        options={{
+                          responsive: true,
+                          plugins: {
+                            legend: { display: false },
+                            title: { display: false },
+                          },
+                          scales: {
+                            x: {
+                                title: { display: true, text: 'Time (s)', color: theme.chartText },
+                              ticks: { color: theme.chartText },
+                              grid: { color: theme.chartGrid },
+                            },
+                            y: {
+                              title: { display: true, text: 'WPM', color: theme.chartText },
+                              ticks: { color: theme.chartText },
+                              grid: { color: theme.chartGrid },
+                              beginAtZero: true,
+                            },
+                          },
+                        }}
+                        height={220}
+                      />
+                    );
+                  })()}
+                </div>
+
+                {/* Performance Charts */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  {/* Bar Chart - Performance Metrics */}
+                  <div className="glass-card rounded-xl p-6 shadow-lg" data-theme={currentTheme}>
+                    <h3 className={`text-lg font-bold mb-4 text-center bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
+                      Performance Metrics
+                    </h3>
+                    <Bar
+                      data={{
+                        labels: ['WPM', 'Accuracy', 'Correct', 'Mistakes'],
+                        datasets: [
+                          {
+                            label: 'Score',
+                            data: [wpm, accuracy, correctChars, mistakes],
+                            backgroundColor: [
+                              theme.chartText,
+                              theme.chartText,
+                              theme.chartText,
+                              theme.chartText,
+                            ],
+                            borderColor: theme.chartText,
+                            borderWidth: 2,
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        plugins: {
+                          legend: { display: false },
+                          title: { display: false },
+                        },
+                        scales: {
+                          x: {
+                            ticks: { color: theme.chartText },
+                            grid: { color: theme.chartGrid },
+                          },
+                          y: {
+                            ticks: { color: theme.chartText },
+                            grid: { color: theme.chartGrid },
+                            beginAtZero: true,
+                          },
+                        },
+                      }}
+                      height={200}
+                    />
+                  </div>
+
+                  {/* Pie Chart - Accuracy Breakdown */}
+                  <div className="glass-card rounded-xl p-6 shadow-lg" data-theme={currentTheme}>
+                    <h3 className={`text-lg font-bold mb-4 text-center bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
+                      Accuracy Breakdown
+                    </h3>
+                    <Pie
+                      data={{
+                        labels: ['Correct', 'Incorrect'],
+                        datasets: [
+                          {
+                            data: [correctChars, mistakes],
+                            backgroundColor: [
+                              theme.chartText,
+                              '#ef4444', // Red for mistakes
+                            ],
+                            borderColor: theme.chartText,
+                            borderWidth: 2,
+                          },
+                        ],
+                      }}
+                      options={{
+                        responsive: true,
+                        plugins: {
+                          legend: {
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                              color: theme.chartText,
+                              font: {
+                                size: 12,
+                              },
+                            },
+                          },
+                          title: { display: false },
+                        },
+                      }}
+                      height={200}
+                    />
+                  </div>
+                </div>
+              </>) : (
+                <VirtualKeyboard
+                  pressedKey={pressedKey}
+                  isCorrect={isCorrectKey}
+                  isIncorrect={isIncorrectKey}
+                  theme={currentTheme}
+                />
+              )}
+            </div>
+
+            {/* Results */}
+            {isFinished && (
+              <div className="glass-card rounded-xl p-6 shadow-lg" data-theme={currentTheme}>
+                <h2 className={`text-2xl font-extrabold text-center mb-6 bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
+                  Test Complete! 🎉
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="text-center">
+                    <div className={`text-3xl font-extrabold drop-shadow-lg ${theme.statsValue}`}>{wpm}</div>
+                    <div className={`text-sm ${theme.text}`}>WPM</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-3xl font-extrabold drop-shadow-lg ${theme.statsValue}`}>{accuracy}%</div>
+                    <div className={`text-sm ${theme.text}`}>Accuracy</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-3xl font-extrabold drop-shadow-lg ${theme.statsValue}`}>{correctChars}</div>
+                    <div className={`text-sm ${theme.text}`}>Correct</div>
+                  </div>
+                  <div className="text-center">
+                    <div className={`text-3xl font-extrabold drop-shadow-lg ${theme.statsValue}`}>{mistakes}</div>
+                    <div className={`text-sm ${theme.text}`}>Mistakes</div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
-          <div className="flex items-center gap-2">
-            <Clock className={`w-5 h-5 ${theme.text}`} />
-            <select
-              value={testDuration}
-              onChange={(e) => {
-                const newDuration = Number(e.target.value);
-                setTestDuration(newDuration);
-                setTimeLeft(newDuration);
-                if (timerRef.current) {
-                  clearInterval(timerRef.current);
-                  timerRef.current = null;
-                }
-                targetTimeRef.current = null;
-              }}
-              className={`px-3 py-2 rounded-lg border ${theme.cardBorder} ${theme.card} ${theme.text}`}
-              disabled={isActive}
-            >
-              <option value={10}>10 seconds</option>
-              <option value={30}>30 seconds</option>
-              <option value={60}>1 minute</option>
-              <option value={120}>2 minutes</option>
-              <option value={300}>5 minutes</option>
-            </select>
-          </div>
-          
-          <button
-            onClick={resetTest}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Reset
-          </button>
+        {/* Desktop Leaderboard - Fixed on right side */}
+        <div className="hidden lg:block fixed right-4 top-1/2 transform -translate-y-1/2 w-80 z-50">
+          {selectedDifficulty && bots.length > 0 && isStarted && !isFinished && (
+            <RealTimeLeaderboard 
+              darkMode={darkMode}
+              bots={bots}
+              selectedDifficulty={selectedDifficulty}
+              theme={currentTheme}
+              isStarted={isStarted}
+              isFinished={isFinished}
+              currentText={currentText}
+              userWpm={wpm}
+              userAccuracy={accuracy}
+              userProgress={(currentIndex / currentText.length) * 100}
+            />
+          )}
         </div>
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatsCard theme={currentTheme} icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
-          <StatsCard theme={currentTheme} icon={Target} label="WPM" value={wpm} color="green" />
-          <StatsCard theme={currentTheme} icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
-          <StatsCard theme={currentTheme} icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
-        </div>
-
-        {/* Mobile Dashboard */}
-        {selectedDifficulty && bots.length > 0 && (
-          <MobileDashboard 
-            darkMode={darkMode}
-            bots={bots}
-            selectedDifficulty={selectedDifficulty}
-            theme={currentTheme}
-            isStarted={isStarted}
-            isFinished={isFinished}
-            currentText={currentText}
-          />
-        )}
-
-        {/* Real-time Leaderboard */}
+      {/* Mobile Leaderboard - Fixed at bottom */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 p-4">
         {selectedDifficulty && bots.length > 0 && isStarted && !isFinished && (
           <RealTimeLeaderboard 
             darkMode={darkMode}
@@ -1470,232 +1711,6 @@ const BotTypingInterface = ({darkMode}) => {
             userAccuracy={accuracy}
             userProgress={(currentIndex / currentText.length) * 100}
           />
-        )}
-
-        {/* Start prompt */}
-        {!isStarted && (
-          <div className="text-center mb-8">
-            <p className={`text-2xl animate-pulse ${theme.text}`}>
-              Press any key to start typing...
-            </p>
-          </div>
-        )}
-
-        {/* Text display */}
-        <div className="mb-8">
-          <div
-            ref={textRef}
-            className="glass-card rounded-xl p-6 shadow-lg max-h-64"
-            data-theme={currentTheme}
-            style={{
-              overflow: 'hidden',
-              pointerEvents: 'none',
-            }}
-          >
-            <div className="text-xl md:text-2xl leading-relaxed font-mono text-center">
-              {currentText.split('').map((char, index) => (
-                <span
-                  key={index}
-                  ref={index === currentIndex ? activeCharRef : null}
-                  className={`${getCharStyle(index)} px-0.5 rounded transition-colors duration-150`}
-                >
-                  {char}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Virtual keyboard or Chart */}
-        <div className="mb-8">
-          {isFinished ? (<>
-            {/* Progress Chart */}
-            <div className="glass-card rounded-xl p-6 shadow-lg md:max-w-[700px] mx-auto mb-6" data-theme={currentTheme}>
-              <h3 className={`text-xl font-bold mb-4 text-center bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
-                Progress Chart (WPM every 5 seconds)
-              </h3>
-              {(() => {
-                // Build x-axis: 0, 5, 10, ..., testDuration
-                const interval = 5;
-                const times = [];
-                for (let t = 0; t <= testDuration; t += interval) times.push(t);
-                // Map progressData to a dict for fast lookup
-                const wpmMap = {};
-                progressData.forEach(d => { wpmMap[d.time] = d.wpm; });
-                // Build y-axis: for each time, use the closest previous WPM value
-                let lastWpm = 0;
-                const wpmPoints = times.map(t => {
-                  if (wpmMap.hasOwnProperty(t)) lastWpm = wpmMap[t];
-                  return lastWpm;
-                });
-                // If no data, show message
-                if (wpmPoints.length <= 1) {
-                  return <div className={`text-center ${theme.text}`}>Not enough data to display chart.</div>;
-                }
-                return (
-                  <Line
-                    data={{
-                      labels: times.map(t => `${t}s`),
-                      datasets: [
-                        {
-                          label: 'WPM',
-                          data: wpmPoints,
-                          borderColor: theme.chartText,
-                          backgroundColor: theme.chartGrid,
-                          pointBackgroundColor: theme.chartText,
-                          tension: 0.3,
-                          borderWidth: 3,
-                        },
-                      ],
-                    }}
-                    options={{
-                      responsive: true,
-                      plugins: {
-                        legend: { display: false },
-                        title: { display: false },
-                      },
-                      scales: {
-                        x: {
-                            title: { display: true, text: 'Time (s)', color: theme.chartText },
-                          ticks: { color: theme.chartText },
-                          grid: { color: theme.chartGrid },
-                        },
-                        y: {
-                          title: { display: true, text: 'WPM', color: theme.chartText },
-                          ticks: { color: theme.chartText },
-                          grid: { color: theme.chartGrid },
-                          beginAtZero: true,
-                        },
-                      },
-                    }}
-                    height={220}
-                  />
-                );
-              })()}
-            </div>
-
-            {/* Performance Charts */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              {/* Bar Chart - Performance Metrics */}
-              <div className="glass-card rounded-xl p-6 shadow-lg" data-theme={currentTheme}>
-                <h3 className={`text-lg font-bold mb-4 text-center bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
-                  Performance Metrics
-                </h3>
-                <Bar
-                  data={{
-                    labels: ['WPM', 'Accuracy', 'Correct', 'Mistakes'],
-                    datasets: [
-                      {
-                        label: 'Score',
-                        data: [wpm, accuracy, correctChars, mistakes],
-                        backgroundColor: [
-                          theme.chartText,
-                          theme.chartText,
-                          theme.chartText,
-                          theme.chartText,
-                        ],
-                        borderColor: theme.chartText,
-                        borderWidth: 2,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    plugins: {
-                      legend: { display: false },
-                      title: { display: false },
-                    },
-                    scales: {
-                      x: {
-                        ticks: { color: theme.chartText },
-                        grid: { color: theme.chartGrid },
-                      },
-                      y: {
-                        ticks: { color: theme.chartText },
-                        grid: { color: theme.chartGrid },
-                        beginAtZero: true,
-                      },
-                    },
-                  }}
-                  height={200}
-                />
-              </div>
-
-              {/* Pie Chart - Accuracy Breakdown */}
-              <div className="glass-card rounded-xl p-6 shadow-lg" data-theme={currentTheme}>
-                <h3 className={`text-lg font-bold mb-4 text-center bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
-                  Accuracy Breakdown
-                </h3>
-                <Pie
-                  data={{
-                    labels: ['Correct', 'Incorrect'],
-                    datasets: [
-                      {
-                        data: [correctChars, mistakes],
-                        backgroundColor: [
-                          theme.chartText,
-                          '#ef4444', // Red for mistakes
-                        ],
-                        borderColor: theme.chartText,
-                        borderWidth: 2,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    plugins: {
-                      legend: {
-                        display: true,
-                        position: 'bottom',
-                        labels: {
-                          color: theme.chartText,
-                          font: {
-                            size: 12,
-                          },
-                        },
-                      },
-                      title: { display: false },
-                    },
-                  }}
-                  height={200}
-                />
-              </div>
-            </div>
-          </>) : (
-            <VirtualKeyboard
-              pressedKey={pressedKey}
-              isCorrect={isCorrectKey}
-              isIncorrect={isIncorrectKey}
-              theme={currentTheme}
-            />
-          )}
-        </div>
-
-        {/* Results */}
-        {isFinished && (
-          <div className="glass-card rounded-xl p-6 shadow-lg" data-theme={currentTheme}>
-            <h2 className={`text-2xl font-extrabold text-center mb-6 bg-clip-text text-transparent drop-shadow-lg ${theme.title}`}>
-              Test Complete! 🎉
-            </h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className={`text-3xl font-extrabold drop-shadow-lg ${theme.statsValue}`}>{wpm}</div>
-                <div className={`text-sm ${theme.text}`}>WPM</div>
-              </div>
-              <div className="text-center">
-                <div className={`text-3xl font-extrabold drop-shadow-lg ${theme.statsValue}`}>{accuracy}%</div>
-                <div className={`text-sm ${theme.text}`}>Accuracy</div>
-              </div>
-              <div className="text-center">
-                <div className={`text-3xl font-extrabold drop-shadow-lg ${theme.statsValue}`}>{correctChars}</div>
-                <div className={`text-sm ${theme.text}`}>Correct</div>
-              </div>
-              <div className="text-center">
-                <div className={`text-3xl font-extrabold drop-shadow-lg ${theme.statsValue}`}>{mistakes}</div>
-                <div className={`text-sm ${theme.text}`}>Mistakes</div>
-              </div>
-            </div>
-          </div>
         )}
       </div>
     </div>
