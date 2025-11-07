@@ -20,13 +20,13 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
-    
+
     const allowedOrigins = [
       "https://typing-webapp-frountend.onrender.com",
       'https://typing-webapp-frountend.onrender.com',
       'http://localhost:5173',
     ];
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -61,7 +61,52 @@ const server = http.createServer(app);
 // Initialize Socket.IO
 initSocket(server);
 
+
+
+
+
+
+
 // Start the server
 server.listen(PORT_NO, () => {
   console.log(`Server is running on port ${PORT_NO}`);
 });
+
+// Keep-alive functionality to prevent server from sleeping
+const https = require('https');
+
+// Set your deployed backend URL here
+const KEEP_ALIVE_URL = process.env.KEEP_ALIVE_URL || `http://localhost:${PORT_NO}`;
+
+function pingKeepAlive() {
+  try {
+    if (typeof fetch === 'function') {
+      fetch(KEEP_ALIVE_URL)
+        .then(() => console.log(`Pinged ${KEEP_ALIVE_URL} to stay awake`))
+        .catch(err => console.error(`Ping failed (${KEEP_ALIVE_URL}):`, err));
+      return;
+    }
+
+    const parsed = new URL(KEEP_ALIVE_URL);
+    const lib = parsed.protocol === 'https:' ? https : http;
+
+    const req = lib.get(parsed, (res) => {
+      res.on('data', () => { });
+      res.on('end', () => console.log(`Pinged ${KEEP_ALIVE_URL} [status: ${res.statusCode}]`));
+    });
+
+    req.on('error', (err) => console.error(`Ping failed (${KEEP_ALIVE_URL}):`, err));
+    req.setTimeout(5000, () => {
+      req.abort();
+    });
+  } catch (err) {
+    console.error('Ping keep-alive error:', err);
+  }
+}
+
+// Start keep-alive pings (every 7 minutes)
+if (process.env.NODE_ENV === 'production') {
+  console.log('Keep-alive service started');
+  pingKeepAlive();
+  setInterval(pingKeepAlive, 7 * 60 * 1000);
+}
