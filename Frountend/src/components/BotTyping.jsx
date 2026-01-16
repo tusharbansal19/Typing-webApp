@@ -149,11 +149,11 @@ const BOT_DIFFICULTIES = {
 };
 
 // Text samples for typing test
-const TEXT_SAMPLES = [  
-"this is a very extensive string composed of random words and phrases designed to meet your specific length requirement it continues to grow with various vocabulary choices ensuring it surpasses the five hundred character mark without using any punctuation whatsoever only lowercase letters and spaces are present throughout its entirety providing a continuous flow of text for your needs we are carefully adding more words to increase its overall length making sure it remains well above your requested minimum this paragraph demonstrates a large block of text suitable for many applications where a long character sequence without special symbols is desired it keeps going and going with more random words and less meaning sometimes just for the sake of length and character count validation we hope this extended passage serves its purpose effectively this is a very extensive string composed of random words and phrases designed to meet your specific length requirement it continues to grow with various vocabulary choices ensuring it surpasses the five hundred character mark without using any punctuation whatsoever only lowercase letters and spaces are present throughout its entirety providing a continuous flow of text for your needs we are carefully adding more words to increase its overall length making sure it remains well above your requested minimum this paragraph demonstrates a large block of text suitable for many applications where a long character sequence without special symbols is desired it keeps going and going with more random words and less meaning sometimes just for the sake of length and character count validation we hope this extended passage serves its purpose effectively",
-"learning new things is always an exciting adventure expanding your knowledge and understanding of the world around you every book you read every skill you acquire adds another layer to your personal growth and development the process of discovery can be incredibly rewarding opening up new perspectives and challenging your existing beliefs it encourages critical thinking and creativity allowing you to approach problems from different angles and find innovative solutions practice and persistence are key components in mastering any new subject or ability as consistent effort often leads to significant progress over time embracing mistakes as learning opportunities helps you refine your approach and build resilience the journey of continuous learning is endless with countless subjects and disciplines waiting to be explored it fosters curiosity and a lifelong passion for gaining insights into various fields whether it is science art history or technology there is always something fascinating to delve into and comprehend the more you learn the more you realize how much more there is to know which only fuels your desire for further exploration and intellectual enrichment making life a constant classroom of endless possibilities and exciting discoveries for every curious mind that seeks knowledge and understanding",
-"a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed",
-"a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed"];
+const TEXT_SAMPLES = [
+  "this is a very extensive string composed of random words and phrases designed to meet your specific length requirement it continues to grow with various vocabulary choices ensuring it surpasses the five hundred character mark without using any punctuation whatsoever only lowercase letters and spaces are present throughout its entirety providing a continuous flow of text for your needs we are carefully adding more words to increase its overall length making sure it remains well above your requested minimum this paragraph demonstrates a large block of text suitable for many applications where a long character sequence without special symbols is desired it keeps going and going with more random words and less meaning sometimes just for the sake of length and character count validation we hope this extended passage serves its purpose effectively this is a very extensive string composed of random words and phrases designed to meet your specific length requirement it continues to grow with various vocabulary choices ensuring it surpasses the five hundred character mark without using any punctuation whatsoever only lowercase letters and spaces are present throughout its entirety providing a continuous flow of text for your needs we are carefully adding more words to increase its overall length making sure it remains well above your requested minimum this paragraph demonstrates a large block of text suitable for many applications where a long character sequence without special symbols is desired it keeps going and going with more random words and less meaning sometimes just for the sake of length and character count validation we hope this extended passage serves its purpose effectively",
+  "learning new things is always an exciting adventure expanding your knowledge and understanding of the world around you every book you read every skill you acquire adds another layer to your personal growth and development the process of discovery can be incredibly rewarding opening up new perspectives and challenging your existing beliefs it encourages critical thinking and creativity allowing you to approach problems from different angles and find innovative solutions practice and persistence are key components in mastering any new subject or ability as consistent effort often leads to significant progress over time embracing mistakes as learning opportunities helps you refine your approach and build resilience the journey of continuous learning is endless with countless subjects and disciplines waiting to be explored it fosters curiosity and a lifelong passion for gaining insights into various fields whether it is science art history or technology there is always something fascinating to delve into and comprehend the more you learn the more you realize how much more there is to know which only fuels your desire for further exploration and intellectual enrichment making life a constant classroom of endless possibilities and exciting discoveries for every curious mind that seeks knowledge and understanding",
+  "a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed",
+  "a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed"];
 // AI Bot class to simulate realistic typing
 class BotAI {
   constructor(difficulty, name) {
@@ -164,7 +164,7 @@ class BotAI {
     this.startTime = null;
     this.isActive = false;
     this.typingSpeed = this.getTypingSpeed();
-    this.accuracy = this.getAccuracy();
+    this.accuracy = this.generateTargetAccuracy();
     this.delay = this.getDelay();
     this.startDelay = BOT_DIFFICULTIES[difficulty].startDelay;
     this.hasStarted = false;
@@ -176,7 +176,7 @@ class BotAI {
     return Math.random() * (range[1] - range[0]) + range[0];
   }
 
-  getAccuracy() {
+  generateTargetAccuracy() {
     const range = BOT_DIFFICULTIES[this.difficulty].accuracyRange;
     return Math.random() * (range[1] - range[0]) + range[0];
   }
@@ -192,7 +192,7 @@ class BotAI {
     this.currentIndex = 0;
     this.mistakes = 0;
     this.hasStarted = false;
-    
+
     // Start typing after the specified delay
     setTimeout(() => {
       this.hasStarted = true;
@@ -206,7 +206,7 @@ class BotAI {
 
     const currentChar = text[this.currentIndex];
     const shouldMakeMistake = Math.random() > this.accuracy / 100;
-    
+
     if (shouldMakeMistake && this.currentIndex < text.length - 1) {
       this.mistakes++;
       // Make more realistic mistakes (similar characters)
@@ -216,7 +216,7 @@ class BotAI {
         'h': 'g', 'j': 'k', 'k': 'j', 'l': 'k', 'z': 'x', 'x': 'z',
         'c': 'v', 'v': 'c', 'b': 'v', 'n': 'm', 'm': 'n'
       };
-      
+
       const similarChar = similarChars[currentChar] || 'a';
       return similarChar;
     }
@@ -252,14 +252,14 @@ const VerticalDashboard = ({ darkMode, bots, selectedDifficulty, theme, isStarte
   // Ensure theme is valid, fallback to 'light' if not
   const currentTheme = THEMES[theme] ? theme : 'light';
   const themeObj = THEMES[currentTheme];
-  
+
   return (
     <div className={`fixed right-4 top-1/2 transform -translate-y-1/2 w-80 glass-card rounded-xl p-4 shadow-lg z-50 hidden lg:block`} data-theme={currentTheme}>
       <h3 className={`text-lg font-bold mb-4 text-center bg-clip-text text-transparent drop-shadow-lg ${themeObj.title}`}>
         <Trophy className="inline w-5 h-5 mr-2" />
         Live Dashboard
       </h3>
-      
+
       {selectedDifficulty && bots.length > 0 && (
         <div className="space-y-4">
           {/* Bot Progress */}
@@ -275,7 +275,7 @@ const VerticalDashboard = ({ darkMode, bots, selectedDifficulty, theme, isStarte
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 mb-1">
-                <div 
+                <div
                   className={`h-1.5 rounded-full transition-all duration-300 ${BOT_DIFFICULTIES[selectedDifficulty]?.color.replace('text-', 'bg-')}`}
                   style={{ width: `${(bot.getProgress() / currentText.length) * 100}%` }}
                 ></div>
@@ -290,30 +290,30 @@ const VerticalDashboard = ({ darkMode, bots, selectedDifficulty, theme, isStarte
               </div>
             </div>
           ))}
-          
+
           {/* Difficulty Info */}
-                      <div className={`p-3 rounded-lg border ${darkMode ? 'bg-gray-800/50 border-gray-600/30' : 'bg-gray-100/50 border-gray-200/30'}`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className={`font-semibold text-sm ${themeObj.text}`}>Difficulty</span>
-                <span className={`text-xs font-bold ${BOT_DIFFICULTIES[selectedDifficulty]?.color}`}>
-                  {selectedDifficulty.toUpperCase()}
+          <div className={`p-3 rounded-lg border ${darkMode ? 'bg-gray-800/50 border-gray-600/30' : 'bg-gray-100/50 border-gray-200/30'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <span className={`font-semibold text-sm ${themeObj.text}`}>Difficulty</span>
+              <span className={`text-xs font-bold ${BOT_DIFFICULTIES[selectedDifficulty]?.color}`}>
+                {selectedDifficulty.toUpperCase()}
+              </span>
+            </div>
+            <div className="text-xs space-y-1">
+              <div className="flex justify-between">
+                <span className={themeObj.text}>WPM Range:</span>
+                <span className={themeObj.text}>
+                  {BOT_DIFFICULTIES[selectedDifficulty]?.wpmRange[0]}-{BOT_DIFFICULTIES[selectedDifficulty]?.wpmRange[1]}
                 </span>
               </div>
-              <div className="text-xs space-y-1">
-                <div className="flex justify-between">
-                  <span className={themeObj.text}>WPM Range:</span>
-                  <span className={themeObj.text}>
-                    {BOT_DIFFICULTIES[selectedDifficulty]?.wpmRange[0]}-{BOT_DIFFICULTIES[selectedDifficulty]?.wpmRange[1]}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className={themeObj.text}>Accuracy:</span>
-                  <span className={themeObj.text}>
-                    {BOT_DIFFICULTIES[selectedDifficulty]?.accuracyRange[0]}%-{BOT_DIFFICULTIES[selectedDifficulty]?.accuracyRange[1]}%
-                  </span>
-                </div>
+              <div className="flex justify-between">
+                <span className={themeObj.text}>Accuracy:</span>
+                <span className={themeObj.text}>
+                  {BOT_DIFFICULTIES[selectedDifficulty]?.accuracyRange[0]}%-{BOT_DIFFICULTIES[selectedDifficulty]?.accuracyRange[1]}%
+                </span>
               </div>
             </div>
+          </div>
         </div>
       )}
     </div>
@@ -325,9 +325,9 @@ const RealTimeLeaderboard = ({ darkMode, bots, selectedDifficulty, theme, isStar
   // Ensure theme is valid, fallback to 'light' if not
   const currentTheme = THEMES[theme] ? theme : 'light';
   const themeObj = THEMES[currentTheme];
-  
+
   if (!isStarted) return null;
-  
+
   const userResult = {
     name: 'You',
     avatar: '👤',
@@ -336,7 +336,7 @@ const RealTimeLeaderboard = ({ darkMode, bots, selectedDifficulty, theme, isStar
     progress: userProgress,
     isUser: true
   };
-  
+
   const botResults = bots.map(bot => ({
     name: bot.name,
     avatar: BOT_DIFFICULTIES[selectedDifficulty]?.avatar,
@@ -345,23 +345,22 @@ const RealTimeLeaderboard = ({ darkMode, bots, selectedDifficulty, theme, isStar
     progress: (bot.getProgress() / currentText.length) * 100,
     isUser: false
   }));
-  
+
   const allResults = [...botResults, userResult].sort((a, b) => b.wpm - a.wpm);
-  
+
   return (
     <div className={`w-full max-w-2xl mx-auto glass-card rounded-xl p-4 shadow-lg mb-6`} data-theme={currentTheme}>
       <h3 className={`text-lg font-bold mb-4 text-center bg-clip-text text-transparent drop-shadow-lg ${themeObj.title}`}>
         <Trophy className="inline w-5 h-5 mr-2" />
         Live Leaderboard
       </h3>
-      
+
       <div className="space-y-3">
         {allResults.map((result, index) => (
-          <div key={result.name} className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-            index === 0 ? 'bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-500/50' :
+          <div key={result.name} className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${index === 0 ? 'bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-500/50' :
             index === 1 ? 'bg-gradient-to-r from-gray-400/20 to-gray-600/20 border border-gray-500/50' :
-            darkMode ? 'bg-gray-700/50 border border-gray-600/30' : 'bg-gray-100/50 border border-gray-200/30'
-          }`}>
+              darkMode ? 'bg-gray-700/50 border border-gray-600/30' : 'bg-gray-100/50 border border-gray-200/30'
+            }`}>
             <div className="flex items-center space-x-3">
               <div className="flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-sm">
                 {index + 1}
@@ -399,14 +398,14 @@ const MobileDashboard = ({ darkMode, bots, selectedDifficulty, theme, isStarted,
   // Ensure theme is valid, fallback to 'light' if not
   const currentTheme = THEMES[theme] ? theme : 'light';
   const themeObj = THEMES[currentTheme];
-  
+
   return (
     <div className={`lg:hidden glass-card rounded-xl p-4 shadow-lg mb-4`} data-theme={currentTheme}>
       <h3 className={`text-lg font-bold mb-3 text-center bg-clip-text text-transparent drop-shadow-lg ${themeObj.title}`}>
         <Trophy className="inline w-5 h-5 mr-2" />
         Live Progress
       </h3>
-      
+
       {selectedDifficulty && bots.length > 0 && (
         <div className="space-y-3">
           {/* Bot Progress */}
@@ -422,7 +421,7 @@ const MobileDashboard = ({ darkMode, bots, selectedDifficulty, theme, isStarted,
                 </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2 dark:bg-gray-700 mb-1">
-                <div 
+                <div
                   className={`h-2 rounded-full transition-all duration-300 ${BOT_DIFFICULTIES[selectedDifficulty]?.color.replace('text-', 'bg-')}`}
                   style={{ width: `${(bot.getProgress() / currentText.length) * 100}%` }}
                 ></div>
@@ -446,21 +445,20 @@ const MobileDashboard = ({ darkMode, bots, selectedDifficulty, theme, isStarted,
 // Bot Leaderboard Component
 const BotLeaderboard = ({ darkMode, botResults, userResult, theme }) => {
   const allResults = [...botResults, userResult].filter(result => result).sort((a, b) => b.wpm - a.wpm);
-  
+
   return (
     <div className={`w-full max-w-2xl mx-auto glass-card rounded-xl p-6 shadow-lg relative`} data-theme={theme}>
       <h3 className={`text-2xl font-bold mb-4 text-center bg-clip-text text-transparent drop-shadow-lg ${THEMES[theme].title}`}>
         <Trophy className="inline w-6 h-6 mr-2" />
         Challenge Results
       </h3>
-      
+
       <div className="space-y-3">
         {allResults.map((result, index) => (
-          <div key={result.name} className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${
-            index === 0 ? 'bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-500/50' :
+          <div key={result.name} className={`flex items-center justify-between p-3 rounded-lg transition-all duration-300 ${index === 0 ? 'bg-gradient-to-r from-yellow-400/20 to-yellow-600/20 border border-yellow-500/50' :
             index === 1 ? 'bg-gradient-to-r from-gray-400/20 to-gray-600/20 border border-gray-500/50' :
-            darkMode ? 'bg-gray-700/50 border border-gray-600/30' : 'bg-gray-100/50 border border-gray-200/30'
-          }`}>
+              darkMode ? 'bg-gray-700/50 border border-gray-600/30' : 'bg-gray-100/50 border border-gray-200/30'
+            }`}>
             <div className="flex items-center space-x-3">
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold">
                 {index + 1}
@@ -500,19 +498,18 @@ const DifficultySelector = ({ darkMode, selectedDifficulty, onDifficultySelect, 
       <h2 className={`text-3xl font-bold mb-6 text-center bg-clip-text text-transparent drop-shadow-lg ${THEMES[theme].title}`}>
         Choose Your Challenge
       </h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {Object.entries(BOT_DIFFICULTIES).map(([key, difficulty]) => (
           <div
             key={key}
             onClick={() => onDifficultySelect(key)}
-            className={`cursor-pointer p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${
-              selectedDifficulty === key
-                ? `${difficulty.borderColor} ${difficulty.bgColor}`
-                : darkMode
+            className={`cursor-pointer p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 ${selectedDifficulty === key
+              ? `${difficulty.borderColor} ${difficulty.bgColor}`
+              : darkMode
                 ? 'border-gray-600/30 bg-gray-700/30 hover:bg-gray-600/30'
                 : 'border-gray-200/50 bg-gray-100/30 hover:bg-gray-200/50'
-            }`}
+              }`}
           >
             <div className="text-center">
               <div className="text-4xl mb-3">{difficulty.avatar}</div>
@@ -553,7 +550,7 @@ const KeyboardKey = ({ keyChar, isPressed, isCorrect, isIncorrect, theme }) => {
       if (isIncorrect) return 'bg-red-500/90 text-white shadow-[0_0_12px_4px_rgba(239,68,68,0.3)] transform scale-95';
       return 'bg-yellow-400/90 text-black shadow-[0_0_12px_4px_rgba(253,224,71,0.3)] transform scale-95';
     }
-    
+
     // Theme-specific key styles
     switch (theme) {
       case 'hacker':
@@ -588,7 +585,7 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect, theme }) => {
       if (isIncorrect) return 'bg-red-400/80 text-white shadow-[0_0_8px_2px_rgba(239,68,68,0.7)]';
       return 'bg-yellow-300/80 text-black shadow-[0_0_8px_2px_rgba(253,224,71,0.7)]';
     }
-    
+
     // Theme-specific spacebar styles
     switch (theme) {
       case 'hacker':
@@ -606,12 +603,11 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect, theme }) => {
     <div className="glass-card rounded-xl p-6 shadow-lg mb-8" data-theme={theme}>
       <div className="flex items-center justify-center mb-4">
         <Keyboard className={`w-6 h-6 mr-2 ${theme === 'hacker' ? 'text-green-400' : theme === 'neon' ? 'text-pink-400' : theme === 'dark' ? 'text-blue-200' : 'text-blue-600'} drop-shadow-lg`} />
-        <h3 className={`text-lg font-bold bg-clip-text text-transparent drop-shadow-lg ${
-          theme === 'hacker' ? 'bg-gradient-to-r from-green-400 to-cyan-400' :
+        <h3 className={`text-lg font-bold bg-clip-text text-transparent drop-shadow-lg ${theme === 'hacker' ? 'bg-gradient-to-r from-green-400 to-cyan-400' :
           theme === 'neon' ? 'bg-gradient-to-r from-pink-400 to-cyan-400' :
-          theme === 'dark' ? 'bg-gradient-to-r from-blue-200 to-purple-300' :
-          'bg-gradient-to-r from-blue-600 to-purple-500'
-        }`}>
+            theme === 'dark' ? 'bg-gradient-to-r from-blue-200 to-purple-300' :
+              'bg-gradient-to-r from-blue-600 to-purple-500'
+          }`}>
           Virtual Keyboard
         </h3>
       </div>
@@ -630,7 +626,7 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect, theme }) => {
             ))}
           </div>
         ))}
-        
+
         {/* Spacebar */}
         <div className="flex justify-center mt-2">
           <div
@@ -722,7 +718,7 @@ const ThemeDrawer = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
               {themes.map((themeKey) => {
                 const theme = THEMES[themeKey];
                 const isActive = currentTheme === themeKey;
-                
+
                 return (
                   <button
                     key={themeKey}
@@ -730,11 +726,10 @@ const ThemeDrawer = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
                       onThemeChange(themeKey);
                       onClose(false);
                     }}
-                    className={`w-full px-3 py-2 text-left text-sm font-medium transition-colors  text-black duration-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                      isActive 
-                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
-                        : 'text-gray-700 dark:text-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 text-left text-sm font-medium transition-colors  text-black duration-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${isActive
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                      : 'text-gray-700 dark:text-gray-300'
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <span>{theme.name}</span>
@@ -759,9 +754,9 @@ const ThemeDrawer = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
 };
 
 // Main typing interface component
-const BotTypingInterface = ({darkMode}) => {
+const BotTypingInterface = ({ darkMode }) => {
   const { userEmail, userName } = useAuth();
-  
+
   // Theme state
   const [currentTheme, setCurrentTheme] = useState(darkMode ? 'dark' : 'light');
   const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
@@ -774,22 +769,22 @@ const BotTypingInterface = ({darkMode}) => {
   const [isStarted, setIsStarted] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
 
-  
+
   // Timer state
   const [timeLeft, setTimeLeft] = useState(60);
   const [testDuration, setTestDuration] = useState(60);
-  
+
   // Statistics state
   const [wpm, setWpm] = useState(0);
   const [accuracy, setAccuracy] = useState(100);
   const [mistakes, setMistakes] = useState(0);
   const [correctChars, setCorrectChars] = useState(0);
-  
+
   // Keyboard state
   const [pressedKey, setPressedKey] = useState('');
   const [isCorrectKey, setIsCorrectKey] = useState(false);
   const [isIncorrectKey, setIsIncorrectKey] = useState(false);
-  
+
   // Bot state
   const [selectedDifficulty, setSelectedDifficulty] = useState(null);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -797,7 +792,7 @@ const BotTypingInterface = ({darkMode}) => {
   const [botResults, setBotResults] = useState([]);
   const [userResult, setUserResult] = useState(null);
   const [showDifficultySelector, setShowDifficultySelector] = useState(true);
-  
+
   // Refs
   const timerRef = useRef(null);
   const textRef = useRef(null);
@@ -878,20 +873,20 @@ const BotTypingInterface = ({darkMode}) => {
   const initializeBots = useCallback((difficulty) => {
     const botCount = 1; // Only 1 bot + 1 user = 2 total
     const newBots = [];
-    
+
     for (let i = 0; i < botCount; i++) {
       const botName = `AI Bot`;
       const bot = new BotAI(difficulty, botName);
       newBots.push(bot);
     }
-    
+
     setBots(newBots);
   }, []);
 
   // Start bot typing simulation
   const startBotTyping = useCallback((text) => {
     bots.forEach(bot => bot.startTyping(text));
-    
+
     botTimerRef.current = setInterval(() => {
       setBots(prevBots => {
         const updatedBots = prevBots.map(bot => {
@@ -904,12 +899,12 @@ const BotTypingInterface = ({darkMode}) => {
           }
           return bot;
         });
-        
+
         const allFinished = updatedBots.every(bot => bot.isFinished(text));
         if (allFinished) {
           clearInterval(botTimerRef.current);
         }
-        
+
         return updatedBots;
       });
     }, 100); // Update every 100ms for more responsive typing
@@ -921,12 +916,12 @@ const BotTypingInterface = ({darkMode}) => {
     setIsFinished(true);
     clearInterval(timerRef.current);
     clearInterval(botTimerRef.current);
-    
+
     const totalTime = (Date.now() - startTimeRef.current) / 1000;
     const wordsTyped = correctChars / 5;
     const finalWpm = Math.round((wordsTyped / totalTime) * 60);
     const finalAccuracy = Math.round(((correctChars - mistakes) / correctChars) * 100) || 100;
-    
+
     const userResultData = {
       name: userName || 'You',
       avatar: '👤',
@@ -936,7 +931,7 @@ const BotTypingInterface = ({darkMode}) => {
       difficulty: selectedDifficulty,
       isUser: true
     };
-    
+
     const botResultsData = bots.map(bot => ({
       name: bot.name,
       avatar: BOT_DIFFICULTIES[selectedDifficulty].avatar,
@@ -946,7 +941,7 @@ const BotTypingInterface = ({darkMode}) => {
       difficulty: selectedDifficulty,
       isUser: false
     }));
-    
+
     setUserResult(userResultData);
     setBotResults(botResultsData);
     setShowLeaderboard(true);
@@ -964,15 +959,15 @@ const BotTypingInterface = ({darkMode}) => {
     if (activeCharRef.current && isStarted) {
       const container = textRef.current;
       const activeElement = activeCharRef.current;
-      
+
       if (container && activeElement) {
         const containerRect = container.getBoundingClientRect();
         const elementRect = activeElement.getBoundingClientRect();
-        
+
         const elementCenter = elementRect.left + elementRect.width / 2;
         const containerCenter = containerRect.left + containerRect.width / 2;
         const offset = elementCenter - containerCenter;
-        
+
         container.scrollLeft += offset;
       }
     }
@@ -985,7 +980,7 @@ const BotTypingInterface = ({darkMode}) => {
     const currentWpm = timeElapsed > 0 ? Math.round((wordsTyped / timeElapsed) * 60) : 0;
     const totalChars = correctCharsRef.current + mistakesRef.current;
     const currentAccuracy = totalChars > 0 ? Math.round((correctCharsRef.current / totalChars) * 100) : 100;
-    
+
     setWpm(currentWpm);
     setAccuracy(currentAccuracy);
     setMistakes(mistakesRef.current);
@@ -1007,15 +1002,15 @@ const BotTypingInterface = ({darkMode}) => {
     if (isStarted && timeLeft > 0 && !timerRef.current) {
       const startTime = Date.now();
       targetTimeRef.current = startTime + (timeLeft * 1000);
-      
+
       console.log('Timer started:', { startTime, targetTime: targetTimeRef.current, timeLeft });
-      
+
       timerRef.current = setInterval(() => {
         const currentTime = Date.now();
         const remainingTime = Math.max(0, Math.ceil((targetTimeRef.current - currentTime) / 1000));
-        
+
         setTimeLeft(remainingTime);
-        
+
         if (remainingTime <= 0) {
           console.log('Timer finished');
           setIsActive(false);
@@ -1094,7 +1089,7 @@ const BotTypingInterface = ({darkMode}) => {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
@@ -1127,10 +1122,10 @@ const BotTypingInterface = ({darkMode}) => {
   useEffect(() => {
     const handleKeyPress = (event) => {
       if (isFinished) return;
-      
+
       const key = event.key;
       setPressedKey(key);
-      
+
       // Start test on first keypress
       if (!isStarted) {
         setIsStarted(true);
@@ -1141,7 +1136,7 @@ const BotTypingInterface = ({darkMode}) => {
           startBotTyping(currentText);
         }
       }
-      
+
       // Handle special keys
       if (key === 'Backspace') {
         event.preventDefault();
@@ -1157,7 +1152,7 @@ const BotTypingInterface = ({darkMode}) => {
         }
         return;
       }
-      
+
       // Handle spacebar for skipping words
       if (key === ' ' && currentIndex < currentText.length) {
         event.preventDefault();
@@ -1197,16 +1192,16 @@ const BotTypingInterface = ({darkMode}) => {
         }, 150);
         return;
       }
-      
+
       // Handle printable characters
       if (key.length === 1 && currentIndex < currentText.length) {
         event.preventDefault();
         const expectedChar = currentText[currentIndex];
         const isCorrect = key === expectedChar;
-        
+
         setInputText(prev => prev + key);
         setCurrentIndex(prev => prev + 1);
-        
+
         if (isCorrect) {
           correctCharsRef.current++;
           setIsCorrectKey(true);
@@ -1216,13 +1211,13 @@ const BotTypingInterface = ({darkMode}) => {
           setIsCorrectKey(false);
           setIsIncorrectKey(true);
         }
-        
+
         // Check if test is complete
         if (currentIndex + 1 === currentText.length) {
           finishTest();
         }
       }
-      
+
       // Clear key press visual feedback
       setTimeout(() => {
         setPressedKey('');
@@ -1242,7 +1237,7 @@ const BotTypingInterface = ({darkMode}) => {
     clearInterval(botTimerRef.current);
     timerRef.current = null;
     botTimerRef.current = null;
-    
+
     const randomText = TEXT_SAMPLES[Math.floor(Math.random() * TEXT_SAMPLES.length)];
     setCurrentText(randomText);
     setInputText('');
@@ -1266,7 +1261,7 @@ const BotTypingInterface = ({darkMode}) => {
     setIsCorrectKey(false);
     setIsIncorrectKey(false);
     setResetTrigger(prev => prev + 1); // Trigger timer reset
-    
+
     // Initialize bots if difficulty is selected
     if (selectedDifficulty) {
       initializeBots(selectedDifficulty);
@@ -1287,7 +1282,7 @@ const BotTypingInterface = ({darkMode}) => {
       if (inputText[index] === '$') {
         return theme.incorrectText;
       }
-      return inputText[index] === currentText[index] 
+      return inputText[index] === currentText[index]
         ? theme.correctText
         : theme.incorrectText;
     }
@@ -1310,10 +1305,10 @@ const BotTypingInterface = ({darkMode}) => {
               Compete against AI bots with different difficulty levels
             </p>
           </div>
-          
-          <DifficultySelector 
-            darkMode={darkMode} 
-            selectedDifficulty={selectedDifficulty} 
+
+          <DifficultySelector
+            darkMode={darkMode}
+            selectedDifficulty={selectedDifficulty}
             onDifficultySelect={setSelectedDifficulty}
             theme={currentTheme}
           />
@@ -1332,7 +1327,7 @@ const BotTypingInterface = ({darkMode}) => {
               🏆 Challenge Results
             </h1>
           </div>
-         
+
           <div className="mt-8 flex justify-center space-x-4">
             <button
               onClick={resetTest}
@@ -1432,7 +1427,7 @@ const BotTypingInterface = ({darkMode}) => {
                   <option value={300}>5 minutes</option>
                 </select>
               </div>
-              
+
               <button
                 onClick={resetTest}
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -1533,7 +1528,7 @@ const BotTypingInterface = ({darkMode}) => {
                           },
                           scales: {
                             x: {
-                                title: { display: true, text: 'Time (s)', color: theme.chartText },
+                              title: { display: true, text: 'Time (s)', color: theme.chartText },
                               ticks: { color: theme.chartText },
                               grid: { color: theme.chartGrid },
                             },
@@ -1680,7 +1675,7 @@ const BotTypingInterface = ({darkMode}) => {
         {/* Desktop Leaderboard - Fixed on right side */}
         <div className="hidden lg:block fixed right-4 top-1/2 transform -translate-y-1/2 w-80 z-50">
           {selectedDifficulty && bots.length > 0 && isStarted && !isFinished && (
-            <RealTimeLeaderboard 
+            <RealTimeLeaderboard
               darkMode={darkMode}
               bots={bots}
               selectedDifficulty={selectedDifficulty}
@@ -1699,7 +1694,7 @@ const BotTypingInterface = ({darkMode}) => {
       {/* Mobile Leaderboard - Fixed at bottom */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 p-4">
         {selectedDifficulty && bots.length > 0 && isStarted && !isFinished && (
-          <RealTimeLeaderboard 
+          <RealTimeLeaderboard
             darkMode={darkMode}
             bots={bots}
             selectedDifficulty={selectedDifficulty}

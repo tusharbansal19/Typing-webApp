@@ -48,19 +48,19 @@ function App() {
           <Route path="/signup" element={<ProtectLogin><SignUpPage /></ProtectLogin>} />
           <Route path="/login" element={<ProtectLogin><LoginPage /></ProtectLogin>} />
           <Route path="/otp" element={<ProtectLogin><OtpPage /></ProtectLogin>} />
-            <Route path="/dashboard" element={<DashBoardProtect><UserDashboard darkMode={darkMode} setDarkMode={setDarkMode} /></DashBoardProtect>} />
+          <Route path="/dashboard" element={<DashBoardProtect><UserDashboard darkMode={darkMode} setDarkMode={setDarkMode} /></DashBoardProtect>} />
 
           {/* All other pages: with navbar/footer */}
-          <Route path='/'  element={<MainLayout darkMode={darkMode}  setDarkMode={setDarkMode} />}>
-            <Route path="/" element={<Home darkMode={darkMode}/>} />
+          <Route path='/' element={<MainLayout darkMode={darkMode} setDarkMode={setDarkMode} />}>
+            <Route path="/" element={<Home darkMode={darkMode} />} />
             <Route path="/typing" element={<TypingInterface darkMode={darkMode} setDarkMode={setDarkMode} />} />
             <Route path="/bot" element={<ComppProtect><BotTypingInterface darkMode={darkMode} setDarkMode={setDarkMode} /></ComppProtect>} />
             <Route path="/host" element={<ComppProtect><HostPage darkMode={darkMode} setDarkMode={setDarkMode} /></ComppProtect>} />
             <Route path="/match/:roomName" element={<ComppProtect><MatchProvider><SocketProvider><MatchInterface darkMode={darkMode} setDarkMode={setDarkMode} /></SocketProvider></MatchProvider></ComppProtect>} />
             <Route path="/contact" element={<ContactUsPage darkMode={darkMode} />} />
-            <Route path="/about" element={<AboutUsPage darkMode={darkMode}/>} />
+            <Route path="/about" element={<AboutUsPage darkMode={darkMode} />} />
             <Route path="/contest" element={<ContestSection darkMode={darkMode} />} />
-            <Route path="/learn" element={<LearnPage darkMode={darkMode}/>} />
+            <Route path="/learn" element={<LearnPage darkMode={darkMode} />} />
             <Route path="/*" element={<h1>not reachable</h1>} />
           </Route>
         </Routes>
