@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
+import { Route, BrowserRouter as Router, Routes, Navigate } from 'react-router-dom';
 import './App.css';
 import AboutUsPage from './components/AboutUs';
 import ContactUsPage from './components/ContactsUs';
@@ -61,7 +61,7 @@ function App() {
             <Route path="/about" element={<AboutUsPage darkMode={darkMode} />} />
             <Route path="/contest" element={<ContestSection darkMode={darkMode} />} />
             <Route path="/learn" element={<LearnPage darkMode={darkMode} />} />
-            <Route path="/*" element={<h1>not reachable</h1>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
       </Router>
