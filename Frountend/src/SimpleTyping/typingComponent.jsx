@@ -427,23 +427,26 @@ const TypingInterface = ({ darkMode }) => {
     resetTest();
   }, []);
 
-  // Auto-scroll to active character - only within the text container
+  // Auto-scroll to keep active character on line 2-3
   useEffect(() => {
     if (activeCharRef.current && textRef.current) {
-      // Scroll within the text container, not the whole page
       const container = textRef.current;
       const element = activeCharRef.current;
 
+      // Get positions
       const containerRect = container.getBoundingClientRect();
       const elementRect = element.getBoundingClientRect();
 
-      // Only scroll if element is outside the visible area
-      if (elementRect.top < containerRect.top || elementRect.bottom > containerRect.bottom) {
-        element.scrollIntoView({
-          behavior: 'smooth',
-          block: 'nearest', // Use 'nearest' instead of 'center' to minimize movement
-          inline: 'nearest'
-        });
+      // Calculate the target position (keep cursor around 40% from top, roughly line 2 of 3)
+      const targetPosition = containerRect.top + (containerRect.height * 0.4);
+      const currentPosition = elementRect.top;
+
+      // Calculate how much to scroll
+      const scrollAmount = currentPosition - targetPosition;
+
+      // Smooth scroll the container
+      if (Math.abs(scrollAmount) > 5) { // Only scroll if difference is significant
+        container.scrollTop += scrollAmount;
       }
     }
   }, [currentIndex]);
@@ -800,8 +803,30 @@ const TypingInterface = ({ darkMode }) => {
           </p>
         </div>
 
-        {/* Controls */}
-        <div className="flex justify-center items-center h-full gap-4 mb-8">
+        {/* Timer Card - Only on Mobile, at top */}
+        <div className="md:hidden mb-4">
+          <div className={`glass-card p-3 rounded-xl ${currentTheme === 'hacker' ? 'bg-black/80 border border-green-500/30' :
+            currentTheme === 'neon' ? 'bg-purple-900/80 border border-pink-500/30' :
+              currentTheme === 'dark' ? 'bg-gray-800/90 border border-gray-500/30' :
+                'bg-white/92 border border-white/50'
+            } transition-all duration-300`} data-theme={currentTheme}>
+            <div className="flex items-center justify-center gap-2">
+              <Clock className={`w-5 h-5 ${currentTheme === 'hacker' ? 'text-green-400' :
+                currentTheme === 'neon' ? 'text-pink-400' :
+                  currentTheme === 'dark' ? 'text-blue-200' :
+                    'text-blue-600'
+                }`} />
+              <p className={`text-2xl font-extrabold ${currentTheme === 'hacker' ? 'text-green-300' :
+                currentTheme === 'neon' ? 'text-pink-200' :
+                  currentTheme === 'dark' ? 'text-white' :
+                    'text-black'
+                }`}>{formatTime(timeLeft)}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Controls - Desktop only, at top */}
+        <div className="hidden md:flex justify-center items-center h-full gap-4 mb-8">
           <div className="flex items-center gap-2">
             <Clock className={`w-5 h-5 ${theme.text}`} />
             <select
@@ -835,13 +860,6 @@ const TypingInterface = ({ darkMode }) => {
             <RotateCcw className="w-4 h-4" />
             Reset
           </button>
-
-
-        </div>
-
-        {/* Timer Card - Only on Mobile, at top */}
-        <div className="md:hidden mb-6">
-          <StatsCard theme={currentTheme} icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
         </div>
 
         {/* Stats - Desktop only, at top */}
@@ -862,18 +880,25 @@ const TypingInterface = ({ darkMode }) => {
         )}
 
         {/* Text display */}
-        <div className="mb-8">
+        <div className="mb-4">
           <div
             ref={textRef}
             className="glass-card rounded-xl p-4 md:p-6 shadow-lg"
             data-theme={currentTheme}
             style={{
-              height: '300px', // Fixed height to prevent jumping
+              height: '180px', // Fixed height for exactly 3 lines
               overflow: 'auto',
               pointerEvents: 'none',
             }}
           >
-            <div className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed font-mono text-center">
+            <div 
+              className="text-base sm:text-lg md:text-xl lg:text-2xl font-mono text-left w-full"
+              style={{
+                lineHeight: '2.5rem', // Fixed line height for consistent display
+                whiteSpace: 'pre-wrap',
+                wordWrap: 'break-word',
+              }}
+            >
               {currentText.split('').map((char, index) => (
                 <span
                   key={index}
@@ -887,11 +912,115 @@ const TypingInterface = ({ darkMode }) => {
           </div>
         </div>
 
-        {/* Stats Cards - Mobile only, at bottom */}
-        <div className="md:hidden grid grid-cols-2 gap-4 mb-8">
-          <StatsCard theme={currentTheme} icon={Target} label="WPM" value={wpm} color="green" />
-          <StatsCard theme={currentTheme} icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
-          <StatsCard theme={currentTheme} icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
+        {/* Controls - Mobile only, below text */}
+        <div className="md:hidden flex flex-col sm:flex-row justify-center items-center gap-3 mb-4">
+          <div className="flex items-center gap-2">
+            <Clock className={`w-4 h-4 ${theme.text}`} />
+            <select
+              value={testDuration}
+              onChange={(e) => {
+                const newDuration = Number(e.target.value);
+                setTestDuration(newDuration);
+                setTimeLeft(newDuration);
+                if (timerRef.current) {
+                  clearInterval(timerRef.current);
+                  timerRef.current = null;
+                }
+                targetTimeRef.current = null;
+              }}
+              className={`px-2 py-1 text-sm rounded-lg border ${theme.cardBorder} ${theme.card} ${theme.text}`}
+              disabled={isActive}
+            >
+              <option value={10}>10s</option>
+              <option value={30}>30s</option>
+              <option value={60}>1m</option>
+              <option value={120}>2m</option>
+              <option value={300}>5m</option>
+            </select>
+          </div>
+
+          <button
+            onClick={resetTest}
+            className="flex items-center gap-1 px-3 py-1 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+          >
+            <RotateCcw className="w-3 h-3" />
+            Reset
+          </button>
+        </div>
+
+        {/* Stats Cards - Mobile only, at bottom with smaller size */}
+        <div className="md:hidden grid grid-cols-3 gap-2 mb-8">
+          <div className={`glass-card p-2 rounded-lg ${currentTheme === 'hacker' ? 'bg-black/80 border border-green-500/30' :
+            currentTheme === 'neon' ? 'bg-purple-900/80 border border-pink-500/30' :
+              currentTheme === 'dark' ? 'bg-gray-800/90 border border-gray-500/30' :
+                'bg-white/92 border border-white/50'
+            } transition-all duration-300`} data-theme={currentTheme}>
+            <div className="flex flex-col items-center">
+              <Target className={`w-4 h-4 mb-1 ${currentTheme === 'hacker' ? 'text-green-400' :
+                currentTheme === 'neon' ? 'text-pink-400' :
+                  currentTheme === 'dark' ? 'text-blue-200' :
+                    'text-blue-600'
+                }`} />
+              <p className={`text-xs font-semibold ${currentTheme === 'hacker' ? 'text-green-400' :
+                currentTheme === 'neon' ? 'text-pink-300' :
+                  currentTheme === 'dark' ? 'text-white' :
+                    'text-gray-500'
+                }`}>WPM</p>
+              <p className={`text-lg font-extrabold ${currentTheme === 'hacker' ? 'text-green-300' :
+                currentTheme === 'neon' ? 'text-pink-200' :
+                  currentTheme === 'dark' ? 'text-white' :
+                    'text-black'
+                }`}>{wpm}</p>
+            </div>
+          </div>
+
+          <div className={`glass-card p-2 rounded-lg ${currentTheme === 'hacker' ? 'bg-black/80 border border-green-500/30' :
+            currentTheme === 'neon' ? 'bg-purple-900/80 border border-pink-500/30' :
+              currentTheme === 'dark' ? 'bg-gray-800/90 border border-gray-500/30' :
+                'bg-white/92 border border-white/50'
+            } transition-all duration-300`} data-theme={currentTheme}>
+            <div className="flex flex-col items-center">
+              <Trophy className={`w-4 h-4 mb-1 ${currentTheme === 'hacker' ? 'text-green-400' :
+                currentTheme === 'neon' ? 'text-pink-400' :
+                  currentTheme === 'dark' ? 'text-blue-200' :
+                    'text-blue-600'
+                }`} />
+              <p className={`text-xs font-semibold ${currentTheme === 'hacker' ? 'text-green-400' :
+                currentTheme === 'neon' ? 'text-pink-300' :
+                  currentTheme === 'dark' ? 'text-white' :
+                    'text-gray-500'
+                }`}>Accuracy</p>
+              <p className={`text-lg font-extrabold ${currentTheme === 'hacker' ? 'text-green-300' :
+                currentTheme === 'neon' ? 'text-pink-200' :
+                  currentTheme === 'dark' ? 'text-white' :
+                    'text-black'
+                }`}>{accuracy}%</p>
+            </div>
+          </div>
+
+          <div className={`glass-card p-2 rounded-lg ${currentTheme === 'hacker' ? 'bg-black/80 border border-green-500/30' :
+            currentTheme === 'neon' ? 'bg-purple-900/80 border border-pink-500/30' :
+              currentTheme === 'dark' ? 'bg-gray-800/90 border border-gray-500/30' :
+                'bg-white/92 border border-white/50'
+            } transition-all duration-300`} data-theme={currentTheme}>
+            <div className="flex flex-col items-center">
+              <AlertCircle className={`w-4 h-4 mb-1 ${currentTheme === 'hacker' ? 'text-green-400' :
+                currentTheme === 'neon' ? 'text-pink-400' :
+                  currentTheme === 'dark' ? 'text-blue-200' :
+                    'text-blue-600'
+                }`} />
+              <p className={`text-xs font-semibold ${currentTheme === 'hacker' ? 'text-green-400' :
+                currentTheme === 'neon' ? 'text-pink-300' :
+                  currentTheme === 'dark' ? 'text-white' :
+                    'text-gray-500'
+                }`}>Mistakes</p>
+              <p className={`text-lg font-extrabold ${currentTheme === 'hacker' ? 'text-green-300' :
+                currentTheme === 'neon' ? 'text-pink-200' :
+                  currentTheme === 'dark' ? 'text-white' :
+                    'text-black'
+                }`}>{mistakes}</p>
+            </div>
+          </div>
         </div>
 
         {/* Virtual keyboard or Chart */}
