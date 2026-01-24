@@ -776,9 +776,16 @@ const TypingInterface = ({ darkMode }) => {
         inputMode="text"
         autoComplete="off"
         autoCorrect="off"
+        autoCapitalize="off"
         spellCheck="false"
+        data-form-type="other"
+        data-lpignore="true"
         value={inputText}
         onChange={handleInputChange}
+        onPaste={(e) => e.preventDefault()} // Prevent paste
+        onCut={(e) => e.preventDefault()} // Prevent cut
+        onCopy={(e) => e.preventDefault()} // Prevent copy
+        onDrop={(e) => e.preventDefault()} // Prevent drag & drop
         style={{
           position: 'absolute',
           opacity: 0,
@@ -891,7 +898,7 @@ const TypingInterface = ({ darkMode }) => {
               pointerEvents: 'none',
             }}
           >
-            <div 
+            <div
               className="text-base sm:text-lg md:text-xl lg:text-2xl font-mono text-left w-full"
               style={{
                 lineHeight: '2.5rem', // Fixed line height for consistent display
