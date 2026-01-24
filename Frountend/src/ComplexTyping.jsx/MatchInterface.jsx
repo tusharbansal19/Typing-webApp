@@ -1590,7 +1590,21 @@ const MatchInterface = ({ darkMode }) => {
 
                           <Header />
 
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                          {/* Timer Card - Only on Mobile, at top */}
+                          <div className="md:hidden mb-4">
+                            <div className={`glass-card p-3 rounded-xl ${darkMode ? 'bg-gray-800/90 border border-gray-500/30' : 'bg-white/92 border border-white/50'
+                              } transition-all duration-300`}>
+                              <div className="flex items-center justify-center gap-2">
+                                <Clock className={`w-5 h-5 ${darkMode ? 'text-blue-200' : 'text-blue-600'}`} />
+                                <p className={`text-2xl font-extrabold ${darkMode ? 'text-white' : 'text-black'}`}>
+                                  {formatTime(timeLeft)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Stats - Desktop only, at top */}
+                          <div className="hidden md:grid grid-cols-4 gap-4 mb-8">
                             <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
                             <StatsCard icon={TrendingUp} label="WPM" value={wpm} color="green" />
                             <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
@@ -1604,7 +1618,38 @@ const MatchInterface = ({ darkMode }) => {
                             activeCharRef={activeCharRef}
                             darkMode={darkMode}
                             getCharStyle={getCharStyle}
+                            textRef={textRef}
                           />
+
+                          {/* Stats Cards - Mobile only, below text */}
+                          <div className="md:hidden grid grid-cols-3 gap-2 mb-4">
+                            <div className={`glass-card p-2 rounded-lg ${darkMode ? 'bg-gray-800/90 border border-gray-500/30' : 'bg-white/92 border border-white/50'
+                              } transition-all duration-300`}>
+                              <div className="flex flex-col items-center">
+                                <TrendingUp className={`w-4 h-4 mb-1 ${darkMode ? 'text-blue-200' : 'text-blue-600'}`} />
+                                <p className={`text-xs font-semibold ${darkMode ? 'text-white' : 'text-gray-500'}`}>WPM</p>
+                                <p className={`text-lg font-extrabold ${darkMode ? 'text-white' : 'text-black'}`}>{wpm}</p>
+                              </div>
+                            </div>
+
+                            <div className={`glass-card p-2 rounded-lg ${darkMode ? 'bg-gray-800/90 border border-gray-500/30' : 'bg-white/92 border border-white/50'
+                              } transition-all duration-300`}>
+                              <div className="flex flex-col items-center">
+                                <Trophy className={`w-4 h-4 mb-1 ${darkMode ? 'text-blue-200' : 'text-blue-600'}`} />
+                                <p className={`text-xs font-semibold ${darkMode ? 'text-white' : 'text-gray-500'}`}>Accuracy</p>
+                                <p className={`text-lg font-extrabold ${darkMode ? 'text-white' : 'text-black'}`}>{accuracy}%</p>
+                              </div>
+                            </div>
+
+                            <div className={`glass-card p-2 rounded-lg ${darkMode ? 'bg-gray-800/90 border border-gray-500/30' : 'bg-white/92 border border-white/50'
+                              } transition-all duration-300`}>
+                              <div className="flex flex-col items-center">
+                                <AlertCircle className={`w-4 h-4 mb-1 ${darkMode ? 'text-blue-200' : 'text-blue-600'}`} />
+                                <p className={`text-xs font-semibold ${darkMode ? 'text-white' : 'text-gray-500'}`}>Mistakes</p>
+                                <p className={`text-lg font-extrabold ${darkMode ? 'text-white' : 'text-black'}`}>{mistakes}</p>
+                              </div>
+                            </div>
+                          </div>
 
                           <TypingChartOrKeyboard
                             pressedKey={pressedKey}
