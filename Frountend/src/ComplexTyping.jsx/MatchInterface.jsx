@@ -311,6 +311,31 @@ const MatchInterface = ({ darkMode }) => {
     }
   }, []);
 
+  // Auto-scroll to keep active character on line 2-3
+  useEffect(() => {
+    if (activeCharRef.current && textRef.current) {
+      const container = textRef.current;
+      const element = activeCharRef.current;
+      
+      // Get positions
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+      
+      // Calculate the target position (keep cursor around 40% from top, roughly line 2 of 3)
+      const targetPosition = containerRect.top + (containerRect.height * 0.4);
+      const currentPosition = elementRect.top;
+      
+      // Calculate how much to scroll
+      const scrollAmount = currentPosition - targetPosition;
+      
+      // Smooth scroll the container
+      if (Math.abs(scrollAmount) > 5) { // Only scroll if difference is significant
+        container.scrollTop += scrollAmount;
+      }
+    }
+  }, [currentIndex]);
+
+
   // Auto-navigate after 5 seconds
   useEffect(() => {
     if (showMatchStartedPopup && countdown > 0) {
