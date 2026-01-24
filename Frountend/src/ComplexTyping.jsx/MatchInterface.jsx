@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { RotateCcw, Play, Pause, Trophy, Target, Clock, AlertCircle, Keyboard, TrendingUp, X, Users, Lock, Unlock } from 'lucide-react';
+import { RotateCcw, Play, Pause, Trophy, Target, Clock, AlertCircle, Keyboard, TrendingUp, X, Users, Lock, Unlock, Share2 } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -125,6 +125,18 @@ const MatchInterface = ({ darkMode }) => {
 
   const [isTogglingAccess, setIsTogglingAccess] = useState(false);
   const [isTogglingRoomClosure, setIsTogglingRoomClosure] = useState(false);
+  const [showShareNotification, setShowShareNotification] = useState(false);
+
+  const handleShareRoom = async () => {
+    const roomUrl = `${window.location.origin}/match/${roomName}`;
+    try {
+      await navigator.clipboard.writeText(roomUrl);
+      setShowShareNotification(true);
+      setTimeout(() => setShowShareNotification(false), 3000);
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   const handleMatchAlreadyStarted = ({ message }) => {
     console.log('Match already started:', message);
@@ -1239,7 +1251,19 @@ const MatchInterface = ({ darkMode }) => {
                               ? 'bg-gray-800/50 border-orange-500 text-gray-200'
                               : 'bg-white border-orange-500 text-gray-700'
                               }`}>
-                              <h3 className="text-2xl font-bold mb-3">{roomName}</h3>
+                              <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-2xl font-bold">{roomName}</h3>
+                                <button
+                                  onClick={handleShareRoom}
+                                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold text-sm transition-all ${darkMode
+                                      ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/50 hover:bg-indigo-500 hover:text-white'
+                                      : 'bg-indigo-500/10 text-indigo-600 border border-indigo-500/50 hover:bg-indigo-500 hover:text-white'
+                                    }`}
+                                >
+                                  <Share2 className="w-4 h-4" />
+                                  Share Room
+                                </button>
+                              </div>
                               <div className="flex items-center gap-6">
                                 <span className={`flex items-center gap-2 text-xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
                                   <Users className="w-5 h-5" /> {participants.length} Players
@@ -1248,6 +1272,13 @@ const MatchInterface = ({ darkMode }) => {
                                   <Clock className="w-5 h-5" /> {testDuration}s
                                 </span>
                               </div>
+
+                              {/* Share Notification */}
+                              {showShareNotification && (
+                                <div className="mt-3 p-2 bg-green-500/20 border border-green-500/50 rounded-lg text-green-500 text-sm font-medium text-center animate-pulse">
+                                  ✓ Room link copied to clipboard!
+                                </div>
+                              )}
                             </div>
 
                             {/* Admin Settings Panel (Only for Admin) */}
