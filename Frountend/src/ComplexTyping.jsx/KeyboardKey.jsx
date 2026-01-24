@@ -13,7 +13,7 @@ const KeyboardKey = ({ keyChar, isPressed, isCorrect, isIncorrect }) => {
   return (
     <div
       className={`
-        flex items-center justify-center w-10 h-10 m-1 rounded-lg font-semibold
+        flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 m-0.5 md:m-1 rounded-lg font-semibold text-xs sm:text-sm md:text-base
         transition-all duration-150 ease-in-out cursor-pointer
         ${getKeyStyle()}
       `}

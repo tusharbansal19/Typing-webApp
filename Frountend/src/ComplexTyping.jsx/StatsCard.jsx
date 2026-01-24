@@ -10,13 +10,13 @@ const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
   };
 
   return (
-    <div className={`glass-card p-4 rounded-xl ${colorClasses[color]} transition-all duration-300 hover:scale-105`}>
+    <div className={`glass-card p-3 md:p-4 rounded-xl ${colorClasses[color]} transition-all duration-300 hover:scale-105`}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-semibold text-black dark:text-gray-100 drop-shadow-md">{label}</p>
-          <p className="text-2xl font-extrabold text-black dark:text-white drop-shadow-md">{value}</p>
+          <p className="text-xs md:text-sm font-semibold text-black dark:text-gray-100 drop-shadow-md">{label}</p>
+          <p className="text-xl md:text-2xl font-extrabold text-black dark:text-white drop-shadow-md">{value}</p>
         </div>
-        <Icon className={`w-8 h-8 ${colorClasses[color].split(' ')[0]} drop-shadow-md`} />
+        <Icon className={`w-6 h-6 md:w-8 md:h-8 ${colorClasses[color].split(' ')[0]} drop-shadow-md`} />
       </div>
     </div>
   );
