@@ -213,21 +213,21 @@ const ShowMember = ({ darkMode }) => {
             {joinMessage && (
                 <div className="mb-4 p-2 bg-green-200 text-green-800 rounded text-center animate-pulse">{joinMessage}</div>
             )}
-
-            <div className="flex justify-between items-center mb-6">
-                <p className={`text-lg font-medium opacity-80 ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+            {/* Header with Total Players and Ready Button */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+                <p className={`text-base sm:text-lg font-semibold ${darkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                     Total Players: {participants.length}
                 </p>
 
                 {
                     restartButton === 'restart' ?
-                        <button onClick={() => navigator("/host")} className="bg-blue-600 text-white py-2 px-6 rounded-lg font-bold shadow hover:bg-blue-700 transition-all">Restart</button>
+                        <button onClick={() => navigator("/host")} className="bg-blue-600 text-white py-2 px-4 sm:px-6 rounded-lg font-bold shadow hover:bg-blue-700 transition-all text-sm sm:text-base">Restart</button>
                         :
                         <button
                             onClick={iReady}
-                            className={`py-2 px-8 rounded-lg font-bold shadow-lg transition-all transform hover:scale-105 ${isReady
-                                    ? 'bg-red-500 hover:bg-red-600 text-white'
-                                    : 'bg-green-500 hover:bg-green-600 text-white'
+                            className={`py-2 px-6 sm:px-8 rounded-lg font-bold shadow-lg transition-all transform hover:scale-105 text-sm sm:text-base ${isReady
+                                ? 'bg-red-500 hover:bg-red-600 text-white'
+                                : 'bg-green-500 hover:bg-green-600 text-white'
                                 }`}
                         >
                             {isReady ? 'Cancel Ready' : 'Ready Up!'}
@@ -240,15 +240,15 @@ const ShowMember = ({ darkMode }) => {
                     {participants.map((member) => (
                         <div key={member._id || member.email}
                             className={`group flex items-center justify-between p-4 rounded-xl border-b-2 transition-all hover:translate-x-1 ${darkMode
-                                    ? 'bg-gray-800/40 border-gray-700 hover:bg-gray-800'
-                                    : 'bg-white border-gray-100 hover:bg-gray-50'
+                                ? 'bg-gray-800/40 border-gray-700 hover:bg-gray-800'
+                                : 'bg-white border-gray-100 hover:bg-gray-50'
                                 }`}
                         >
                             {/* Left: User Info */}
                             <div className="flex items-center gap-4">
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold ${member.ready
-                                        ? 'bg-green-500 text-white shadow-green-500/50 shadow-md'
-                                        : 'bg-gray-500 text-white'
+                                    ? 'bg-green-500 text-white shadow-green-500/50 shadow-md'
+                                    : 'bg-gray-500 text-white'
                                     }`}>
                                     {member.username ? member.username[0].toUpperCase() : '?'}
                                 </div>

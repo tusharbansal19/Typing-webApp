@@ -96,11 +96,11 @@ const THEMES = {
 };
 
 // Text samples for typing test
-const TEXT_SAMPLES = [  
-"this is a very extensive string composed of random words and phrases designed to meet your specific length requirement it continues to grow with various vocabulary choices ensuring it surpasses the five hundred character mark without using any punctuation whatsoever only lowercase letters and spaces are present throughout its entirety providing a continuous flow of text for your needs we are carefully adding more words to increase its overall length making sure it remains well above your requested minimum this paragraph demonstrates a large block of text suitable for many applications where a long character sequence without special symbols is desired it keeps going and going with more random words and less meaning sometimes just for the sake of length and character count validation we hope this extended passage serves its purpose effectively this is a very extensive string composed of random words and phrases designed to meet your specific length requirement it continues to grow with various vocabulary choices ensuring it surpasses the five hundred character mark without using any punctuation whatsoever only lowercase letters and spaces are present throughout its entirety providing a continuous flow of text for your needs we are carefully adding more words to increase its overall length making sure it remains well above your requested minimum this paragraph demonstrates a large block of text suitable for many applications where a long character sequence without special symbols is desired it keeps going and going with more random words and less meaning sometimes just for the sake of length and character count validation we hope this extended passage serves its purpose effectively",
-"learning new things is always an exciting adventure expanding your knowledge and understanding of the world around you every book you read every skill you acquire adds another layer to your personal growth and development the process of discovery can be incredibly rewarding opening up new perspectives and challenging your existing beliefs it encourages critical thinking and creativity allowing you to approach problems from different angles and find innovative solutions practice and persistence are key components in mastering any new subject or ability as consistent effort often leads to significant progress over time embracing mistakes as learning opportunities helps you refine your approach and build resilience the journey of continuous learning is endless with countless subjects and disciplines waiting to be explored it fosters curiosity and a lifelong passion for gaining insights into various fields whether it is science art history or technology there is always something fascinating to delve into and comprehend the more you learn the more you realize how much more there is to know which only fuels your desire for further exploration and intellectual enrichment making life a constant classroom of endless possibilities and exciting discoveries for every curious mind that seeks knowledge and understanding",
-"a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed",
-"a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed"];
+const TEXT_SAMPLES = [
+  "this is a very extensive string composed of random words and phrases designed to meet your specific length requirement it continues to grow with various vocabulary choices ensuring it surpasses the five hundred character mark without using any punctuation whatsoever only lowercase letters and spaces are present throughout its entirety providing a continuous flow of text for your needs we are carefully adding more words to increase its overall length making sure it remains well above your requested minimum this paragraph demonstrates a large block of text suitable for many applications where a long character sequence without special symbols is desired it keeps going and going with more random words and less meaning sometimes just for the sake of length and character count validation we hope this extended passage serves its purpose effectively this is a very extensive string composed of random words and phrases designed to meet your specific length requirement it continues to grow with various vocabulary choices ensuring it surpasses the five hundred character mark without using any punctuation whatsoever only lowercase letters and spaces are present throughout its entirety providing a continuous flow of text for your needs we are carefully adding more words to increase its overall length making sure it remains well above your requested minimum this paragraph demonstrates a large block of text suitable for many applications where a long character sequence without special symbols is desired it keeps going and going with more random words and less meaning sometimes just for the sake of length and character count validation we hope this extended passage serves its purpose effectively",
+  "learning new things is always an exciting adventure expanding your knowledge and understanding of the world around you every book you read every skill you acquire adds another layer to your personal growth and development the process of discovery can be incredibly rewarding opening up new perspectives and challenging your existing beliefs it encourages critical thinking and creativity allowing you to approach problems from different angles and find innovative solutions practice and persistence are key components in mastering any new subject or ability as consistent effort often leads to significant progress over time embracing mistakes as learning opportunities helps you refine your approach and build resilience the journey of continuous learning is endless with countless subjects and disciplines waiting to be explored it fosters curiosity and a lifelong passion for gaining insights into various fields whether it is science art history or technology there is always something fascinating to delve into and comprehend the more you learn the more you realize how much more there is to know which only fuels your desire for further exploration and intellectual enrichment making life a constant classroom of endless possibilities and exciting discoveries for every curious mind that seeks knowledge and understanding",
+  "a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed",
+  "a gentle breeze swept through the tall grass making soft rustling sounds that echoed across the open fields the sky above was a vast expanse of light blue with only a few wispy clouds drifting lazily across the horizon in the distance you could see the faint outline of mountains their peaks touching the edge of the world creating a picturesque backdrop for the tranquil landscape birds chirped happily from the trees their melodies adding to the serene ambiance of the afternoon a small stream meandered through the fields its clear water sparkling under the sunlight inviting creatures to quench their thirst and cool themselves on this warm day the air was filled with the sweet scent of wildflowers blooming in various colors painting the meadows with vibrant hues the world seemed to slow down in this idyllic setting offering a moment of peace and quiet reflection away from the hustle and bustle of everyday life it was a perfect day for contemplation a time to simply exist and appreciate the simple beauty that nature so freely offered to those who took the time to notice and immerse themselves in its calming presence a true escape from the ordinary into something truly extraordinary and profoundly refreshing for the mind body and soul a wonderful experience indeed"];
 // Virtual keyboard layout
 const KEYBOARD_LAYOUT = [
   ['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'],
@@ -116,7 +116,7 @@ const KeyboardKey = ({ keyChar, isPressed, isCorrect, isIncorrect, theme }) => {
       if (isIncorrect) return 'bg-red-500/90 text-white shadow-[0_0_12px_4px_rgba(239,68,68,0.3)] transform scale-95';
       return 'bg-yellow-400/90 text-black shadow-[0_0_12px_4px_rgba(253,224,71,0.3)] transform scale-95';
     }
-    
+
     // Theme-specific key styles
     switch (theme) {
       case 'hacker':
@@ -151,7 +151,7 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect, theme }) => {
       if (isIncorrect) return 'bg-red-400/80 text-white shadow-[0_0_8px_2px_rgba(239,68,68,0.7)]';
       return 'bg-yellow-300/80 text-black shadow-[0_0_8px_2px_rgba(253,224,71,0.7)]';
     }
-    
+
     // Theme-specific spacebar styles
     switch (theme) {
       case 'hacker':
@@ -169,12 +169,11 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect, theme }) => {
     <div className="glass-card rounded-xl p-6 shadow-lg mb-8" data-theme={theme}>
       <div className="flex items-center justify-center mb-4">
         <Keyboard className={`w-6 h-6 mr-2 ${theme === 'hacker' ? 'text-green-400' : theme === 'neon' ? 'text-pink-400' : theme === 'dark' ? 'text-blue-200' : 'text-blue-600'} drop-shadow-lg`} />
-        <h3 className={`text-lg font-bold bg-clip-text text-transparent drop-shadow-lg ${
-          theme === 'hacker' ? 'bg-gradient-to-r from-green-400 to-cyan-400' :
+        <h3 className={`text-lg font-bold bg-clip-text text-transparent drop-shadow-lg ${theme === 'hacker' ? 'bg-gradient-to-r from-green-400 to-cyan-400' :
           theme === 'neon' ? 'bg-gradient-to-r from-pink-400 to-cyan-400' :
-          theme === 'dark' ? 'bg-gradient-to-r from-blue-200 to-purple-300' :
-          'bg-gradient-to-r from-blue-600 to-purple-500'
-        }`}>
+            theme === 'dark' ? 'bg-gradient-to-r from-blue-200 to-purple-300' :
+              'bg-gradient-to-r from-blue-600 to-purple-500'
+          }`}>
           Virtual Keyboard
         </h3>
       </div>
@@ -193,7 +192,7 @@ const VirtualKeyboard = ({ pressedKey, isCorrect, isIncorrect, theme }) => {
             ))}
           </div>
         ))}
-        
+
         {/* Spacebar */}
         <div className="flex justify-center mt-2">
           <div
@@ -285,7 +284,7 @@ const ThemeDrawer = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
               {themes.map((themeKey) => {
                 const theme = THEMES[themeKey];
                 const isActive = currentTheme === themeKey;
-                
+
                 return (
                   <button
                     key={themeKey}
@@ -293,11 +292,10 @@ const ThemeDrawer = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
                       onThemeChange(themeKey);
                       onClose(false);
                     }}
-                    className={`w-full px-3 py-2 text-left text-sm font-medium transition-colors  text-black duration-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${
-                      isActive 
-                        ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300' 
-                        : 'text-gray-700 dark:text-gray-300'
-                    }`}
+                    className={`w-full px-3 py-2 text-left text-sm font-medium transition-colors  text-black duration-200 hover:bg-gray-100 dark:hover:bg-gray-700 ${isActive
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                      : 'text-gray-700 dark:text-gray-300'
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <span>{theme.name}</span>
@@ -322,7 +320,7 @@ const ThemeDrawer = ({ isOpen, onClose, currentTheme, onThemeChange }) => {
 };
 
 // Main typing interface component
-const TypingInterface = ({darkMode}) => {
+const TypingInterface = ({ darkMode }) => {
   // Theme state
   const [currentTheme, setCurrentTheme] = useState(darkMode ? 'dark' : 'light');
   const [isThemeDrawerOpen, setIsThemeDrawerOpen] = useState(false);
@@ -335,22 +333,22 @@ const TypingInterface = ({darkMode}) => {
   const [isStarted, setIsStarted] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
 
-  
+
   // Timer state
   const [timeLeft, setTimeLeft] = useState(60);
   const [testDuration, setTestDuration] = useState(60);
-  
+
   // Statistics state
   const [wpm, setWpm] = useState(0);
   const [accuracy, setAccuracy] = useState(100);
   const [mistakes, setMistakes] = useState(0);
   const [correctChars, setCorrectChars] = useState(0);
-  
+
   // Keyboard state
   const [pressedKey, setPressedKey] = useState('');
   const [isCorrectKey, setIsCorrectKey] = useState(false);
   const [isIncorrectKey, setIsIncorrectKey] = useState(false);
-  
+
   // Refs
   const timerRef = useRef(null);
   const textRef = useRef(null);
@@ -446,7 +444,7 @@ const TypingInterface = ({darkMode}) => {
     const currentWpm = timeElapsed > 0 ? Math.round((wordsTyped / timeElapsed) * 60) : 0;
     const totalChars = correctCharsRef.current + mistakesRef.current;
     const currentAccuracy = totalChars > 0 ? Math.round((correctCharsRef.current / totalChars) * 100) : 100;
-    
+
     setWpm(currentWpm);
     setAccuracy(currentAccuracy);
     setMistakes(mistakesRef.current);
@@ -468,15 +466,15 @@ const TypingInterface = ({darkMode}) => {
     if (isStarted && timeLeft > 0 && !timerRef.current) {
       const startTime = Date.now();
       targetTimeRef.current = startTime + (timeLeft * 1000);
-      
+
       console.log('Timer started:', { startTime, targetTime: targetTimeRef.current, timeLeft });
-      
+
       timerRef.current = setInterval(() => {
         const currentTime = Date.now();
         const remainingTime = Math.max(0, Math.ceil((targetTimeRef.current - currentTime) / 1000));
-        
+
         setTimeLeft(remainingTime);
-        
+
         if (remainingTime <= 0) {
           console.log('Timer finished');
           setIsActive(false);
@@ -555,7 +553,7 @@ const TypingInterface = ({darkMode}) => {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
@@ -588,17 +586,17 @@ const TypingInterface = ({darkMode}) => {
   useEffect(() => {
     const handleKeyPress = (event) => {
       if (isFinished) return;
-      
+
       const key = event.key;
       setPressedKey(key);
-      
+
       // Start test on first keypress
       if (!isStarted) {
         setIsStarted(true);
         setIsActive(true);
         startTimeRef.current = Date.now();
       }
-      
+
       // Handle special keys
       if (key === 'Backspace') {
         event.preventDefault();
@@ -614,7 +612,7 @@ const TypingInterface = ({darkMode}) => {
         }
         return;
       }
-      
+
       // Handle spacebar for skipping words
       if (key === ' ' && currentIndex < currentText.length) {
         event.preventDefault();
@@ -654,16 +652,16 @@ const TypingInterface = ({darkMode}) => {
         }, 150);
         return;
       }
-      
+
       // Handle printable characters
       if (key.length === 1 && currentIndex < currentText.length) {
         event.preventDefault();
         const expectedChar = currentText[currentIndex];
         const isCorrect = key === expectedChar;
-        
+
         setInputText(prev => prev + key);
         setCurrentIndex(prev => prev + 1);
-        
+
         if (isCorrect) {
           correctCharsRef.current++;
           setIsCorrectKey(true);
@@ -673,14 +671,14 @@ const TypingInterface = ({darkMode}) => {
           setIsCorrectKey(false);
           setIsIncorrectKey(true);
         }
-        
+
         // Check if test is complete
         if (currentIndex + 1 === currentText.length) {
           setIsFinished(true);
           // Don't stop the timer - let it continue until time is up
         }
       }
-      
+
       // Clear key press visual feedback
       setTimeout(() => {
         setPressedKey('');
@@ -732,7 +730,7 @@ const TypingInterface = ({darkMode}) => {
       if (inputText[index] === '$') {
         return theme.incorrectText;
       }
-      return inputText[index] === currentText[index] 
+      return inputText[index] === currentText[index]
         ? theme.correctText
         : theme.incorrectText;
     }
@@ -781,10 +779,10 @@ const TypingInterface = ({darkMode}) => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          {!inputText&&
-          <h1 className={`text-4xl md:text-6xl font-extrabold mb-4 bg-clip-text text-transparent drop-shadow-2xl ${theme.title}`}>
-            Typing Speed Test
-          </h1>
+          {!inputText &&
+            <h1 className={`text-4xl md:text-6xl font-extrabold mb-4 bg-clip-text text-transparent drop-shadow-2xl ${theme.title}`}>
+              Typing Speed Test
+            </h1>
           }
           <p className={`text-lg font-semibold drop-shadow-md ${theme.subtitle}`}>
             Test your typing speed and accuracy
@@ -811,14 +809,14 @@ const TypingInterface = ({darkMode}) => {
               className={`px-3 py-2 z-[100] rounded-lg border ${theme.cardBorder} ${theme.card} ${theme.text}`}
               disabled={isActive}
             >
-            <option value={10}>10 seconds</option>
+              <option value={10}>10 seconds</option>
               <option value={30}>30 seconds</option>
               <option value={60}>1 minute</option>
               <option value={120}>2 minutes</option>
               <option value={300}>5 minutes</option>
             </select>
           </div>
-          
+
           <button
             onClick={resetTest}
             className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
@@ -826,8 +824,8 @@ const TypingInterface = ({darkMode}) => {
             <RotateCcw className="w-4 h-4" />
             Reset
           </button>
-          
-        
+
+
         </div>
 
         {/* Stats */}
@@ -851,14 +849,15 @@ const TypingInterface = ({darkMode}) => {
         <div className="mb-8">
           <div
             ref={textRef}
-            className="glass-card rounded-xl p-6 shadow-lg max-h-64"
+            className="glass-card rounded-xl p-4 md:p-6 shadow-lg"
             data-theme={currentTheme}
             style={{
-              overflow: 'hidden',
+              height: '300px', // Fixed height to prevent jumping
+              overflow: 'auto',
               pointerEvents: 'none',
             }}
           >
-            <div className="text-xl md:text-2xl leading-relaxed font-mono text-center">
+            <div className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed font-mono text-center">
               {currentText.split('').map((char, index) => (
                 <span
                   key={index}
@@ -922,7 +921,7 @@ const TypingInterface = ({darkMode}) => {
                       },
                       scales: {
                         x: {
-                            title: { display: true, text: 'Time (s)', color: theme.chartText },
+                          title: { display: true, text: 'Time (s)', color: theme.chartText },
                           ticks: { color: theme.chartText },
                           grid: { color: theme.chartGrid },
                         },
