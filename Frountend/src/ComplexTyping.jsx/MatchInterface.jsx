@@ -787,8 +787,25 @@ const MatchInterface = ({ darkMode }) => {
       }, 150);
     };
 
+    // Prevent paste, copy, cut, and drop
+    const handlePaste = (e) => e.preventDefault();
+    const handleCopy = (e) => e.preventDefault();
+    const handleCut = (e) => e.preventDefault();
+    const handleDrop = (e) => e.preventDefault();
+
     window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
+    window.addEventListener('paste', handlePaste);
+    window.addEventListener('copy', handleCopy);
+    window.addEventListener('cut', handleCut);
+    window.addEventListener('drop', handleDrop);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+      window.removeEventListener('paste', handlePaste);
+      window.removeEventListener('copy', handleCopy);
+      window.removeEventListener('cut', handleCut);
+      window.removeEventListener('drop', handleDrop);
+    };
   }, [currentIndex, currentText, inputText, isFinished, isStarted]);
 
   // Reset test
@@ -1291,8 +1308,8 @@ const MatchInterface = ({ darkMode }) => {
                                   <button
                                     onClick={handleShareRoom}
                                     className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-lg font-bold text-xs md:text-sm transition-all ${darkMode
-                                        ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/50 hover:bg-indigo-500 hover:text-white'
-                                        : 'bg-indigo-500/10 text-indigo-600 border border-indigo-500/50 hover:bg-indigo-500 hover:text-white'
+                                      ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/50 hover:bg-indigo-500 hover:text-white'
+                                      : 'bg-indigo-500/10 text-indigo-600 border border-indigo-500/50 hover:bg-indigo-500 hover:text-white'
                                       }`}
                                   >
                                     <Share2 className="w-4 h-4" />
