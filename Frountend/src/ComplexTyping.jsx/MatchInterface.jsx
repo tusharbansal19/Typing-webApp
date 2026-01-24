@@ -88,6 +88,7 @@ const MatchInterface = ({ darkMode }) => {
   const mistakesRef = useRef(0);
   const correctCharsRef = useRef(0);
   const startTimeRef = useRef(null);
+  const hiddenInputRef = useRef(null); // For mobile typing
   const [progressData, setProgressData] = useState([]); // Array of {time, wpm}
   const [intervalStep, setIntervalStep] = useState(0); // Track elapsed time in 5s steps
   const { socket } = useSocket();
@@ -255,6 +256,60 @@ const MatchInterface = ({ darkMode }) => {
     setShowMatchStartedPopup(false);
     navigate('/host');
   };
+
+  // Helper to focus input on tap/click - prevent if already focused
+  const focusInput = (e) => {
+    if (hiddenInputRef.current && document.activeElement !== hiddenInputRef.current) {
+      e?.preventDefault();
+      hiddenInputRef.current.focus({ preventScroll: true });
+    }
+  };
+
+  // Handle input from the hidden input (for mobile)
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    if (isFinished || !isStarted) return;
+
+    // Only process the new character(s)
+    let newChar = value.slice(inputText.length);
+
+    // Simulate key presses for each new character
+    for (let i = 0; i < newChar.length; i++) {
+      const key = newChar[i];
+      // Only allow typing up to the text length
+      if (currentIndex < currentText.length) {
+        const expectedChar = currentText[currentIndex];
+        const isCorrect = key === expectedChar;
+        setInputText(prev => prev + key);
+        setCurrentIndex(prev => prev + 1);
+        if (isCorrect) {
+          correctCharsRef.current++;
+          setIsCorrectKey(true);
+          setIsIncorrectKey(false);
+        } else {
+          mistakesRef.current++;
+          setIsCorrectKey(false);
+          setIsIncorrectKey(true);
+        }
+        if (currentIndex + 1 === currentText.length) {
+          setIsFinished(true);
+        }
+        setTimeout(() => {
+          setPressedKey('');
+          setIsCorrectKey(false);
+          setIsIncorrectKey(false);
+        }, 150);
+      }
+    }
+  };
+
+
+  // Focus the hidden input on mount for mobile typing
+  useEffect(() => {
+    if (hiddenInputRef.current) {
+      hiddenInputRef.current.focus();
+    }
+  }, []);
 
   // Auto-navigate after 5 seconds
   useEffect(() => {
@@ -1205,10 +1260,42 @@ const MatchInterface = ({ darkMode }) => {
   };
 
   return (
-    <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode
-      ? 'bg-gradient-to-br from-blue-950 via-black-900 to-gray-900'
-      : 'bg-gradient-to-br from-blue-100 via-white to-blue-200'
-      }`}>
+    <div
+      className={`min-h-screen w-full transition-colors duration-300 ${darkMode
+        ? 'bg-gradient-to-br from-blue-950 via-black-900 to-gray-900'
+        : 'bg-gradient-to-br from-blue-100 via-white to-blue-200'
+        }`}
+      onClick={focusInput}
+      onTouchStart={focusInput}
+    >
+      {/* Visually hidden input for mobile typing */}
+      <input
+        ref={hiddenInputRef}
+        type="text"
+        inputMode="text"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck="false"
+        data-form-type="other"
+        data-lpignore="true"
+        value={inputText}
+        onChange={handleInputChange}
+        onPaste={(e) => e.preventDefault()}
+        onCut={(e) => e.preventDefault()}
+        onCopy={(e) => e.preventDefault()}
+        onDrop={(e) => e.preventDefault()}
+        style={{
+          position: 'absolute',
+          opacity: 0,
+          pointerEvents: 'none',
+          width: 1,
+          height: 1,
+          zIndex: -1,
+        }}
+        tabIndex={-1}
+        aria-hidden="true"
+      />
 
       <div className="w-full mx-auto px-4 py-8">
         {/* Loader until socket is ready or during reload */}
