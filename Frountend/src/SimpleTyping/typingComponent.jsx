@@ -839,8 +839,13 @@ const TypingInterface = ({ darkMode }) => {
 
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Timer Card - Only on Mobile, at top */}
+        <div className="md:hidden mb-6">
+          <StatsCard theme={currentTheme} icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
+        </div>
+
+        {/* Stats - Desktop only, at top */}
+        <div className="hidden md:grid grid-cols-4 gap-4 mb-8">
           <StatsCard theme={currentTheme} icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
           <StatsCard theme={currentTheme} icon={Target} label="WPM" value={wpm} color="green" />
           <StatsCard theme={currentTheme} icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
@@ -880,6 +885,13 @@ const TypingInterface = ({ darkMode }) => {
               ))}
             </div>
           </div>
+        </div>
+
+        {/* Stats Cards - Mobile only, at bottom */}
+        <div className="md:hidden grid grid-cols-2 gap-4 mb-8">
+          <StatsCard theme={currentTheme} icon={Target} label="WPM" value={wpm} color="green" />
+          <StatsCard theme={currentTheme} icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
+          <StatsCard theme={currentTheme} icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
         </div>
 
         {/* Virtual keyboard or Chart */}
