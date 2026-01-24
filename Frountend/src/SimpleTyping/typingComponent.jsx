@@ -372,10 +372,11 @@ const TypingInterface = ({ darkMode }) => {
     }
   }, []);
 
-  // Helper to focus input on tap/click
-  const focusInput = () => {
-    if (hiddenInputRef.current) {
-      hiddenInputRef.current.focus();
+  // Helper to focus input on tap/click - prevent if already focused
+  const focusInput = (e) => {
+    if (hiddenInputRef.current && document.activeElement !== hiddenInputRef.current) {
+      e?.preventDefault();
+      hiddenInputRef.current.focus({ preventScroll: true }); // Prevent scroll on focus
     }
   };
 
@@ -426,14 +427,24 @@ const TypingInterface = ({ darkMode }) => {
     resetTest();
   }, []);
 
-  // Auto-scroll to active character
+  // Auto-scroll to active character - only within the text container
   useEffect(() => {
-    if (activeCharRef.current) {
-      activeCharRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-        inline: 'start'
-      });
+    if (activeCharRef.current && textRef.current) {
+      // Scroll within the text container, not the whole page
+      const container = textRef.current;
+      const element = activeCharRef.current;
+
+      const containerRect = container.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
+
+      // Only scroll if element is outside the visible area
+      if (elementRect.top < containerRect.top || elementRect.bottom > containerRect.bottom) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'nearest', // Use 'nearest' instead of 'center' to minimize movement
+          inline: 'nearest'
+        });
+      }
     }
   }, [currentIndex]);
 
