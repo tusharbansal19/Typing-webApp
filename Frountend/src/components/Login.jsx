@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import '../css/Loader.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser, clearError } from '../features/user/userSlice';
@@ -7,6 +7,7 @@ import { loginUser, clearError } from '../features/user/userSlice';
 const Login = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { loading, error, isAuthenticated, accessToken } = useSelector((state) => state.user);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -14,21 +15,24 @@ const Login = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
-  useEffect(() => {
-    if (isAuthenticated && accessToken) {
-      setSuccessMsg('Login successful! Redirecting...');
-      setTimeout(() => {
-        setSuccessMsg('');
-        navigate('/');
-      }, 1200);
-    }
-  }, [isAuthenticated, accessToken, navigate]);
+  // Get the page they were trying to access before login
+  const from = location.state?.from || '/';
+  console.log('FROM:', from, 'LOCATION:', location);
+
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
+    console.log('Auth check - isAuthenticated:', isAuthenticated, 'accessToken:', !!accessToken);
+    if (isAuthenticated && accessToken) {
+      console.log('✅ LOGIN SUCCESSFUL - Will redirect to:', from);
+      setSuccessMsg('Login successful! Redirecting...');
+      setTimeout(() => {
+        console.log('🚀 REDIRECTING NOW to:', from);
+        setSuccessMsg('');
+        // Redirect to the page they were trying to access
+        navigate(from, { replace: true });
+      }, 1200);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, accessToken, navigate, from]);
 
   useEffect(() => {
     if (error) setShowPopup(true);
@@ -124,7 +128,7 @@ const Login = () => {
                 <Link to="/forgot-password" className="text-blue-400 underline text-sm hover:text-blue-600">Forgot password?</Link>
               </div>
               {/* Sign Up Link */}
-              <div className='text-white'>Don't have an account? <Link className='text-red-700 underline' to="/signup">Sign Up</Link></div>
+              <div className='text-white'>Don't have an account? <Link className='text-red-700 underline' to="/signup" state={{ from }}>Sign Up</Link></div>
               {/* Submit Button */}
               <button
                 type="submit"

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import '../css/Loader.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { signupUser, clearError } from '../features/user/userSlice';
@@ -7,6 +7,7 @@ import { signupUser, clearError } from '../features/user/userSlice';
 const Signin = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const { loading, error, isAuthenticated, accessToken } = useSelector((state) => state.user);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -15,21 +16,19 @@ const Signin = () => {
   const [showPopup, setShowPopup] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
 
+  // Get the page they were trying to access before signup
+  const from = location.state?.from || '/';
+
   useEffect(() => {
     if (isAuthenticated && accessToken) {
       setSuccessMsg('Signup successful! Redirecting...');
       setTimeout(() => {
         setSuccessMsg('');
-        navigate('/');
+        // Redirect to the page they were trying to access
+        navigate(from, { replace: true });
       }, 1200);
     }
-  }, [isAuthenticated, accessToken, navigate]);
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
-    }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, accessToken, navigate, from]);
 
   useEffect(() => {
     if (error) setShowPopup(true);
@@ -137,7 +136,7 @@ const Signin = () => {
                 {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
               </div>
               {/* Login Link */}
-              <div className='text-white'>Already have an account? <Link className='text-red-700 underline' to="/login">Login</Link></div>
+              <div className='text-white'>Already have an account? <Link className='text-red-700 underline' to="/login" state={{ from }}>Login</Link></div>
               {/* Submit Button */}
               <button
                 type="submit"
