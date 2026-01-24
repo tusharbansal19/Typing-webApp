@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { RotateCcw, Play, Pause, Trophy, Target, Clock, AlertCircle, Keyboard, TrendingUp, X } from 'lucide-react';
+import { RotateCcw, Play, Pause, Trophy, Target, Clock, AlertCircle, Keyboard, TrendingUp, X, Users, Lock, Unlock } from 'lucide-react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -55,7 +55,7 @@ const StatsCard = ({ icon: Icon, label, value, color = "blue" }) => {
 };
 
 // Main typing interface component
-const MatchInterface = ({darkMode}) => {
+const MatchInterface = ({ darkMode }) => {
   // simple typing test................................................................................
   // Core state
   const [currentText, setCurrentText] = useState('');
@@ -65,22 +65,22 @@ const MatchInterface = ({darkMode}) => {
   const [isStarted, setIsStarted] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
 
-  
+
   // Timer state
   const [timeLeft, setTimeLeft] = useState(60);
   const [testDuration, setTestDuration] = useState(60);
-  
+
   // Statistics state
   const [wpm, setWpm] = useState(0);
   const [accuracy, setAccuracy] = useState(100);
   const [mistakes, setMistakes] = useState(0);
   const [correctChars, setCorrectChars] = useState(0);
-  
+
   // Keyboard state
   const [pressedKey, setPressedKey] = useState('');
   const [isCorrectKey, setIsCorrectKey] = useState(false);
   const [isIncorrectKey, setIsIncorrectKey] = useState(false);
-  
+
   // Refs
   const timerRef = useRef(null);
   const textRef = useRef(null);
@@ -111,7 +111,7 @@ const MatchInterface = ({darkMode}) => {
   const navigate = useNavigate();
   const [showMatchStartedPopup, setShowMatchStartedPopup] = useState(false);
   const [countdown, setCountdown] = useState(5);
-  
+
   // Admin and viewer state
   const [isAdmin, setIsAdmin] = useState(false);
   const [isViewer, setIsViewer] = useState(false);
@@ -122,13 +122,85 @@ const MatchInterface = ({darkMode}) => {
   const [viewers, setViewers] = useState([]);
   const [showAdminControls, setShowAdminControls] = useState(false);
   const [isReloading, setIsReloading] = useState(false);
-  
-  const handleMatchAlreadyStarted = ({message}) => {
+
+  const [isTogglingAccess, setIsTogglingAccess] = useState(false);
+  const [isTogglingRoomClosure, setIsTogglingRoomClosure] = useState(false);
+
+  const handleMatchAlreadyStarted = ({ message }) => {
     console.log('Match already started:', message);
     setShowMatchStartedPopup(true);
     setSocketReady(false);
     setCountdown(5);
   };
+
+  const handleToggleNewPlayers = () => {
+    setIsTogglingAccess(true);
+    try {
+      socket.emit('adminToggleNewPlayers', {
+        roomName: urlRoomName || roomName, // handle both cases
+        adminEmail: userEmail
+      });
+    } catch (error) {
+      console.error('Error toggling new players:', error);
+    } finally {
+      setIsTogglingAccess(false);
+    }
+  };
+
+  const handleToggleRoomClosure = () => {
+    setIsTogglingRoomClosure(true);
+    try {
+      socket.emit('adminToggleRoomClosure', {
+        roomName: urlRoomName || roomName,
+        adminEmail: userEmail
+      });
+    } catch (error) {
+      console.error('Error toggling room closure:', error);
+    } finally {
+      setIsTogglingRoomClosure(false);
+    }
+  };
+
+  // Listen for admin action responses
+  useEffect(() => {
+    if (!socket) return;
+    const handleNewPlayersToggled = ({ message, allowNewPlayers }) => {
+      setAllowNewPlayers(allowNewPlayers);
+    };
+    const handleRoomClosureToggled = ({ message, isClosed }) => {
+      setIsRoomClosed(isClosed);
+    };
+    socket.on('newPlayersToggled', handleNewPlayersToggled);
+    socket.on('roomClosureToggled', handleRoomClosureToggled);
+    return () => {
+      socket.off('newPlayersToggled', handleNewPlayersToggled);
+      socket.off('roomClosureToggled', handleRoomClosureToggled);
+    };
+  }, [socket]);
+
+  // Check initial room state
+  useEffect(() => {
+    if (!urlRoomName && !roomName) return;
+    const targetRoom = urlRoomName || roomName;
+
+    const checkRoomState = async () => {
+      try {
+        const response = await fetch(`/api/match/info/${targetRoom}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setAllowNewPlayers(data.allowNewPlayers);
+          // Assume api might return isRoomClosed too if updated, otherwise default false
+        }
+      } catch (error) {
+        console.error('Error checking room state:', error);
+      }
+    };
+    checkRoomState();
+  }, [urlRoomName, roomName]);
 
   const handleClosePopup = () => {
     setShowMatchStartedPopup(false);
@@ -285,7 +357,7 @@ const MatchInterface = ({darkMode}) => {
     if (!socket) return;
     const handleMatchStateSync = (matchState) => {
       console.log('Received match state sync:', matchState);
-      
+
       if (matchState.isStarted) {
         // Sync with current match state
         if (matchState.mode) dispatch(setMode(matchState.mode));
@@ -295,7 +367,7 @@ const MatchInterface = ({darkMode}) => {
           setCurrentText(matchState.wordList);
         }
         dispatch(setStarted(true));
-        
+
         // Check if match is finished
         if (matchState.results && matchState.results.length > 0) {
           setLeaderboardData({ ranked: matchState.results });
@@ -308,14 +380,14 @@ const MatchInterface = ({darkMode}) => {
             setIsTypingActive(true);
             setIsActive(true);
             setIsStarted(true);
-            
+
             // Calculate remaining time
             if (matchState.startTime) {
               const startTime = new Date(matchState.startTime).getTime();
               const now = Date.now();
               const elapsed = Math.floor((now - startTime) / 1000);
               const remaining = Math.max(0, (matchState.timeLimit || 60) - elapsed);
-              
+
               if (remaining > 0) {
                 setTimeLeft(remaining);
                 setTestDuration(matchState.timeLimit || 60);
@@ -333,7 +405,7 @@ const MatchInterface = ({darkMode}) => {
         }
       }
     };
-    
+
     socket.on('matchStateSync', handleMatchStateSync);
     return () => {
       socket.off('matchStateSync', handleMatchStateSync);
@@ -377,7 +449,7 @@ const MatchInterface = ({darkMode}) => {
     const currentWpm = timeElapsed > 0 ? Math.round((wordsTyped / timeElapsed) * 60) : 0;
     const totalChars = correctCharsRef.current + mistakesRef.current;
     const currentAccuracy = totalChars > 0 ? Math.round((correctCharsRef.current / totalChars) * 100) : 100;
-    
+
     setWpm(currentWpm);
     setAccuracy(currentAccuracy);
     setMistakes(mistakesRef.current);
@@ -401,13 +473,13 @@ const MatchInterface = ({darkMode}) => {
     if (timeLeft > 0 && isStarted) {
       const startTime = Date.now();
       const targetTime = startTime + (timeLeft * 1000);
-      
+
       timerRef.current = setInterval(() => {
         const currentTime = Date.now();
         const remainingTime = Math.max(0, Math.ceil((targetTime - currentTime) / 1000));
-        
+
         setTimeLeft(remainingTime);
-        
+
         if (remainingTime <= 0) {
           setIsActive(false);
           setIsFinished(true);
@@ -475,7 +547,7 @@ const MatchInterface = ({darkMode}) => {
 
       // Set up periodic emission every 5 seconds (reduced from 2 seconds)
       const interval = setInterval(debouncedEmit, 5000);
-      
+
       return () => {
         clearInterval(interval);
         if (emitTimeout) {
@@ -535,7 +607,7 @@ const MatchInterface = ({darkMode}) => {
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('focus', handleFocus);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('focus', handleFocus);
@@ -568,10 +640,10 @@ const MatchInterface = ({darkMode}) => {
   useEffect(() => {
     const handleKeyPress = (event) => {
       if (isFinished) return;
-      
+
       const key = event.key;
       setPressedKey(key);
-      
+
       // Start test on first keypress
       if (!isStarted) {
         setIsStarted(true);
@@ -580,7 +652,7 @@ const MatchInterface = ({darkMode}) => {
         // Force timer to start immediately
         setTimeLeft(prev => prev);
       }
-      
+
       // Handle special keys
       if (key === 'Backspace') {
         event.preventDefault();
@@ -596,7 +668,7 @@ const MatchInterface = ({darkMode}) => {
         }
         return;
       }
-      
+
       // Handle spacebar for skipping words
       if (key === ' ' && currentIndex < currentText.length) {
         event.preventDefault();
@@ -636,16 +708,16 @@ const MatchInterface = ({darkMode}) => {
         }, 150);
         return;
       }
-      
+
       // Handle printable characters
       if (key.length === 1 && currentIndex < currentText.length) {
         event.preventDefault();
         const expectedChar = currentText[currentIndex];
         const isCorrect = key === expectedChar;
-        
+
         setInputText(prev => prev + key);
         setCurrentIndex(prev => prev + 1);
-        
+
         if (isCorrect) {
           correctCharsRef.current++;
           setIsCorrectKey(true);
@@ -655,14 +727,14 @@ const MatchInterface = ({darkMode}) => {
           setIsCorrectKey(false);
           setIsIncorrectKey(true);
         }
-        
+
         // Check if test is complete
         if (currentIndex + 1 === currentText.length) {
           setIsFinished(true);
           // Don't stop the timer - let it continue until time is up
         }
       }
-      
+
       // Clear key press visual feedback
       setTimeout(() => {
         setPressedKey('');
@@ -710,8 +782,8 @@ const MatchInterface = ({darkMode}) => {
       if (inputText[index] === '$') {
         return 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200';
       }
-      return inputText[index] === currentText[index] 
-        ? 'bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200' 
+      return inputText[index] === currentText[index]
+        ? 'bg-green-200 dark:bg-green-800 text-green-800 dark:text-green-200'
         : 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200';
     }
     if (index === currentIndex) {
@@ -726,7 +798,7 @@ const MatchInterface = ({darkMode}) => {
 
     // Check if current user is admin (host) based on participants data
     const currentUser = participants.find(p => p.email === userEmail);
-    
+
     if (currentUser) {
       const isHostUser = currentUser.isHost || false;
       setIsAdmin(isHostUser);
@@ -742,7 +814,7 @@ const MatchInterface = ({darkMode}) => {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
-        
+
         if (response.ok) {
           const data = await response.json();
           setIsViewer(data.isViewer || false);
@@ -751,7 +823,7 @@ const MatchInterface = ({darkMode}) => {
           setViewers(data.viewers || []);
           setIsRoomClosed(data.isRoomClosed || false);
           setAdminPresent(data.adminPresent || false);
-          
+
           // If user is only a viewer, disable typing functionality
           if (data.isViewer && !data.isParticipant) {
             setIsTypingActive(false);
@@ -788,14 +860,14 @@ const MatchInterface = ({darkMode}) => {
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           }
         });
-        
+
         if (response.ok) {
           const data = await response.json();
-          
+
           // If match is already started, sync with current state
           if (data.isStarted) {
             console.log('Match already in progress, syncing state...');
-            
+
             // Set match state from server
             if (data.mode) dispatch(setMode(data.mode));
             if (data.timeLimit) dispatch(setTimeLimit(data.timeLimit));
@@ -804,7 +876,7 @@ const MatchInterface = ({darkMode}) => {
               setCurrentText(data.wordList);
             }
             dispatch(setStarted(true));
-            
+
             // Check if match is finished
             if (data.results && data.results.length > 0) {
               // Match is finished, show results
@@ -819,14 +891,14 @@ const MatchInterface = ({darkMode}) => {
                 setIsTypingActive(true);
                 setIsActive(true);
                 setIsStarted(true);
-                
+
                 // Calculate remaining time
                 if (data.startTime) {
                   const startTime = new Date(data.startTime).getTime();
                   const now = Date.now();
                   const elapsed = Math.floor((now - startTime) / 1000);
                   const remaining = Math.max(0, (data.timeLimit || 60) - elapsed);
-                  
+
                   if (remaining > 0) {
                     setTimeLeft(remaining);
                     setTestDuration(data.timeLimit || 60);
@@ -894,7 +966,7 @@ const MatchInterface = ({darkMode}) => {
 
     const handleRemovePlayer = async (participantEmail) => {
       if (participantEmail === userEmail) return; // Can't remove yourself
-      
+
       setIsRemovingPlayer(true);
       try {
         // Use socket event instead of API call
@@ -982,7 +1054,7 @@ const MatchInterface = ({darkMode}) => {
         <div className="mb-4">
           <h3 className={`font-bold ${darkMode ? 'text-white' : 'text-gray-800'}`}>Admin Controls</h3>
         </div>
-        
+
         <div className="space-y-3">
           {/* Toggle new players */}
           <div className="flex items-center justify-between">
@@ -992,16 +1064,15 @@ const MatchInterface = ({darkMode}) => {
             <button
               onClick={handleToggleNewPlayers}
               disabled={isTogglingAccess}
-              className={`px-3 py-1 rounded text-xs font-medium ${
-                allowNewPlayers
-                  ? 'bg-green-500 text-white'
-                  : 'bg-red-500 text-white'
-              }`}
+              className={`px-3 py-1 rounded text-xs font-medium ${allowNewPlayers
+                ? 'bg-green-500 text-white'
+                : 'bg-red-500 text-white'
+                }`}
             >
               {isTogglingAccess ? '...' : (allowNewPlayers ? 'ON' : 'OFF')}
             </button>
           </div>
-          
+
           {/* Toggle Room Closure */}
           <div className="flex items-center justify-between">
             <span className={`text-sm ${darkMode ? 'text-gray-300' : 'text-gray-600'}`}>
@@ -1010,11 +1081,10 @@ const MatchInterface = ({darkMode}) => {
             <button
               onClick={handleToggleRoomClosure}
               disabled={isTogglingRoomClosure}
-              className={`px-3 py-1 rounded text-xs font-medium ${
-                isRoomClosed
-                  ? 'bg-red-500 text-white'
-                  : 'bg-green-500 text-white'
-              }`}
+              className={`px-3 py-1 rounded text-xs font-medium ${isRoomClosed
+                ? 'bg-red-500 text-white'
+                : 'bg-green-500 text-white'
+                }`}
             >
               {isTogglingRoomClosure ? '...' : (isRoomClosed ? 'CLOSED' : 'OPEN')}
             </button>
@@ -1056,7 +1126,7 @@ const MatchInterface = ({darkMode}) => {
         <div className={`text-center ${darkMode ? 'text-white' : 'text-gray-800'}`}>
           <h2 className="text-3xl font-bold mb-4">Spectator Mode</h2>
           <p className="text-lg mb-6">You are watching this match as a spectator.</p>
-          
+
           {/* Show viewers list */}
           <div className={`p-4 rounded-lg ${darkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
             <h3 className="font-semibold mb-2">Spectators ({viewers.length})</h3>
@@ -1074,12 +1144,11 @@ const MatchInterface = ({darkMode}) => {
   };
 
   return (
-    <div className={`min-h-screen w-full transition-colors duration-300 ${
-      darkMode
+    <div className={`min-h-screen w-full transition-colors duration-300 ${darkMode
       ? 'bg-gradient-to-br from-blue-950 via-black-900 to-gray-900'
       : 'bg-gradient-to-br from-blue-100 via-white to-blue-200'
-  }`}>
- 
+      }`}>
+
       <div className="w-full mx-auto px-4 py-8">
         {/* Loader until socket is ready or during reload */}
         {!socketReady || isReloading ? (
@@ -1091,14 +1160,13 @@ const MatchInterface = ({darkMode}) => {
           </div>
         ) : (
           <>
-            {/* Admin Controls */}
-            {isAdmin && (
+            {/* Admin Controls - Floating button (Only during match) */}
+            {isAdmin && (isTypingActive || cooldown) && (
               <div className="fixed top-4 right-4 z-40">
                 <button
                   onClick={() => setShowAdminControls(!showAdminControls)}
-                  className={`p-3 rounded-lg shadow-lg border ${
-                    darkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-gray-800 border-gray-200'
-                  }`}
+                  className={`p-3 rounded-lg shadow-lg border ${darkMode ? 'bg-gray-800 text-white border-gray-600' : 'bg-white text-gray-800 border-gray-200'
+                    }`}
                 >
                   <span className="text-sm font-medium">⚙️ Admin</span>
                 </button>
@@ -1109,9 +1177,8 @@ const MatchInterface = ({darkMode}) => {
             {/* Reload Recovery Indicator */}
             {isReloading && (
               <div className="fixed top-4 left-4 z-40">
-                <div className={`px-4 py-2 rounded-lg shadow-lg border ${
-                  darkMode ? 'bg-blue-900 text-blue-200 border-blue-600' : 'bg-blue-100 text-blue-800 border-blue-300'
-                }`}>
+                <div className={`px-4 py-2 rounded-lg shadow-lg border ${darkMode ? 'bg-blue-900 text-blue-200 border-blue-600' : 'bg-blue-100 text-blue-800 border-blue-300'
+                  }`}>
                   <span className="text-sm font-medium">🔄 Recovering match state...</span>
                 </div>
               </div>
@@ -1130,12 +1197,13 @@ const MatchInterface = ({darkMode}) => {
               </div>
             ) : (
               <>
-                {/* Responsive layout: main + sidebar */}
-                {/* Leaderboard */}
+                {/* New Layout System */}
                 {isFinished && leaderboardData ? (
-                  <div className='w-full min-h-screem'>
-                    <ResultLeaderboard ranked={leaderboardData.ranked} />
-                    <div className="w-full flex flex-col items-center justify-center">
+                  <div className='w-full min-h-screen animate-fadeIn'>
+                    <div className="max-w-4xl mx-auto">
+                      <ResultLeaderboard ranked={leaderboardData.ranked} />
+                    </div>
+                    <div className="w-full flex flex-col items-center justify-center mt-8">
                       <Results
                         isFinished={isFinished}
                         wpm={wpm}
@@ -1148,44 +1216,136 @@ const MatchInterface = ({darkMode}) => {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex flex-col lg:flex-row lg:items-start w-full">
-                    {/* Main content */}
-                    <div className="flex-1 w-full lg:ml-6">
-                      {cooldown || !isTypingActive ? (<>
-                    <div className="block lg:hidden mt-4">
-                            <ShowMember darkMode={darkMode} />
+                  <>
+                    {!isTypingActive && !cooldown ? (
+                      /* --- CENTRAL LOBBY VIEW --- */
+                      <div className="relative w-full max-w-7xl mx-auto animate-fadeIn flex flex-col justify-center min-h-[calc(100vh-150px)] px-4">
+                        {/* Vertical Divider (Desktop Only) - Single continuous line */}
+                        <div className={`hidden lg:block absolute left-[33.33%] top-10 bottom-10 w-[1px] -translate-x-1/2 pointer-events-none bg-gradient-to-b ${darkMode ? 'from-indigo-500/30 via-purple-500/50 to-pink-500/30' : 'from-indigo-400/40 via-purple-400/60 to-pink-400/40'}`}></div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
+
+                          {/* LEFT COLUMN: GAME INFO & SETTINGS */}
+                          <div className="flex flex-col space-y-6">
+                            <div className="flex items-center gap-4 mb-2">
+                              <h2 className={`text-xl font-bold uppercase tracking-widest ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                                Game Info
+                              </h2>
+                              <div className="h-[2px] flex-grow rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
+                            </div>
+
+                            {/* Room Details */}
+                            <div className={`p-6 rounded-xl border-l-4 shadow-sm transition-all hover:translate-x-1 ${darkMode
+                              ? 'bg-gray-800/50 border-orange-500 text-gray-200'
+                              : 'bg-white border-orange-500 text-gray-700'
+                              }`}>
+                              <h3 className="text-2xl font-bold mb-3">{roomName}</h3>
+                              <div className="flex items-center gap-6">
+                                <span className={`flex items-center gap-2 text-xl font-bold ${darkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                                  <Users className="w-5 h-5" /> {participants.length} Players
+                                </span>
+                                <span className={`flex items-center gap-2 text-xl font-bold ${darkMode ? 'text-orange-400' : 'text-orange-600'}`}>
+                                  <Clock className="w-5 h-5" /> {testDuration}s
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Admin Settings Panel (Only for Admin) */}
+                            {isAdmin && (
+                              <div className="mt-8">
+                                <div className="flex items-center gap-4 mb-4">
+                                  <h3 className={`text-xl font-bold uppercase tracking-widest ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                                    Settings
+                                  </h3>
+                                  <div className="h-[2px] flex-grow rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
+                                </div>
+
+                                <div className={`p-6 rounded-xl border-l-4 shadow-sm transition-all hover:translate-x-1 ${darkMode ? 'bg-gray-800/50 border-blue-500' : 'bg-white border-blue-500'} shadow-sm`}>
+                                  <div className="grid grid-cols-2 gap-3">
+                                    {/* Toggle New Players */}
+                                    <button
+                                      onClick={handleToggleNewPlayers}
+                                      disabled={isTogglingAccess}
+                                      className={`w-full py-2 px-3 rounded-lg font-bold flex flex-col items-center justify-center gap-1 transition-all text-xs ${allowNewPlayers
+                                        ? 'bg-green-500/10 text-green-500 border border-green-500/50 hover:bg-green-500 hover:text-white'
+                                        : 'bg-red-500/10 text-red-500 border border-red-500/50 hover:bg-red-500 hover:text-white'
+                                        }`}
+                                    >
+                                      <div className="flex items-center gap-1">
+                                        {allowNewPlayers ? <Unlock className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                                        <span>New Players</span>
+                                      </div>
+                                      <span className="uppercase tracking-wider opacity-75">{allowNewPlayers ? 'Allowed' : 'Locked'}</span>
+                                    </button>
+
+                                    {/* Toggle Room Closure */}
+                                    <button
+                                      onClick={handleToggleRoomClosure}
+                                      disabled={isTogglingRoomClosure}
+                                      className={`w-full py-2 px-3 rounded-lg font-bold flex flex-col items-center justify-center gap-1 transition-all text-xs ${isRoomClosed
+                                        ? 'bg-red-500/10 text-red-500 border border-red-500/50 hover:bg-red-500 hover:text-white'
+                                        : 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/50 hover:bg-indigo-500 hover:text-white'
+                                        }`}
+                                    >
+                                      <div className="flex items-center gap-1">
+                                        {isRoomClosed ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                                        <span>Room Status</span>
+                                      </div>
+                                      <span className="uppercase tracking-wider opacity-75">{isRoomClosed ? 'Closed' : 'Open'}</span>
+                                    </button>
+                                  </div>
+
+                                  <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-xs text-yellow-600 dark:text-yellow-400">
+                                    <p>Only the host can start the game.</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
                           </div>
 
-                        <div className="fixed flex flex-col items-center justify-center min-h-[300px] relative">
-                          <h2 className="text-3xl font-bold text-center mt-12">Get Ready...</h2>
+                          {/* RIGHT COLUMN: PLAYERS LIST */}
+                          <div className="flex flex-col space-y-6 lg:col-span-2">
+                            <div className="flex items-center gap-4 mb-2">
+                              <h2 className={`text-xl font-bold uppercase tracking-widest ${darkMode ? 'text-gray-200' : 'text-gray-700'}`}>
+                                Players
+                              </h2>
+                              <div className="h-[2px] flex-grow rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
+                            </div>
+
+                            <div className="flex-1">
+                              <ShowMember darkMode={darkMode} />
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    ) : (
+                      /* --- ACTIVE MATCH VIEW --- */
+                      <div className="flex flex-col lg:flex-row lg:items-start w-full gap-8 animate-fadeIn">
+                        {/* Main Typing Area */}
+                        <div className="flex-1 w-full relative">
+
+                          {/* Countdown Overlay */}
                           {cooldown && (
-                            <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                              <span className="text-7xl font-extrabold text-yellow-400 drop-shadow-lg animate-pulse">{cooldownValue > 0 ? cooldownValue : ''}</span>
+                            <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/10 backdrop-blur-sm rounded-3xl">
+                              <div className="flex flex-col items-center animate-bounce">
+                                <span className="text-8xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-purple-600 drop-shadow-2xl">
+                                  {cooldownValue}
+                                </span>
+                                <span className="text-2xl font-bold text-gray-800 dark:text-white mt-4">Get Ready!</span>
+                              </div>
                             </div>
                           )}
-                         
-                        </div>
-                          </>
-                      ) : (
-                        <>
-                          {/* Header */}
+
                           <Header />
-                          {/* Stats */}
+
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
                             <StatsCard icon={Clock} label="Time Left" value={formatTime(timeLeft)} color="blue" />
                             <StatsCard icon={TrendingUp} label="WPM" value={wpm} color="green" />
                             <StatsCard icon={Trophy} label="Accuracy" value={`${accuracy}%`} color="purple" />
                             <StatsCard icon={AlertCircle} label="Mistakes" value={mistakes} color="red" />
                           </div>
-                          {/* Start prompt */}
-                          {!isStarted && (
-                            <div className="text-center mb-8">
-                              <p className="text-lg font-semibold text-gray-700 dark:text-gray-200">
-                                Press any key to start typing!
-                              </p>
-                            </div>
-                          )}
-                          {/* Text display */}
+
                           <TextDisplay
                             currentText={currentText}
                             inputText={inputText}
@@ -1194,43 +1354,42 @@ const MatchInterface = ({darkMode}) => {
                             darkMode={darkMode}
                             getCharStyle={getCharStyle}
                           />
-                          {/* Virtual keyboard or Chart */}
+
                           <TypingChartOrKeyboard
                             pressedKey={pressedKey}
                             isCorrectKey={isCorrectKey}
                             isIncorrectKey={isIncorrectKey}
                           />
-                          
-                          {/* Mobile Real-time Leaderboard */}
-                          <div className="block lg:hidden mt-6">
-                            <RealTimeLeaderboard 
-                              darkMode={darkMode} 
-                              isTypingActive={isTypingActive} 
+
+                          {/* Mobile Leaderboard */}
+                          <div className="block lg:hidden mt-8">
+                            <RealTimeLeaderboard
+                              darkMode={darkMode}
+                              isTypingActive={isTypingActive}
                               currentUserWpm={wpm}
                               currentUserAccuracy={accuracy}
                             />
                           </div>
-                        </>
-                      )}
-                    </div>
-                    {/* Sidebar on large screens */}
+                        </div>
 
-                      <div className="hidden lg:block lg:w-1/4 lg:ml-6">
-                      {cooldown || !isTypingActive ? (
-                        <ShowMember darkMode={darkMode} />
-                      ) : (
-                        <RealTimeLeaderboard 
-                          darkMode={darkMode} 
-                          isTypingActive={isTypingActive} 
-                          currentUserWpm={wpm}
-                          currentUserAccuracy={accuracy}
-                        />
-                      )}
-                    </div>
-                  </div>
+                        {/* Sidebar: Real-Time Leaderboard */}
+                        <div className="hidden lg:block w-80 shrink-0">
+                          <div className="sticky top-24">
+                            <RealTimeLeaderboard
+                              darkMode={darkMode}
+                              isTypingActive={isTypingActive}
+                              currentUserWpm={wpm}
+                              currentUserAccuracy={accuracy}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
                 )}
               </>
             )}
+
           </>
         )}
       </div>
@@ -1238,77 +1397,69 @@ const MatchInterface = ({darkMode}) => {
       {/* Match Already Started Popup */}
       {showMatchStartedPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 animate-fadeIn">
-          <div className={`relative max-w-md w-full mx-4 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 animate-scaleIn ${
-            darkMode 
-              ? 'bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 border border-gray-600' 
-              : 'bg-gradient-to-br from-white via-gray-50 to-white border border-gray-200'
-          }`}>
+          <div className={`relative max-w-md w-full mx-4 p-6 rounded-2xl shadow-2xl transform transition-all duration-300 animate-scaleIn ${darkMode
+            ? 'bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 border border-gray-600'
+            : 'bg-gradient-to-br from-white via-gray-50 to-white border border-gray-200'
+            }`}>
             {/* Close button */}
             <button
               onClick={handleClosePopup}
-              className={`absolute top-4 right-4 p-2 rounded-full transition-all duration-200 hover:scale-110 ${
-                darkMode 
-                  ? 'text-gray-400 hover:text-white hover:bg-gray-700' 
-                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-              }`}
+              className={`absolute top-4 right-4 p-2 rounded-full transition-all duration-200 hover:scale-110 ${darkMode
+                ? 'text-gray-400 hover:text-white hover:bg-gray-700'
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                }`}
             >
               <X className="w-5 h-5" />
             </button>
 
             {/* Icon */}
             <div className="flex justify-center mb-6">
-              <div className={`p-4 rounded-full ${
-                darkMode 
-                  ? 'bg-red-900/30 text-red-400' 
-                  : 'bg-red-100 text-red-600'
-              }`}>
+              <div className={`p-4 rounded-full ${darkMode
+                ? 'bg-red-900/30 text-red-400'
+                : 'bg-red-100 text-red-600'
+                }`}>
                 <AlertCircle className="w-12 h-12" />
               </div>
             </div>
 
             {/* Content */}
             <div className="text-center">
-              <h3 className={`text-2xl font-bold mb-3 ${
-                darkMode ? 'text-white' : 'text-gray-900'
-              }`}>
+              <h3 className={`text-2xl font-bold mb-3 ${darkMode ? 'text-white' : 'text-gray-900'
+                }`}>
                 Match Already Started!
               </h3>
-              <p className={`text-lg mb-4 ${
-                darkMode ? 'text-gray-300' : 'text-gray-600'
-              }`}>
+              <p className={`text-lg mb-4 ${darkMode ? 'text-gray-300' : 'text-gray-600'
+                }`}>
                 This typing match has already begun. You cannot join a match that's in progress.
               </p>
-              
+
               {/* Countdown Timer */}
-              <div className={`mb-6 p-3 rounded-lg ${
-                darkMode 
-                  ? 'bg-yellow-900/20 text-yellow-400 border border-yellow-600/30' 
-                  : 'bg-yellow-100 text-yellow-700 border border-yellow-300'
-              }`}>
+              <div className={`mb-6 p-3 rounded-lg ${darkMode
+                ? 'bg-yellow-900/20 text-yellow-400 border border-yellow-600/30'
+                : 'bg-yellow-100 text-yellow-700 border border-yellow-300'
+                }`}>
                 <p className="text-sm font-medium">Redirecting in:</p>
                 <p className="text-2xl font-bold">{countdown} seconds</p>
               </div>
-              
+
               {/* Action buttons */}
               <div className="space-y-3">
                 <button
                   onClick={handleGoBack}
-                  className={`w-full py-3 px-6 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 ${
-                    darkMode
-                      ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
-                      : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 shadow-lg hover:shadow-xl'
-                  }`}
+                  className={`w-full py-3 px-6 rounded-xl font-semibold text-lg transition-all duration-200 transform hover:scale-105 ${darkMode
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
+                    : 'bg-gradient-to-r from-blue-500 to-purple-500 text-white hover:from-blue-600 hover:to-purple-600 shadow-lg hover:shadow-xl'
+                    }`}
                 >
                   Go Back to Host
                 </button>
-                
+
                 <button
                   onClick={handleClosePopup}
-                  className={`w-full py-2 px-6 rounded-lg font-medium text-sm transition-all duration-200 ${
-                    darkMode
-                      ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
-                      : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                  }`}
+                  className={`w-full py-2 px-6 rounded-lg font-medium text-sm transition-all duration-200 ${darkMode
+                    ? 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                    }`}
                 >
                   Close
                 </button>
